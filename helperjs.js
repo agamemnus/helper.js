@@ -1,7 +1,5 @@
 // HelperJS version 2.4.
 
-// NOTE: Array.fill should optionally take 1 param as well.
-
 // Prototypes and Math. property-functions always camel-case.
 
 // camelCase functions and variables, by design:
