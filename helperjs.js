@@ -1,4 +1,5 @@
-// HelperJS version 2.4.
+// http://jsfiddle.net/brigand/U8Y6C/ ?
+// HelperJS version 2.5.
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -300,6 +301,7 @@ function case_insensitive_sort (a, b) {return alpha_sort_inner_function (a, b)}
 // Sample sort function is: function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
 function sortLinkedArrays (input_array, linked_array, sort_function) {
  if (typeof sort_function == "undefined") {
+  if (input_array.length == 0) return
   var starts = [0]
   var ends = [input_array.length]
   while (starts.length) {
@@ -479,7 +481,7 @@ function search_array_of_objects (init) {
 // <Generic logic functions. TAG: logic, TAG: logic functions, TAG: bits, TAG: bit manipulation, TAG: data, TAG: data manipulation.>
 
 // Converts a 0 or 1 (or a string version of it) to a true/false value. Returns true if '1' or 1; otherwise, returns false.
-function numeric_to_truthy (value) {if (+value == 1) {return true} else {return false}}
+function numeric_to_truthy (value) {if (+value != 0) {return true} else {return false}}
 // Converts a true/false value to 0 (not true) or 1 (true).
 function truthy_to_numeric (value) {if (value == true) {return 1} else {return 0}}
 // Clear a bit n in the pth position, starting from 0.
@@ -584,7 +586,7 @@ function replace_property (init) {
 
 function grid_create (target, xsize, ysize, constructor) {
  var x = 0, y = 0
- if (constructor == null) {for (x = 0; x < xsize; x++) {target[x] = new Array()}; return}
+ if (typeof constructor != "undefined") {for (x = 0; x < xsize; x++) {target[x] = new Array()}; return}
  for (x = 0; x < xsize; x++) {
   target[x] = new Array()
   for (y = 0; y < ysize; y++) {
@@ -1249,8 +1251,8 @@ function queueDBDataProcess (run_array) {
    switch (function_name) {
     case 'setDBData'                   : args[6]  = queueDBDataShift; break
     case 'getTextData'                 : args[6]  = queueDBDataShift; break
-    case 'getDBData_2Dintarray'        : args[10] = queueDBDataShift; break
-    case 'getDBData_2Dintarray_zipped' : args[10] = queueDBDataShift; break
+    case 'getDBData_2Dintarray'        : args[11] = queueDBDataShift; break
+    case 'getDBData_2Dintarray_zipped' : args[11] = queueDBDataShift; break
     case 'getDBData_json'              : args[1]  = queueDBDataShift; break
     case 'getDBData_binary'            : args[1]  = queueDBDataShift; break
     case 'getDBData'                   : args[10] = queueDBDataShift; break
@@ -1332,13 +1334,13 @@ function getTextData (filename, successfunc, errorfunc, successparam, send_data_
 
 
 // Use XMLHttpRequest to get a 32-bit integer 2D array from a static file.
-function getDBData_2Dintarray (responsedatavar, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam, async, finishfunc) {
+function getDBData_2Dintarray (responsedatavar, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam, async, request_method, finishfunc) {
  async = (typeof async != "undefined") ? async : true
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  if (typeof responsedatavar != "object") return false
  
  for (var x = 0; x < sizex; x++) {responsedatavar[x] = []}
- var make_request_result = make_request (filename, "", undefined, undefined, async)
+ var make_request_result = make_request (filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
 
  if (async == false) return process_http_request ()
@@ -1363,8 +1365,8 @@ function getDBData_2Dintarray (responsedatavar, bytesize, filename, sizex, sizey
 // Requires the JSZip library: http://stuartk.com/jszip.
 if (typeof JSZip != "undefined") {
  function zip_imagelist_object () {
-  var zip_src_to_generated_src_list = this.zip_src_to_generated_src_list = {}
-  var deferred_list = {}
+  var zip_src_to_generated_img_list = this.zip_src_to_generated_img_list = {}
+  var deferred_list_src = {}, deferred_list_img = {}
   this.load = function (init) {
    zip_load_images ({
     filename : init.filename,
@@ -1401,21 +1403,37 @@ if (typeof JSZip != "undefined") {
       return url.substring(0, last_index)
      }
      var filename_dir = get_domain_and_directory (init.filename)
+     var load_count = 0
      for (var i = 0, curlen = result_keys.length; i < curlen; i++) {
       var relative_url = filename_dir + result_keys[i]
       var img = new Image ()
+      load_count += 1
       img.src = window.URL.createObjectURL(web_worker_output[i])
-      zip_src_to_generated_src_list[relative_url] = img.src
-      var test_deferred = deferred_list[relative_url]
+      img.onload = test_load_count
+      zip_src_to_generated_img_list[relative_url] = img
+      // Deferred SRCs.
+      var test_deferred = deferred_list_src[relative_url]
       if (typeof test_deferred != "undefined") {
        for (var t = 0; t < test_deferred.length; t++) {
         var test_deferred_current = test_deferred[t]
         test_deferred_current[0][test_deferred_current[1]] = img.src
        }
-       delete (deferred_list[relative_url])
+       delete (deferred_list_src[relative_url])
+      }
+      // Deferred IMGs.
+      var test_deferred = deferred_list_img[relative_url]
+      if (typeof test_deferred != "undefined") {
+       for (var t = 0; t < test_deferred.length; t++) {
+        var test_deferred_current = test_deferred[t]
+        test_deferred_current[0][test_deferred_current[1]] = img
+       }
+       delete (deferred_list_img[relative_url])
       }
      }
-     if (typeof init.callback != "undefined") init.callback ()
+     function test_load_count (evt) {
+      load_count -= 1
+      if (load_count == 0) {if (typeof init.callback != "undefined") init.callback ()}
+     }
     }
     
     // Start the web worker.
@@ -1431,16 +1449,29 @@ if (typeof JSZip != "undefined") {
    }
   }
   this.get_src = function (zip_src) {
-   return ((typeof zip_src_to_generated_src_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_src_list [zip_src])
+   return ((typeof zip_src_to_generated_img_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_img_list[zip_src].src)
+  }
+  this.get_img = function (zip_src) {
+   return ((typeof zip_src_to_generated_img_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_img_list[zip_src])
   }
   this.get_src_deferred = function (zip_src, obj, prop) {
    if (zip_src.trim() == '') return ''
-   if (typeof zip_src_to_generated_src_list[zip_src] == "undefined") {
-    if (typeof deferred_list[zip_src] == "undefined") deferred_list[zip_src] = []
-    deferred_list[zip_src].push ([obj, prop])
+   if (typeof zip_src_to_generated_img_list[zip_src] == "undefined") {
+    if (typeof deferred_list_src[zip_src] == "undefined") deferred_list_src[zip_src] = []
+    deferred_list_src[zip_src].push ([obj, prop])
     return zip_src
    } else {
-    return zip_src_to_generated_src_list [zip_src]
+    return zip_src_to_generated_img_list[zip_src].src
+   }
+  }
+  this.get_img_deferred = function (zip_src, obj, prop) {
+   if (zip_src.trim() == '') return ''
+   if (typeof zip_src_to_generated_img_list[zip_src] == "undefined") {
+    if (typeof deferred_list_img[zip_src] == "undefined") deferred_list_img[zip_src] = []
+    deferred_list_img[zip_src].push ([obj, prop])
+    return zip_src
+   } else {
+    return zip_src_to_generated_img_list[zip_img]
    }
   }
  }
@@ -1482,7 +1513,7 @@ if (typeof JSZip != "undefined") {
   }
  }
  
- var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam_list, async, callback) {
+ var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam_list, async, request_method, callback) {
   if (typeof errorfunc == "undefined") errorfunc = function () {}
   async = (typeof async != "undefined") ? async : true
   if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
@@ -1491,7 +1522,7 @@ if (typeof JSZip != "undefined") {
    if (typeof responsedatavar != "object") return false
    for (var x = 0; x < sizex; x++) {responsedatavar[x] = []}
   }
-  var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, 'GET')
+  var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
   var http_request        = make_request_result["http_request"]
  
   if (async == false) return process_http_request ()
@@ -1532,7 +1563,6 @@ function getDBData_binary (init, finishfunc) {
 // Use XMLHttpRequest to request table data.
 function getDBData (input_tablename, columnlist, successfunc, input_where, input_values, send_data_as_binary_func_param, successparam, extra_params, async, request_method, finishfunc) {
  var async = (typeof async != "undefined") ? async : true
- if (typeof request_method == "undefined") request_method = "POST"
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  if (typeof errorfunc   != "undefined") {if (errorfunc   == null)   errorfunc = undefined}
  
@@ -1566,7 +1596,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) + orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
  console.log (requeststring)
  // Set up the temp string and call the request function.
- var make_request_result = make_request ("dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, request_method)
+ var make_request_result = make_request ("dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) {return process_http_request ()}
@@ -1838,7 +1868,7 @@ function makeTipObjArray (tipid, init, cssLines) {
  myheader.appendChild(temp)
  var temp = document.createElement('div')
  temp.id = tipobjname_new+'Layer'; temp.innerHTML = '&nbsp;'
- setStyle(temp, 'position: absolute; z-index: 10000; visibility: hidden; left: 0px; top: 0px; display:block')
+ setStyle (temp, 'position: absolute; z-index: 10000; visibility: hidden; left: 0px; top: 0px; display:block')
  document.body.appendChild(temp)
  var current_tip = mytips[tipid]
  current_tip.hideDelay = init.hideDelay
@@ -1883,7 +1913,7 @@ function addtip (that, tiptype, inline) {
 }
 
 function button (init) {
- var main               = this
+ var button_div         = document.createElement ('div')
  var parent             = init['parent']
  var className          = init['className']
  var style              = init['style']
@@ -1892,40 +1922,35 @@ function button (init) {
  var mouseover_function = init['mouseover function']
  var mouseout_function  = init['mouseout function']
 
- main.mousedown = function (evt) {
+ button_div.mousedown = function (evt) {
   if (getRightClick(evt)) return
   clicked_function (evt)
  }
 
- main.mouseover = function (evt) {
+ button_div.mouseover = function (evt) {
   mouseover_function (evt)
  }
 
- main.mouseout = function (evt) {
+ button_div.mouseout = function (evt) {
   mouseout_function (evt)
  }
 
- main.destroy = function () {
-  removeEvent (main.mainobj, 'mousedown', main.mousedown)
-  if (typeof mouseover_function != 'undefined') removeEvent (main.mainobj, 'mouseover', main.mouseover)
-  if (typeof mouseout_function  != 'undefined') removeEvent (main.mainobj, 'mouseout', main.mouseout)
+ button_div.destroy = function () {
+  removeEvent (button_div, 'mousedown', button_div.mousedown)
+  if (typeof mouseover_function != 'undefined') removeEvent (button_div, 'mouseover', button_div.mouseover)
+  if (typeof mouseout_function  != 'undefined') removeEvent (button_div, 'mouseout', button_div.mouseout)
  }
+ 
+ button_div.innerHTML = text
+ if (typeof className != "undefined")  button_div.className = className
+ if (typeof style != "undefined") setStyle (button_div, style)
+ parent.appendChild (button_div)
 
- main.mainobj = document.createElement ('div')
- main.mainobj.innerHTML = text
- if (typeof className != "undefined")  main.mainobj.className = className
- if (typeof style != "undefined") setStyle (main.mainobj, style)
- parent.appendChild (main.mainobj)
-
- addEvent (main.mainobj, 'mousedown', main.mousedown)
- if (typeof mouseover_function != 'undefined') addEvent (main.mainobj, 'mouseover', main.mouseover)
- if (typeof mouseout_function  != 'undefined') addEvent (main.mainobj, 'mouseout', main.mouseout)
-
- // Add all "main.mainobj" properties to "main".
- for (var i in main.mainobj) {
-  main[i] = main.mainobj[i]
- }
- return
+ addEvent (button_div, 'mousedown', button_div.mousedown)
+ if (typeof mouseover_function != 'undefined') addEvent (button_div, 'mouseover', button_div.mouseover)
+ if (typeof mouseout_function  != 'undefined') addEvent (button_div, 'mouseout', button_div.mouseout)
+ 
+ return button_div
 }
 
 function gui_close_button (init) {
@@ -2010,7 +2035,7 @@ function sliderbar (init) {
  }
  
  main.sliderbar_background = document.createElement('div'); parent.appendChild(main.sliderbar_background)
- setStyle(main.sliderbar_background, style_background)
+ setStyle (main.sliderbar_background, style_background)
  
  var zoom_level = getInheritedTransform(main.sliderbar_background, {transform_type:"scale", xy:"x"})
  
@@ -2020,18 +2045,18 @@ function sliderbar (init) {
  main.slider_position             = (starting_point_value * main.slider_position_upper_limit) / point_upper_limit
  
  main.sliderbar_foreground = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_foreground)
- setStyle(main.sliderbar_foreground, style_foreground)
+ setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
   main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
-  setStyle(main.sliderbar_background_beyond_max, style_background_beyond_max)
+  setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
  }
  
  if (typeof style_pivot_slice != 'undefined') {
   main.sliderbar_pivot_slice = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_pivot_slice)
-  setStyle(main.sliderbar_pivot_slice, style_pivot_slice)
+  setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
   
   main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit))
   main.slider_pivot_end    = parseFloat(main.slider_position)
@@ -2045,7 +2070,7 @@ function sliderbar (init) {
  }
  
  var sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild(sliderbar_control)
- setStyle(sliderbar_control, style_control)
+ setStyle (sliderbar_control, style_control)
  sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'
  if (textbox_enabled == true) textbox_update_value ()
  
@@ -2251,7 +2276,7 @@ function sliderbar_v2 (init) {
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
   main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
-  setStyle(main.sliderbar_background_beyond_max, style_background_beyond_max)
+  setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (preliminary_position_max - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
  }
@@ -2394,10 +2419,10 @@ function red_blue_arrow (init) {
  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
- main.mainobj.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle(main.mainobj.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
- main.mainobj.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle(main.mainobj.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
- main.mainobj.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle(main.mainobj.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
- setStyle(main.mainobj, style)
+ main.mainobj.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.mainobj.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
+ main.mainobj.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.mainobj.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
+ main.mainobj.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.mainobj.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
+ setStyle (main.mainobj, style)
  main.mainobj.style.display = "inline-block"
  main.mainobj.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
  main.mainobj.style.height = main.thickness + 'px'
@@ -2418,7 +2443,7 @@ function loadingbarObject (init) {
  setStyle (loadingbar.loadingouterbar, 'position:absolute; left:0; top:0; height:100%; width:100%; background-color:#8F0000')
  setStyle (loadingbar.loadinginnerbar, 'position:absolute; left:0; top:0; height:100%; width:0%; background-color:#FFFFFF')
  loadingbar.loadingbartext1 = document.createElement('div')
- setStyle(loadingbar.loadingbartext1, 'position:absolute; left:0; top:0; margin:.125em; width:100%; text-align:center; color:#C0C0C0; font-size:1.5em; font-family:arial; display:block')
+ setStyle (loadingbar.loadingbartext1, 'position:absolute; left:0; top:0; margin:.125em; width:100%; text-align:center; color:#C0C0C0; font-size:1.5em; font-family:arial; display:block')
  loadingbar.appendChild (loadingbar.loadingouterbar)
  loadingbar.appendChild (loadingbar.loadinginnerbar)
  loadingbar.appendChild (loadingbar.loadingbartext1)
