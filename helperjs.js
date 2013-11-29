@@ -44,17 +44,12 @@
 // function setCaretPosition
 //
 // Potentially case non-compliant functions and variables:
-// function sortLinkedArrays
-// function getArrayIndices
-// function addArrayIgnoreDuplicates
-// function ArrayFill
 // function bitClear
 // function bitSet
 // function bitToggle
 // function bitIsSet
 // function countBits
 // function isEmpty
-// function String.prototype.indexOfMultiSingle (remove?)
 // function queueDBDataAdd
 // function queueDBDataAddMultiAccumulate
 // function queueDBDataAddMultiRun
@@ -83,12 +78,35 @@ if (typeof console.log == "undefined") console.log = function () {}
 
 // <DOM object prototypes. TAG: DOM, TAG: DOM objects, TAG: prototypes.>
 // Others: adoptChildren, stealChildren, window.childServices. Props to averyvery on the last one!
-HTMLDivElement.prototype.appendChildrenOf = function (source) {
+HTMLElement.prototype.appendChildrenOf = function (source) {
  while (source.firstChild) {this.appendChild (source.firstChild)}
  return this
 }
-// </DOM object prototypes.>
 
+HTMLElement.prototype.setPositionOnLeft = function () {
+ var marginLeft_stored = parseFloat(window.getComputedStyle(this)['marginLeft'])
+ var width_stored      = getClientWidthFull (this)
+ this.style.marginLeft = -width_stored + 'px'
+ this.style.left       = (width_stored - marginLeft_stored) + 'px'
+}
+
+HTMLElement.prototype.setPositionOnRight = function () {
+ var marginRight_stored = parseFloat(window.getComputedStyle(this)['marginRight'])
+ var width_stored       = getClientWidthFull (this)
+ this.style.marginRight = -width_stored + 'px'
+ this.style.right       = (width_stored + marginRight_stored) + 'px'
+ return this
+}
+
+HTMLElement.prototype.setPositionOnCenter = function () {
+ //var marginRight_stored = parseFloat(window.getComputedStyle(this)['marginRight'])
+ //var marginLeft_stored  = parseFloat(window.getComputedStyle(this)['marginLeft'])
+ //var width_stored       = getClientWidthFull (this)
+ //this.style.marginRight = -width_stored + 'px'
+ //this.style.right       = (width_stored - marginRight_stored) + 'px'
+ this.style.left = (getClientWidthFull(this.parentNode) - getClientWidthFull(this)) / 2 + 'px'
+ return this
+}
 
 // <Event and interval handler/wrapper functions. TAG: event listener, TAG: event, TAG: setInterval, TAG: setTimeout.>
 if (typeof addEvent != 'function') {
@@ -299,7 +317,7 @@ function case_insensitive_sort (a, b) {return alpha_sort_inner_function (a, b)}
 
 // Sorts "linked arrays", or "array pairs".
 // Sample sort function is: function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
-function sortLinkedArrays (input_array, linked_array, sort_function) {
+function sort_linked_arrays (input_array, linked_array, sort_function) {
  if (typeof sort_function == "undefined") {
   if (input_array.length == 0) return
   var starts = [0]
@@ -335,7 +353,9 @@ function sortLinkedArrays (input_array, linked_array, sort_function) {
  }
 }
 
-function getArrayIndices (input_array) {
+// Get the resultant indices of an array as if it was sorted.
+Array.prototype.getSortedIndices = function (sort_function) {
+ var input_array = this
  if (typeof sort_function == "undefined") var sort_function = function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
  var curlen = input_array.length
  var input_array_obj = new Array(curlen)
@@ -353,25 +373,18 @@ function getArrayIndices (input_array) {
 
 
 // <Array manipulation functions. TAG: array, TAG: arrays, TAG: array manipulation.>
-function addArrayIgnoreDuplicates (init) {
- var source = init["source"]
- var target = init["target"]
- var current_entry = null
- var target_found  = null
- var source_length = source.length
- var target_length = target.length
- for (var i = 0; i < source_length; i++) {
-  current_entry = source[i]
-  target_found = false
-  for (var j = 0; j < target_length; j++) {
-   if (target[j] != current_entry) continue
-   if (target[j] == current_entry) {target_found = true; break}
-  }
+Array.prototype.combineWith (secondary) {
+ var primary = this, primary_length = primary.length
+ for (var i = 0, secondary_length = secondary.length; i < secondary_length; i++) {
+  var current_entry = secondary[i]
+  var target_found = false
+  for (var j = 0; j < primary_length; j++) {if (primary[j] === current_entry) {target_found = true; break}}
   if (target_found != true) {
-   target.push (current_entry)
-   target_length += 1
+   primary.push (current_entry)
+   primary_length += 1
   }
  }
+ return primary
 }
 
 Array.prototype.sendToFront = function (obj) {
@@ -584,33 +597,65 @@ function replace_property (init) {
  }
 }
 
-function grid_create (target, xsize, ysize, constructor) {
+// Populate an array, with (by default) a set of sub-arrays, without (by default) setting values in each sub-array.
+function grid_create (target, xsize, ysize, constructor_inner, constructor_outer) {
  var x = 0, y = 0
- if (typeof constructor != "undefined") {for (x = 0; x < xsize; x++) {target[x] = new Array()}; return}
- for (x = 0; x < xsize; x++) {
-  target[x] = new Array()
-  for (y = 0; y < ysize; y++) {
-   target[x][y] = constructor
+ if (typeof constructor_outer != "undefined") {
+  if (typeof constructor_inner != "undefined") {
+   for (x = 0; x < xsize; x++) {eval ('target[x]=' + constructor_outer); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
+  } else {
+   for (x = 0; x < xsize; x++) {eval ('target[x]=' + constructor_outer)}
+  }
+ } else {
+  if (typeof constructor_inner != "undefined") {
+   for (x = 0; x < xsize; x++) {target[x] = new Array(); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
+  } else {
+   for (x = 0; x < xsize; x++) {target[x] = new Array ()}
   }
  }
+ return target
 }
-function grid_clone (source, target, xsize, ysize) {
- var x = 0, y = 0
- for (x = 0; x < xsize; x++) {
-  target[x] = new Array()
-  for (y = 0; y < ysize; y++) {
-   target[x][y] = source[x][y]
+// Clone an array in the first and second level. (the sub-arrays and their values)
+function grid_clone (source, target, constructor_outer, constructor_initial) {
+ if (typeof target == "undefined") {
+  if (typeof constructor_initial == "undefined") {
+   if (source.constructor == Array) {var target = new Array(source.length)} else {var target = new source.constructor}
+  } else {
+   eval ('var target=' + constructor_initial)
   }
  }
+ if (source.constructor == Array) {
+  var xsize = source.length
+  var s0 = source[0]
+  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof Float32Array) || (s0 instanceof Float64Array)) {
+   for (var x = 0; x < xsize; x++) {
+    target[x] = new source[x].constructor (source[x].buffer, source[x].byteOffset)
+   }
+  }
+  return target
+ }
+ var ysize = source[0].length
+ for (var x = 0; x < xsize; x++) {
+  if (typeof constructor_outer == "undefined") {target[x] = new source[0].constructor} else {eval ('target[x]=' + constructor_outer)}
+  for (var y = 0; y < ysize; y++) {target[x][y] = source[x][y]}
+ }
+ return target
 }
-// Unlike deepcopy, assumes arrays are already in place on the target and source/target xsize and ysize are the same.
-function grid_copy (source, target, xsize, ysize) {
- var x = 0, y = 0
- for (x = 0; x < xsize; x++) {
-  for (y = 0; y < ysize; y++) {
-   target[x][y] = source[x][y]
+// Unlike clone, assumes arrays are already in place on the target and source/target xsize and ysize are the same.
+function grid_copy (source, target) {
+ if (source.constructor == Array) {
+  var xsize = source.length
+  var s0 = source[0]
+  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof Float32Array) || (s0 instanceof Float64Array)) {
+   for (var x = 0; x < xsize; x++) {
+    target[x] = new source[x].constructor (source[x].buffer, source[x].byteOffset)
+   }
   }
+  return target
  }
+ var ysize = source[0].length
+ for (var x = 0; x < xsize; x++) {for (var y = 0; y < ysize; y++) {target[x][y] = source[x][y]}}
+ return target
 }
 function grid_normalize (curobj, xsize, ysize, oldmax, newmax, toint) {
  var x = 0, y = 0
@@ -628,10 +673,11 @@ function grid_normalize (curobj, xsize, ysize, oldmax, newmax, toint) {
  } else {
   for (x = 0; x < xsize; x++) {
    for (y = 0; y< ysize; y++) {
-    curobj[x][y] = parseInt(curobj[x][y] / oldmax * newmax * 100) / 100
+    curobj[x][y] = parseInt(curobj[x][y] / oldmax * newmax)
    }
   }
  }
+ return curobj
 }
 function grid_clear (target, xsize, ysize) {
  var x = 0, y = 0
@@ -640,6 +686,7 @@ function grid_clear (target, xsize, ysize) {
    delete (target[x][y])
   }
  }
+ return target
 }
 function grid_set (target, xsize, ysize, value) {
  var x = 0, y = 0
@@ -648,6 +695,7 @@ function grid_set (target, xsize, ysize, value) {
    target[x][y] = value
   }
  }
+ return target
 }
 
 
@@ -921,12 +969,12 @@ Date.prototype.format = function (mask, utc) {return dateFormat(this, mask, utc)
 
 // <String manipulation functions. TAG: string, string manipulation.>
 String.prototype.repeat = function (num) {return new Array(num + 1).join(this)}
-// Remove this?
-String.prototype.indexOfMultiSingle = function (searchstring, startpos) {
+// Check if any character in the search string is in any character in the target string. Otherwise, return false.
+String.prototype.indexOfMultiChar = function (searchstring, startpos) {
  if (typeof startpos == "undefined") startpos = 0
  var curlen = this.length
  for (var i = startpos; i < curlen; i++) {if (searchstring.indexOf (this[i]) != -1) return i}
- return -1
+ return false
 }
 // 16 bit. (2 bytes)
 String.prototype.cushort = function () {return ( ((this.charCodeAt(1)&0xff)<<8) + (this.charCodeAt(0)&0xff) )}
@@ -1334,12 +1382,12 @@ function getTextData (filename, successfunc, errorfunc, successparam, send_data_
 
 
 // Use XMLHttpRequest to get a 32-bit integer 2D array from a static file.
-function getDBData_2Dintarray (responsedatavar, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam, async, request_method, finishfunc) {
+function getDBData_2Dintarray (responsedatavar, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam, async, request_method, finishfunc) {
  async = (typeof async != "undefined") ? async : true
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  if (typeof responsedatavar != "object") return false
  
- for (var x = 0; x < sizex; x++) {responsedatavar[x] = []}
+ for (var x = 0; x < xsize; x++) {responsedatavar[x] = []}
  var make_request_result = make_request (filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
 
@@ -1350,10 +1398,10 @@ function getDBData_2Dintarray (responsedatavar, bytesize, filename, sizex, sizey
   var response_value = http_request.responseText
   var i = 0, len = response_value.length, x = 0, y = 0
   switch (bytesize) {
-   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); x++; if (x==sizey) {x=0; y+=1}} break
-   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); x++; if (x==sizey) {x=0; y+=1}} break
-   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (x==sizey) {x=0; y+=1}} break
-   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (x == sizey) {x=0; y+=1}} break
+   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); x++; if (x==ysize) {x=0; y+=1}} break
+   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
+   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
+   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (x == ysize) {x=0; y+=1}} break
   }
   if (typeof successparam != "undefined") {successfunc (successparam)} else {successfunc ()}
   if (typeof finishfunc != "undefined") finishfunc ()
@@ -1513,14 +1561,13 @@ if (typeof JSZip != "undefined") {
   }
  }
  
- var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, sizex, sizey, successfunc, errorfunc, successparam_list, async, request_method, callback) {
+ var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam_list, async, request_method, callback) {
   if (typeof errorfunc == "undefined") errorfunc = function () {}
   async = (typeof async != "undefined") ? async : true
   if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
   for (var filename_in_loop in responsedatavar_list) {
    var responsedatavar = responsedatavar_list[filename_in_loop]
    if (typeof responsedatavar != "object") return false
-   for (var x = 0; x < sizex; x++) {responsedatavar[x] = []}
   }
   var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
   var http_request        = make_request_result["http_request"]
@@ -1534,14 +1581,15 @@ if (typeof JSZip != "undefined") {
    var zip = new JSZip(response_value_zipped)
    for (var filename_in_loop in zip.files) {
     var buffer = zip.file(filename_in_loop).asArrayBuffer()
-    switch (bytesize) {
-     case 1: var response_value = new Uint8Array (buffer); break
-     case 2: var response_value = new Uint16Array(buffer); break
-     case 4: var response_value = new Uint32Array(buffer); break
-    }
+    var offset = 0
     var responsedatavar = responsedatavar_list[filename_in_loop]
-    var curlen = response_value.length, x = 0, y = 0
-    for (var i = 0; i < curlen; i++)  {responsedatavar[x][y] = response_value[i]; x++; if (x == sizey) {x = 0; y++}}
+    for (var x = 0; x < xsize; x++)  {
+     switch (bytesize) {
+      case 1: responsedatavar[x] = new Uint8Array (buffer, offset); offset += ysize    ; break
+      case 2: responsedatavar[x] = new Uint16Array(buffer, offset); offset += ysize * 2; break
+      case 4: responsedatavar[x] = new Uint32Array(buffer, offset); offset += ysize * 4; break
+     }
+    }
     if (typeof successparam_list[filename_in_loop] != "undefined") {successfunc (successparam_list[filename_in_loop])} else {successfunc ()}
    }
    if (typeof callback != "undefined") callback ()
@@ -2406,26 +2454,26 @@ function sliderbar_v2 (init) {
 
 
 function red_blue_arrow (init) {
- var main        = this
  var parent      = init['parent']
  var style       = init['style']
+ var main        = document.createElement('div'); parent.appendChild(main)
  main.thickness  = parseFloat(init['thickness'])
  main.bar_length = parseFloat(init['bar length'])
  main.tip_length = parseFloat(init['tip length'])
- main.mainobj        = document.createElement('div') ; parent.appendChild(main.mainobj)
- main.mainobj.left   = document.createElement('img') ; main.mainobj.appendChild(main.mainobj.left)
- main.mainobj.middle = document.createElement('img') ; main.mainobj.appendChild(main.mainobj.middle)
- main.mainobj.right  = document.createElement('img') ; main.mainobj.appendChild(main.mainobj.right)
+ main.left   = document.createElement('img') ; main.appendChild(main.left)
+ main.middle = document.createElement('img') ; main.appendChild(main.middle)
+ main.right  = document.createElement('img') ; main.appendChild(main.right)
  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
- main.mainobj.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.mainobj.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
- main.mainobj.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.mainobj.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
- main.mainobj.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.mainobj.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
- setStyle (main.mainobj, style)
- main.mainobj.style.display = "inline-block"
- main.mainobj.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
- main.mainobj.style.height = main.thickness + 'px'
+ main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
+ main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
+ main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
+ setStyle (main, style)
+ main.style.display = "inline-block"
+ main.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
+ main.style.height = main.thickness + 'px'
+ return main
 }
 
 
@@ -3344,18 +3392,19 @@ function image_preload (cursrc, init) {
 
 // Colorize (eg: grayscale if the values are 1/1/1)
 function canvas_colorize (ctx, rpercent, gpercent, bpercent, octx) {
- var pixelavg = 0, x = 0, y = 0, i = 0, curwidth = ctx.width, curheight = ctx.height
- var pixels = ctx.getImageData(0, 0, curwidth, curheight)
- for (x = 0; x < curwidth; x++) {
-  for (y = 0; y < curheight; y++) {
-   pixelavg = (pixels.data[i]+pixels.data[i+1]+pixels.data[i+2])/3
-   pixels.data[i] = pixelavg*rpercent; i++
-   pixels.data[i] = pixelavg*gpercent; i++
-   pixels.data[i] = pixelavg*bpercent; i++
+ var i = 0, curwidth = ctx.width, curheight = ctx.height
+ var pixels = ctx.getImageData (0, 0, curwidth, curheight)
+ var pixels_data = pixels.data
+ for (var x = 0; x < curwidth; x++) {
+  for (var y = 0; y < curheight; y++) {
+   var pixelavg = (pixels_data[i] + pixels_data[i + 1] + pixels_data[i + 2]) / 3
+   pixels_data[i] = parseInt (pixelavg * rpercent); i++
+   pixels_data[i] = parseInt (pixelavg * gpercent); i++
+   pixels_data[i] = parseInt (pixelavg * bpercent); i++
    i++
   }
  }
- octx.putImageData(pixels, 0, 0, 0, 0, curwidth, curheight)
+ octx.putImageData (pixels, 0, 0, 0, 0, curwidth, curheight)
 }
 
 function create_composite_set (init) {
@@ -3802,19 +3851,29 @@ function detect_scrollbar_thickness () {
 
 function detect_event_is_supported (event_name) {
  var TAGNAMES = {
-  'orientationchange' : 'window',
-  'select'            : 'input',
-  'change'            : 'input',
-  'submit'            : 'form',
-  'reset'             : 'form',
-  'error'             : 'img',
-  'load'              : 'img',
-  'abort'             : 'img'
+  'select' : 'input',
+  'change' : 'input',
+  'submit' : 'form',
+  'reset'  : 'form',
+  'error'  : 'img',
+  'load'   : 'img',
+  'abort'  : 'img'
  }
+ if (typeof window['on' + event_name] != "undefined") return true
  var element = document.createElement('div' || TAGNAMES[event_name])
  event_name = 'on' + event_name
  var is_supported = (typeof element[event_name] != "undefined")
  return is_supported
+}
+
+function detect_pixels_per_inch () {
+ var dom_body = document.getElementsByTagName('body')[0]
+ var dom_div  = document.createElement('div')
+ dom_div.style = 'width: 1in; visibility:hidden'
+ dom_body.appendChild (dom_div)
+ var w = document.defaultView.getComputedStyle(dom_div, null).getPropertyValue('width')
+ dom_body.removeChild (dom_div)
+ return parseInt(w)
 }
 // </Feature/property detection functions.>
 
