@@ -44,6 +44,7 @@
 // function setCaretPosition
 //
 // Potentially case non-compliant functions and variables:
+/// shortenText
 // function bitClear
 // function bitSet
 // function bitToggle
