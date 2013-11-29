@@ -44,7 +44,7 @@
 // function setCaretPosition
 //
 // Potentially case non-compliant functions and variables:
-/// shortenText
+// shortenText
 // function bitClear
 // function bitSet
 // function bitToggle
@@ -374,7 +374,7 @@ Array.prototype.getSortedIndices = function (sort_function) {
 
 
 // <Array manipulation functions. TAG: array, TAG: arrays, TAG: array manipulation.>
-Array.prototype.combineWith (secondary) {
+Array.prototype.combineWith = function (secondary) {
  var primary = this, primary_length = primary.length
  for (var i = 0, secondary_length = secondary.length; i < secondary_length; i++) {
   var current_entry = secondary[i]
