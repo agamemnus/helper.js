@@ -286,9 +286,7 @@ function add_swipe_controls (init) {
    if (typeof init.start_effect != "undefined") init.start_effect (evt)
   }
   function swipe_event (evt) {
-   if ((evt.touches.length != 1) || ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === 
-
-false))) {swipe_end (evt); return}
+   if ((evt.touches.length != 1) || ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false))) {swipe_end (evt); return}
    var xy = getXY_zoom(evt.touches[0], target_obj); current_x = xy[0]; current_y = xy[1]
   }
   function swipe_end_event (evt) {
@@ -365,9 +363,7 @@ function sort_linked_arrays (input_array, linked_array, sort_function) {
 // Get the resultant indices of an array as if it was sorted.
 Array.prototype.getSortedIndices = function (sort_function) {
  var input_array = this
- if (typeof sort_function == "undefined") var sort_function = function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b
-
-[0])}
+ if (typeof sort_function == "undefined") var sort_function = function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
  var curlen = input_array.length
  var input_array_obj = new Array(curlen)
  for (var i = 0; i < curlen; i++) {
@@ -474,9 +470,7 @@ Array.prototype.fill = function (size, fill_value) {
 Array.fill = Array.prototype.fill
 
 function search_array_of_objects (init) {
- var text_list        = init.text; if ((typeof text_list == "undefined") || (!(text_list instanceof Array) && (text_list.trim() 
-
-== ""))) return init.array
+ var text_list        = init.text; if ((typeof text_list == "undefined") || (!(text_list instanceof Array) && (text_list.trim() == ""))) return init.array
  if (!(text_list instanceof Array)) text_list = [text_list]
  var input_array      = init.array
  var attribute_list   = init.attribute
@@ -504,9 +498,7 @@ function search_array_of_objects (init) {
 // </Array manipulation functions.>
 
 
-// <Generic logic functions. TAG: logic, TAG: logic functions, TAG: bits, TAG: bit manipulation, TAG: data, TAG: data 
-
-manipulation.>
+// <Generic logic functions. TAG: logic, TAG: logic functions, TAG: bits, TAG: bit manipulation, TAG: data, TAG: data manipulation.>
 
 // Converts a 0 or 1 (or a string version of it) to a true/false value. Returns true if '1' or 1; otherwise, returns false.
 function numeric_to_truthy (value) {if (+value != 0) {return true} else {return false}}
@@ -528,12 +520,8 @@ function countBits (n) {
 }
 
 function objects_are_equal (a, b) {
- function generalType (o) {var t = typeof(o); if (t != 'object') return t; if (o instanceof String) return 'string'; if (o 
-
-instanceof Number) return 'number'; return t}
- function uniqueArray (a) {if (!(a instanceof Array)) return; a.sort (); for (var i = 1; i < a.length; i++) {if (a[i - 1] == a
-
-[i]) a.splice(i, 1)}}
+ function generalType (o) {var t = typeof(o); if (t != 'object') return t; if (o instanceof String) return 'string'; if (o instanceof Number) return 'number'; return t}
+ function uniqueArray (a) {if (!(a instanceof Array)) return; a.sort (); for (var i = 1; i < a.length; i++) {if (a[i - 1] == a[i]) a.splice(i, 1)}}
  function keys (map) {var list = []; for (var prop in map) {if (map.hasOwnProperty(prop)) list.push(prop)}; return list}
  if (a === b) return true
  if (generalType(a) != generalType(b)) return false
@@ -621,17 +609,13 @@ function grid_create (target, xsize, ysize, constructor_inner, constructor_outer
  var x = 0, y = 0
  if (typeof constructor_outer != "undefined") {
   if (typeof constructor_inner != "undefined") {
-   for (x = 0; x < xsize; x++) {eval ('target[x]=' + constructor_outer); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + 
-
-constructor_inner)}}
+   for (x = 0; x < xsize; x++) {eval ('target[x]=' + constructor_outer); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
   } else {
    for (x = 0; x < xsize; x++) {eval ('target[x]=' + constructor_outer)}
   }
  } else {
   if (typeof constructor_inner != "undefined") {
-   for (x = 0; x < xsize; x++) {target[x] = new Array(); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + 
-
-constructor_inner)}}
+   for (x = 0; x < xsize; x++) {target[x] = new Array(); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
   } else {
    for (x = 0; x < xsize; x++) {target[x] = new Array ()}
   }
@@ -650,11 +634,7 @@ function grid_clone (source, target, constructor_outer, constructor_initial) {
  if (source.constructor == Array) {
   var xsize = source.length
   var s0 = source[0]
-  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof 
-
-Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof 
-
-Float32Array) || (s0 instanceof Float64Array)) {
+  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof Float32Array) || (s0 instanceof Float64Array)) {
    for (var x = 0; x < xsize; x++) {
     target[x] = new source[x].constructor (source[x].buffer, source[x].byteOffset)
    }
@@ -663,9 +643,7 @@ Float32Array) || (s0 instanceof Float64Array)) {
  }
  var ysize = source[0].length
  for (var x = 0; x < xsize; x++) {
-  if (typeof constructor_outer == "undefined") {target[x] = new source[0].constructor} else {eval ('target[x]=' + 
-
-constructor_outer)}
+  if (typeof constructor_outer == "undefined") {target[x] = new source[0].constructor} else {eval ('target[x]=' + constructor_outer)}
   for (var y = 0; y < ysize; y++) {target[x][y] = source[x][y]}
  }
  return target
@@ -675,11 +653,7 @@ function grid_copy (source, target) {
  if (source.constructor == Array) {
   var xsize = source.length
   var s0 = source[0]
-  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof 
-
-Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof 
-
-Float32Array) || (s0 instanceof Float64Array)) {
+  if ((s0 instanceof Int8Array) || (s0 instanceof Uint8Array) || (s0 instanceof Uint8ClampedArray) || (s0 instanceof Int16Array) || (s0 instanceof Uint16Array) || (s0 instanceof Int32Array) || (s0 instanceof Uint32Array) || (s0 instanceof Float32Array) || (s0 instanceof Float64Array)) {
    for (var x = 0; x < xsize; x++) {
     target[x] = new source[x].constructor (source[x].buffer, source[x].byteOffset)
    }
@@ -835,9 +809,7 @@ function get_rotated_size (width, height, degrees) {
 
 
 // <Date manipulation functions. TAG: date.>
-var monthName      = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", 
-
-"November", "December"]
+var monthName      = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 var shortMonthName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 Date.prototype.getUTCTime = function() {return this.getTime() - -this.getTimezoneOffset()*60000}
 Date.prototype.getMonthName = function() {return monthName[this.getMonth()]}
@@ -860,9 +832,7 @@ function get_mysql_format_from_date (unix_timestamp) {
  var current_hour   = date.getUTCHours()    ; if (current_hour   < 10) current_hour   = "0" + current_hour
  var current_minute = date.getUTCMinutes()  ; if (current_minute < 10) current_minute = "0" + current_minute
  var current_second = date.getUTCSeconds()  ; if (current_second < 10) current_second = "0" + current_second
- return date.getUTCFullYear() + "-" + current_month + "-" + current_day + " " + current_hour + ":" + current_minute + ":" + 
-
-current_second
+ return date.getUTCFullYear() + "-" + current_month + "-" + current_day + " " + current_hour + ":" + current_minute + ":" + current_second
 }
 
 // Mysql date (just date, no time) <-> unix timestamp conversion functions.
@@ -894,9 +864,7 @@ function unix_timestamp_from_mysql_date (mysql_date) {
 
 var dateFormat = function () {
  var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g,
-  timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|
-
-UTC)(?:[-+]\d{4})?)\b/g,
+  timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g,
   timezoneClip = /[^-+\dA-Z]/g,
   pad = function (val, len) {
    val = String(val)
@@ -1018,9 +986,7 @@ String.prototype.indexOfMultiChar = function (searchstring, startpos) {
 // 16 bit. (2 bytes)
 String.prototype.cushort = function () {return ( ((this.charCodeAt(1)&0xff)<<8) + (this.charCodeAt(0)&0xff) )}
 // 32-bit. (4 bytes)
-String.prototype.cuint = function () {return ((this.charCodeAt(3)&0xff)<<24) + ((this.charCodeAt(2)&0xff)<<16) + 
-
-((this.charCodeAt(1)&0xff)<<8) + (this.charCodeAt(0)&0xff)}
+String.prototype.cuint = function () {return ((this.charCodeAt(3)&0xff)<<24) + ((this.charCodeAt(2)&0xff)<<16) + ((this.charCodeAt(1)&0xff)<<8) + (this.charCodeAt(0)&0xff)}
 String.prototype.l2br = function () {return this.replace(/(\r\n|\n\r|\r|\n)/g, "<br/>")}
 String.prototype.trim = function () {return this.replace(/^\s+|\s+$/g,"")}
 String.prototype.ltrim = function () {return this.replace(/^\s+/,"")}
@@ -1099,9 +1065,7 @@ function (curstring) {
 // </String manipulation functions.>
 
 
-// <Mouse/DOM object position functions. TAG: mouse, TAG: mouse position, TAG: positions, TAG: object positions, TAG: element 
-
-positions.>
+// <Mouse/DOM object position functions. TAG: mouse, TAG: mouse position, TAG: positions, TAG: object positions, TAG: element positions.>
 
 // Does not account for CSS transforms.
 function getXY (evt, target) {
@@ -1383,9 +1347,7 @@ function setDBData (input_tablename, params, successfunc, errorfunc, successpara
  var http_request        = make_request_result["http_request"]
  
  if (async == false) return process_http_request ()
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+ http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
  function process_http_request () {
   if (http_request.responseText.substr(0, 5) == 'Error') {
@@ -1416,9 +1378,7 @@ function getTextData (filename, successfunc, errorfunc, successparam, send_data_
  var http_request        = make_request_result["http_request"]
  
  if (async == false) return process_http_request ()
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+ http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
  function process_http_request () {
   var response_value = http_request.responseText
@@ -1429,42 +1389,26 @@ process_http_request ()}
 
 
 // Use XMLHttpRequest to get a 32-bit integer 2D array from a static file.
-function getDBData_2Dintarray (responsedatavar, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam, async, 
-
-request_method, finishfunc) {
+function getDBData_2Dintarray (responsedatavar, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam, async, request_method, finishfunc) {
  async = (typeof async != "undefined") ? async : true
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  if (typeof responsedatavar != "object") return false
  
  for (var x = 0; x < xsize; x++) {responsedatavar[x] = []}
- var make_request_result = make_request (filename, "", undefined, undefined, async, undefined, undefined, (typeof 
-
-request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request (filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
 
  if (async == false) return process_http_request ()
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+ http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
  function process_http_request () {
   var response_value = http_request.responseText
   var i = 0, len = response_value.length, x = 0, y = 0
   switch (bytesize) {
-   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); x++; if (x==ysize) {x=0; y+=1}} 
-
-break
-   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       
-
-+(response_value.charCodeAt(i+1)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
-   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      
-
-+((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
-   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)
-
->>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)
-
-&0xff); x++; if (x == ysize) {x=0; y+=1}} break
+   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); x++; if (x==ysize) {x=0; y+=1}} break
+   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
+   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
+   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (x == ysize) {x=0; y+=1}} break
   }
   if (typeof successparam != "undefined") {successfunc (successparam)} else {successfunc ()}
   if (typeof finishfunc != "undefined") finishfunc ()
@@ -1560,9 +1504,7 @@ if (typeof JSZip != "undefined") {
    }
   }
   this.get_src = function (zip_src) {
-   return ((typeof zip_src_to_generated_img_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_img_list
-
-[zip_src].src)
+   return ((typeof zip_src_to_generated_img_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_img_list[zip_src].src)
   }
   this.get_img = function (zip_src) {
    return ((typeof zip_src_to_generated_img_list[zip_src] == "undefined") ? zip_src : zip_src_to_generated_img_list[zip_src])
@@ -1599,9 +1541,7 @@ if (typeof JSZip != "undefined") {
   var http_request        = make_request_result["http_request"]
   
   if (async == false) return process_http_request ()
-  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
   
   function process_http_request () {
    var URL = window.URL | window.webkitURL
@@ -1609,9 +1549,7 @@ process_http_request ()}
     var response = evt.data
     window = {}
     importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip.js')
-    importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-deflate.js', 
-
-'http://capitalopoly.com/js/plugins/jszip/jszip-inflate.js')
+    importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-deflate.js', 'http://capitalopoly.com/js/plugins/jszip/jszip-inflate.js')
     importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-load.js')
     var zip = new JSZip (response)
     var buffer_list = {}
@@ -1630,9 +1568,7 @@ process_http_request ()}
   }
  }
  
- var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, xsize, ysize, successfunc, errorfunc, 
-
-successparam_list, async, request_method, callback) {
+ var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam_list, async, request_method, callback) {
   if (typeof errorfunc == "undefined") errorfunc = function () {}
   async = (typeof async != "undefined") ? async : true
   if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
@@ -1640,15 +1576,11 @@ successparam_list, async, request_method, callback) {
    var responsedatavar = responsedatavar_list[filename_in_loop]
    if (typeof responsedatavar != "object") return false
   }
-  var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, (typeof 
-
-request_method == "undefined") ? 'POST' : request_method)
+  var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
   var http_request        = make_request_result["http_request"]
  
   if (async == false) return process_http_request ()
-  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
   
   function process_http_request () {
    var response_value_zipped = http_request.responseText
@@ -1665,9 +1597,7 @@ process_http_request ()}
       case 4: responsedatavar[x] = new Uint32Array(buffer, offset); offset += ysize * 4; break
      }
     }
-    if (typeof successparam_list[filename_in_loop] != "undefined") {successfunc (successparam_list[filename_in_loop])} else 
-
-{successfunc ()}
+    if (typeof successparam_list[filename_in_loop] != "undefined") {successfunc (successparam_list[filename_in_loop])} else {successfunc ()}
    }
    if (typeof callback != "undefined") callback ()
   }
@@ -1676,23 +1606,17 @@ process_http_request ()}
 
 // Use XMLHttpRequest to request for table data in JSON form.
 function getDBData_json (init, finishfunc) {
- getDBData (init['table'], init['column list'], init['success'], init['where params'], init['where values'], false, init
-
-['success value'], init['extra params'], init['async'], init['request method'], finishfunc)
+ getDBData (init['table'], init['column list'], init['success'], init['where params'], init['where values'], false, init['success value'], init['extra params'], init['async'], init['request method'], finishfunc)
 }
 
 // Use XMLHttpRequest to request for table data in binary form.
 function getDBData_binary (init, finishfunc) {
- getDBData (init['table'], init['column list'], init['success'], init['where params'], init['where values'], true, init
-
-['success value'], init['extra params'], init['async'], init['request method'], finishfunc)
+ getDBData (init['table'], init['column list'], init['success'], init['where params'], init['where values'], true, init['success value'], init['extra params'], init['async'], init['request method'], finishfunc)
 }
 
 
 // Use XMLHttpRequest to request table data.
-function getDBData (input_tablename, columnlist, successfunc, input_where, input_values, send_data_as_binary_func_param, 
-
-successparam, extra_params, async, request_method, finishfunc) {
+function getDBData (input_tablename, columnlist, successfunc, input_where, input_values, send_data_as_binary_func_param, successparam, extra_params, async, request_method, finishfunc) {
  var async = (typeof async != "undefined") ? async : true
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  if (typeof errorfunc   != "undefined") {if (errorfunc   == null)   errorfunc = undefined}
@@ -1702,9 +1626,7 @@ successparam, extra_params, async, request_method, finishfunc) {
  if (typeof input_values != "undefined") {
   if (input_values) {
    if (!(input_values instanceof Array)) input_values = [input_values] // Make input_values an array if it isn't.
-   input_where_and_values = '&input_where=' + input_where.toString() + '&input_values=' + encodeURIComponent(JSON.stringify
-
-(input_values))
+   input_where_and_values = '&input_where=' + input_where.toString() + '&input_values=' + encodeURIComponent(JSON.stringify(input_values))
   }
  }
  
@@ -1726,20 +1648,14 @@ successparam, extra_params, async, request_method, finishfunc) {
   var send_data_as_binary = false; var send_data_as_binary_string = ""
  }
  
- var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) 
-
-+ orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
+ var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) + orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
  console.log (requeststring)
  // Set up the temp string and call the request function.
- var make_request_result = make_request ("dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, 
-
-undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request ("dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) {return process_http_request ()}
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) 
-
-process_http_request ()}
+ http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
  function process_http_request () {
   if (http_request.responseText.substr(0, 5) == 'Error') {messagebox.send_message (http_request.responseText); return}
@@ -1767,9 +1683,7 @@ process_http_request ()}
   // Get the data if it is sent back as binary. Note: the byte array response type can't handle signed values!
   var tempdata = http_request.responseText
   var header_version = tempdata.charCodeAt(0)
-  if (header_version != 0) {messagebox.send_message ('Unable to cope with this response text header version. ('+tempdata.slice
-
-(0,30)+') (' + requeststring+', '+header_version+')'); return}
+  if (header_version != 0) {messagebox.send_message ('Unable to cope with this response text header version. ('+tempdata.slice(0,30)+') (' + requeststring+', '+header_version+')'); return}
   var column_amount = tempdata.charCodeAt(1)
   var len = column_amount*9+2
   var targetarray = new Array ()
@@ -1777,12 +1691,8 @@ process_http_request ()}
   for (i = 2; i < len; i += 9) {
    var cursubarray_bytetype    = tempdata.charCodeAt(i) + 1
    var cursubarray_indexlength = ((tempdata.charCodeAt(i+1)&0xff)<<8)+(tempdata.charCodeAt(i+2)&0xff)
-   var cursubarray_startread   = ((tempdata.charCodeAt(i+3)&0xff)<<16)+((tempdata.charCodeAt(i+4)&0xff)
-
-<<8)+(tempdata.charCodeAt(i+5)&0xff)
-   var cursubarray_endread     = ((tempdata.charCodeAt(i+6)&0xff)<<16)+((tempdata.charCodeAt(i+7)&0xff)
-
-<<8)+(tempdata.charCodeAt(i+8)&0xff)
+   var cursubarray_startread   = ((tempdata.charCodeAt(i+3)&0xff)<<16)+((tempdata.charCodeAt(i+4)&0xff)<<8)+(tempdata.charCodeAt(i+5)&0xff)
+   var cursubarray_endread     = ((tempdata.charCodeAt(i+6)&0xff)<<16)+((tempdata.charCodeAt(i+7)&0xff)<<8)+(tempdata.charCodeAt(i+8)&0xff)
    var y = 0
    // "Must have (tempdata.charCodeAt(j+3)&0xff)", not "tempdata.charCodeAt(j+3)&0xff":
    // "&" operates after "+"!
@@ -1829,30 +1739,20 @@ process_http_request ()}
     case 3: // Three bytes ("mediumint").
      if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 3) {
-      targetarray[x][y] = ((tempdata.charCodeAt(j)&0xff)<<16)+((tempdata.charCodeAt(j+1)&0xff)<<8)+(tempdata.charCodeAt(j+2)
-
-&0xff); y++
+      targetarray[x][y] = ((tempdata.charCodeAt(j)&0xff)<<16)+((tempdata.charCodeAt(j+1)&0xff)<<8)+(tempdata.charCodeAt(j+2)&0xff); y++
      }
     break
      case 4: // Unsigned integer ("int").
      if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 4) {
-      targetarray[x][y] = (((tempdata.charCodeAt(j)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+1)&0xff)
-
-<<16)+((tempdata.charCodeAt(j+2)&0xff)<<8)+(tempdata.charCodeAt(j+3)&0xff); y++
+      targetarray[x][y] = (((tempdata.charCodeAt(j)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+1)&0xff)<<16)+((tempdata.charCodeAt(j+2)&0xff)<<8)+(tempdata.charCodeAt(j+3)&0xff); y++
      }
     break
-    case 6: // Unsigned long integer ("bigint"). Note: accuracy is limited since Javascript can only handle 56-bit floats, not 
-
-uintegers, so we drop the first char.
+    case 6: // Unsigned long integer ("bigint"). Note: accuracy is limited since Javascript can only handle 56-bit floats, not uintegers, so we drop the first char.
      if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 8) {
-      targetarray[x][y] = ((tempdata.charCodeAt(j+1)&0xff)*281474976710656)+((tempdata.charCodeAt(j+2)&0xff)
-
-*1099511627776)+((tempdata.charCodeAt(j+3)&0xff)*4294967296) +
-                          (((tempdata.charCodeAt(j+4)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+5)&0xff)
-
-<<16)+((tempdata.charCodeAt(j+6)&0xff)<<8)+(tempdata.charCodeAt(j+7)&0xff); y++
+      targetarray[x][y] = ((tempdata.charCodeAt(j+1)&0xff)*281474976710656)+((tempdata.charCodeAt(j+2)&0xff)*1099511627776)+((tempdata.charCodeAt(j+3)&0xff)*4294967296) +
+                          (((tempdata.charCodeAt(j+4)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+5)&0xff)<<16)+((tempdata.charCodeAt(j+6)&0xff)<<8)+(tempdata.charCodeAt(j+7)&0xff); y++
      }
     break
    }
@@ -1897,9 +1797,7 @@ function get_data (params) {
     if (is_asynchronous == false) {return response_text} else {params.error(response_text); return}
    }
    if ((response_text != null) && (response_text.error == true)) {
-    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error
-
-(response_text)}
+    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
     return
    }
   }
@@ -1909,16 +1807,12 @@ function get_data (params) {
 }
 
 
-function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, 
-
-request_method) {
+function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
  if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
  var http_request = new XMLHttpRequest()
- if (!http_request) {messagebox.send_message ("Cannot create an XMLHTTP instance for some reason. Please try reloading the 
-
-page."); return false}
+ if (!http_request) {messagebox.send_message ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page."); return false}
  if (typeof request_method == "undefined") var request_method = ((data == null) ? "GET" : "POST")
  if (request_method == "GET") {url = url + "?" + data; data = null}
  http_request.open (request_method, url, is_asynchronous)
@@ -1940,13 +1834,9 @@ function get_script_if_not_loaded (init) {
   return
  }
  if (typeof init.success == "undefined")  {
-  //$.ajax({async: init.async, url: init.name, dataType: "script", error: function(errormessage) {for (var i in errormessage) 
-
-{send_error(i + ": " + errormessage[i])}}})
+  //$.ajax({async: init.async, url: init.name, dataType: "script", error: function(errormessage) {for (var i in errormessage) {send_error(i + ": " + errormessage[i])}}})
  } else {
-  //$.ajax({async: init.async, url: init.name, dataType: "script", success: init.success, error: function(errormessage) {for 
-
-(var i in errormessage) {send_error(i + ": " + errormessage[i])}}})
+  //$.ajax({async: init.async, url: init.name, dataType: "script", success: init.success, error: function(errormessage) {for (var i in errormessage) {send_error(i + ": " + errormessage[i])}}})
  }
  loaded_object_counter[init.name] = true
 }
@@ -2064,9 +1954,7 @@ function sliderbar (init) {
  var point_maximum               = init['point maximum']; if (typeof point_maximum == 'undefined') point_maximum = 100
  var pivot_point                 = init['pivot point']; if (typeof pivot_point == 'undefined') pivot_point = 0
  var use_update_function_param   = init['use update function param']
- var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 
-
-100
+ var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 100
  if (point_upper_limit == 0) point_upper_limit = 1
  var textbox_enabled             = init['textbox enabled'] || false
  
@@ -2138,9 +2026,7 @@ function sliderbar (init) {
  setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild
-
-(main.sliderbar_background_beyond_max)
+  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
   setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
@@ -2257,9 +2143,7 @@ function sliderbar (init) {
   var mouseX = evt.pageX; var mouseY = evt.pageY
   var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
   var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
-  if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + 
-
-windowScrollX))) return
+  if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
   sliderbar_mouseup_or_blur (evt)
  }
  
@@ -2289,13 +2173,9 @@ function sliderbar_v2 (init) {
  var final_update_function       = main.final_update_function       = init['final update function']
  var point_maximum               = init['point maximum']; if (typeof point_maximum == 'undefined') point_maximum = 100
  main.point_maximum = point_maximum
- var pivot_point                 = main.pivot_point                 = init['pivot point']; if (typeof pivot_point == 
-
-'undefined') pivot_point = 0
+ var pivot_point                 = main.pivot_point                 = init['pivot point']; if (typeof pivot_point == 'undefined') pivot_point = 0
  var use_update_function_param   = main.use_update_function_param   = init['use update function param']
- var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 
-
-100
+ var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 100
  if (point_upper_limit == 0) point_upper_limit = 1
  main.point_upper_limit = point_upper_limit
  var textbox_enabled             = main.textbox_enabled             = init['textbox enabled'] || false
@@ -2346,9 +2226,7 @@ function sliderbar_v2 (init) {
   if (keyCode == 13) textbox_number.blur ()
  }
  function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit*main.slider_position)/(main.sliderbar_background.clientWidth - 
-
-getClientWidthFull(sliderbar_control)))
+  textbox_number.value = Math.round((point_upper_limit*main.slider_position)/(main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
  }
  function textbox_blur (evt) {
   if (textbox_enabled == false) return
@@ -2360,9 +2238,7 @@ getClientWidthFull(sliderbar_control)))
  if (typeof class_background != "undefined") main.sliderbar_background.className = class_background
  setStyle (main.sliderbar_background, style_background)
  
- var sliderbar_control = main.sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild
-
-(sliderbar_control)
+ var sliderbar_control = main.sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild(sliderbar_control)
  if (typeof class_control != "undefined") sliderbar_control.className = class_control
  setStyle (sliderbar_control, style_control)
  sliderbar_control.style.left = main.slider_position + 'px'
@@ -2377,9 +2253,7 @@ getClientWidthFull(sliderbar_control)))
  setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild
-
-(main.sliderbar_background_beyond_max)
+  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
   setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (preliminary_position_max - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
@@ -2496,9 +2370,7 @@ getClientWidthFull(sliderbar_control)))
   var mouseX = evt.pageX; var mouseY = evt.pageY
   var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
   var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
-  if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + 
-
-windowScrollX))) return
+  if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
   sliderbar_mouseup_or_blur (evt)
  }
  
@@ -2524,15 +2396,9 @@ function red_blue_arrow (init) {
  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
- main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + 
-
-main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
- main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + 
-
-main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
- main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + 
-
-main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
+ main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
+ main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
+ main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
  setStyle (main, style)
  main.style.display = "inline-block"
  main.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
@@ -2555,9 +2421,7 @@ function loadingbarObject (init) {
  setStyle (loadingbar.loadingouterbar, 'position:absolute; left:0; top:0; height:100%; width:100%; background-color:#8F0000')
  setStyle (loadingbar.loadinginnerbar, 'position:absolute; left:0; top:0; height:100%; width:0%; background-color:#FFFFFF')
  loadingbar.loadingbartext1 = document.createElement('div')
- setStyle (loadingbar.loadingbartext1, 'position:absolute; left:0; top:0; margin:.125em; width:100%; text-align:center; 
-
-color:#C0C0C0; font-size:1.5em; font-family:arial; display:block')
+ setStyle (loadingbar.loadingbartext1, 'position:absolute; left:0; top:0; margin:.125em; width:100%; text-align:center; color:#C0C0C0; font-size:1.5em; font-family:arial; display:block')
  loadingbar.appendChild (loadingbar.loadingouterbar)
  loadingbar.appendChild (loadingbar.loadinginnerbar)
  loadingbar.appendChild (loadingbar.loadingbartext1)
@@ -2581,9 +2445,7 @@ color:#C0C0C0; font-size:1.5em; font-family:arial; display:block')
   if (rounded_percent >= 100) {removeAllDescendantsAndSelf (loadingbar); return}
   var percentstring = rounded_percent.toString()
   loadingbar.loadinginnerbar.style.width = percentstring + "%"
-  loadingbar.loadingbartext1.innerHTML = loadingbar.loading_string + ((loadingbar.show_percent == true) ? (percentstring + "% 
-
-done.") : "")
+  loadingbar.loadingbartext1.innerHTML = loadingbar.loading_string + ((loadingbar.show_percent == true) ? (percentstring + "% done.") : "")
  }
  
  loadingbar.update ()
@@ -2646,9 +2508,7 @@ function addStyle (element, text) {
  }
 }
 function checkForMissingProperties (element, text) {
- if (!(getComputedStyle(document.documentElement,null)["BoxSizing"]) && !!(getComputedStyle(document.documentElement,null)
-
-["MozBoxSizing"])) text = text.replace(/box-sizing/g, '-moz-box-sizing')
+ if (!(getComputedStyle(document.documentElement,null)["BoxSizing"]) && !!(getComputedStyle(document.documentElement,null)["MozBoxSizing"])) text = text.replace(/box-sizing/g, '-moz-box-sizing')
  return text
 }
 
@@ -2687,9 +2547,7 @@ if (typeof document !== "undefined" && !("classList" in document.documentElement
    return arrIndexOf.call(classList, token)
   }
   , ClassList = function (elem) {
-   var trimmedClasses = strTrim.call(elem.className), classes = trimmedClasses ? trimmedClasses.split(/\s+/) : [], i = 0, len = 
-
-classes.length
+   var trimmedClasses = strTrim.call(elem.className), classes = trimmedClasses ? trimmedClasses.split(/\s+/) : [], i = 0, len = classes.length
    for (; i < len; i++) {this.push(classes[i])}
    this._updateClassName = function () {elem.className = this.toString()}
   }
@@ -2703,16 +2561,12 @@ classes.length
  classListProto.contains = function (token) {token += ""; return checkTokenAndGetIndex(this, token) !== -1;}
  classListProto.add = function () {
   var tokens = arguments, i = 0, l = tokens.length, token, updated = false
-  do {token = tokens[i] + ""; if (checkTokenAndGetIndex(this, token) === -1) {this.push(token); updated = true}} while (++i < 
-
-l)
+  do {token = tokens[i] + ""; if (checkTokenAndGetIndex(this, token) === -1) {this.push(token); updated = true}} while (++i < l)
   if (updated) this._updateClassName()
  }
  classListProto.remove = function () {
   var tokens = arguments, i = 0, l = tokens.length, token, updated = false
-  do {token = tokens[i] + ""; var index = checkTokenAndGetIndex(this, token); if (index !== -1) {this.splice(index, 1); updated 
-
-= true;}} while (++i < l)
+  do {token = tokens[i] + ""; var index = checkTokenAndGetIndex(this, token); if (index !== -1) {this.splice(index, 1); updated = true;}} while (++i < l)
   if (updated) this._updateClassName()
  }
  classListProto.toggle = function (token, forse) {
@@ -2852,11 +2706,7 @@ function merge_objects (primary, secondary) {
 
 // Get the [left, top] scroll position of the window / document / body.
 function get_document_scroll_position () {
- return Array((document.documentElement && document.documentElement.scrollLeft) || window.pageXOffset || self.pageXOffset || 
-
-document.body.scrollLeft, (document.documentElement && document.documentElement.scrollTop) || window.pageYOffset || 
-
-self.pageYOffset || document.body.scrollTop)
+ return Array((document.documentElement && document.documentElement.scrollLeft) || window.pageXOffset || self.pageXOffset || document.body.scrollLeft, (document.documentElement && document.documentElement.scrollTop) || window.pageYOffset || self.pageYOffset || document.body.scrollTop)
 }
 
 
@@ -2992,9 +2842,7 @@ function make_label_and_input (init) {
  if (use_default_styles) input.style.display = "inline-block"
  if (nest_input == true) {
   var input_wrapper = document.createElement ('span')
-  input_wrapper.className = (typeof init.input_wrapper_cssclass != 'undefined') ? init.input_wrapper_cssclass : 
-
-"input_wrapper_default"
+  input_wrapper.className = (typeof init.input_wrapper_cssclass != 'undefined') ? init.input_wrapper_cssclass : "input_wrapper_default"
   if (typeof init.input_wrapper_style != "undefined") addStyle (input_wrapper, init.input_wrapper_style)
   input_wrapper.appendChild (input)
  }
@@ -3144,9 +2992,7 @@ function create_dom_option_list (option_text_array) {
 function get_data_string_from_input_list (input_object_list) {
  var data_array = new Array ()
  for (var input_object_name in input_object_list) {
-  var current_string_fragment = "&" + input_object_name + "=" + encodeURIComponent(input_object_list
-
-[input_object_name].input.value)
+  var current_string_fragment = "&" + input_object_name + "=" + encodeURIComponent(input_object_list[input_object_name].input.value)
   data_array.push (current_string_fragment)
  }
  return data_array.join("")
@@ -3366,9 +3212,7 @@ function playAudio (filename, init) {
  if (typeof init == "undefined") return new playAudio (filename, {})
  var main = this
  main.play_track  = function () {main.audio.play ()}
- main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; removeEvent (main.audio, 
-
-'ended', main.play_track)}
+ main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; removeEvent (main.audio, 'ended', main.play_track)}
  main.pause       = function () {main.stopped = true; main.audio.pause (); removeEvent (main.audio, 'ended', main.play_track)}
  main.play        = function () {main.resume ()}
  main.resume      = function () {
@@ -3658,9 +3502,7 @@ function color_fill (init) {
   rect_source.height = image_obj.height
   rect_source_ctx.fillStyle = init.color
   rect_source_ctx.fillRect (0, 0, rect_source.width, rect_source.height)
-  if ((typeof init.image == "undefined") || (init.image instanceof HTMLImageElement) || ((typeof init.create_new != 
-
-"undefined") && (init.create_new == true))) {
+  if ((typeof init.image == "undefined") || (init.image instanceof HTMLImageElement) || ((typeof init.create_new != "undefined") && (init.create_new == true))) {
    var target = document.createElement ('canvas'); var target_ctx = target.getContext('2d')
    target.width  = image_obj.width
    target.height = image_obj.height
@@ -3893,9 +3735,7 @@ function on_background_image_url_load (current_div, callback) {
  }
  var background_image_raw = current_div.style.backgroundImage
  if ((background_image_raw == "") || (background_image_raw == "none")) {
-  // If there is no background image inline, checks the computed style. This mechanism will ignore seniority granted by "!
-
-important" inside the stylesheet.
+  // If there is no background image inline, checks the computed style. This mechanism will ignore seniority granted by "!important" inside the stylesheet.
   background_image_raw = window.getComputedStyle(current_div)['backgroundImage']
   if ((background_image_raw == "") || (background_image_raw == "none")) callback (null)
  }
