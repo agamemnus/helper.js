@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 2.6.
+// HelperJS version 2.7.
 
 // Prototypes and Math. property-functions always camel-case.
 
