@@ -97,12 +97,7 @@ HTMLElement.prototype.setPositionOnRight = function () {
 }
 
 HTMLElement.prototype.setPositionOnCenter = function () {
- //var marginRight_stored = parseFloat(window.getComputedStyle(this)['marginRight'])
- //var marginLeft_stored  = parseFloat(window.getComputedStyle(this)['marginLeft'])
- //var width_stored       = getClientWidthFull (this)
- //this.style.marginRight = -width_stored + 'px'
- //this.style.right       = (width_stored - marginRight_stored) + 'px'
- this.style.left = (getClientWidthFull(this.parentNode) - getClientWidthFull(this)) / 2 + 'px'
+ this.style.left = (getClientWidthFull(this.parentNode, {margin: true}) - getClientWidthFull(this, {margin: true})) / 2 + 'px'
  return this
 }
 
@@ -214,6 +209,7 @@ function intervalListClear (obj) {
 function getRightClick (evt) {
  if (evt.which) return (evt.which == 3)
  if (evt.button) return (evt.button == 2)
+ return false
 }
 
 function getWheelData (evt) {
@@ -237,31 +233,34 @@ function getKeyCodeString (evt) {
 }
 
 function add_pinch_controls (init) {
- void function (init) {
-  var target_obj = init.target, current_distance = false, zoom_x = undefined, zoom_y = undefined
-  target_obj.addEventListener ('touchstart', pinch)
-  target_obj.addEventListener ('touchmove' , pinch)
-  function pinch (evt) {
-   if (evt.touches.length < 2) {current_distance = false; return}
-   if (evt.type == 'touchmove') {
-    if (current_distance == false) {return} else {var last_distance = current_distance}
-   } else {
-    if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) === false)) return
-   }
-   var xy0 = getXY_zoom(evt.touches[0], target_obj); var x0 = xy0[0]; var y0 = xy0[1]
-   var xy1 = getXY_zoom(evt.touches[1], target_obj); var x1 = xy1[0]; var y1 = xy1[1]
-   if ((init.always_recalculate_zoom_target === true) || (current_distance == false)) {
-    zoom_x = (x0 + x1) / 2, zoom_y = (y0 + y1) / 2
-   }
-   current_distance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
-   if (evt.type == 'touchstart') {
-    if (typeof init.start_effect != "undefined") init.start_effect (evt)
-    return
-   }
-   init.result_function (current_distance / last_distance, zoom_x, zoom_y)
-   if (typeof init.move_effect != "undefined") init.move_effect ()
+ if ((typeof this == "undefined") || (this === window)) return new add_pinch_controls (init)
+ var target_obj = init.target, current_distance = false, zoom_x = undefined, zoom_y = undefined
+ target_obj.addEventListener ('touchend'    , end_effect)
+ target_obj.addEventListener ('touchcancel' , end_effect)
+ target_obj.addEventListener ('touchleave'  , end_effect)
+ target_obj.addEventListener ('touchstart'  , pinch)
+ target_obj.addEventListener ('touchmove'   , pinch)
+ function end_effect (evt) {if (current_distance != false) if (typeof init.end_effect != "undefined") init.end_effect (evt)}
+ function pinch (evt) {
+  if (evt.touches.length < 2) {current_distance = false; return}
+  if (evt.type == 'touchmove') {
+   if (current_distance == false) {return} else {var last_distance = current_distance}
+  } else {
+   if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) === false)) return
   }
- } (init)
+  var xy0 = getXY_zoom(evt.touches[0], target_obj); var x0 = xy0[0]; var y0 = xy0[1]
+  var xy1 = getXY_zoom(evt.touches[1], target_obj); var x1 = xy1[0]; var y1 = xy1[1]
+  if ((init.always_recalculate_zoom_target === true) || (current_distance == false)) {
+   zoom_x = (x0 + x1) / 2, zoom_y = (y0 + y1) / 2
+  }
+  current_distance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
+  if (evt.type == 'touchstart') {
+   if (typeof init.start_effect != "undefined") init.start_effect (evt, x0, y0, x1, y1)
+   return
+  }
+  init.result_function (current_distance / last_distance, zoom_x, zoom_y)
+  if (typeof init.move_effect != "undefined") init.move_effect (evt)
+ }
 }
 
 function add_swipe_controls (init) {
@@ -615,9 +614,9 @@ function grid_create (target, xsize, ysize, constructor_inner, constructor_outer
   }
  } else {
   if (typeof constructor_inner != "undefined") {
-   for (x = 0; x < xsize; x++) {target[x] = new Array(); for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
+   for (x = 0; x < xsize; x++) {target[x] = []; for (y = 0; y < xsize; y++) {eval ('target[x][y]=' + constructor_inner)}}
   } else {
-   for (x = 0; x < xsize; x++) {target[x] = new Array ()}
+   for (x = 0; x < xsize; x++) {target[x] = []}
   }
  }
  return target
@@ -679,7 +678,7 @@ function grid_normalize (curobj, xsize, ysize, oldmax, newmax, toint) {
   }
  } else {
   for (x = 0; x < xsize; x++) {
-   for (y = 0; y< ysize; y++) {
+   for (y = 0; y < ysize; y++) {
     curobj[x][y] = parseInt(curobj[x][y] / oldmax * newmax)
    }
   }
@@ -1120,11 +1119,11 @@ function findabspos (obj, lastobj) {
  var curleft = 0, curtop = 0, borderWidthTest = 0
  if (typeof lastobj == "undefined") lastobj = null
  do {
-  borderWidthTest = parseFloat(window.getComputedStyle(obj).getPropertyValue('border-left-width'))
+  borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest
-  borderWidthTest = parseFloat(window.getComputedStyle(obj).getPropertyValue('border-top-width'))
+  borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest
-  if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft
   curtop  += obj.offsetTop
   obj = obj.offsetParent
@@ -1135,9 +1134,9 @@ function findabspos_x (obj, lastobj) {
  var curleft = 0, borderWidthTest = 0
  if (typeof lastobj == "undefined") lastobj = null
  do {
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-left-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest
-  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft
   obj = obj.offsetParent
  } while (true)
@@ -1147,9 +1146,9 @@ function findabspos_y (obj, lastobj) {
  var curtop = 0, borderWidthTest = 0
  if (typeof lastobj == "undefined") lastobj = null
  do {
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-top-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest
-  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curtop += obj.offsetTop
   obj = obj.offsetParent
  } while (true)
@@ -1163,14 +1162,14 @@ function findabspos_zoom (obj, lastobj) {
   if (obj.offsetParent == lastobj) {
    zoom_level_x = 1; zoom_level_y = 1
   } else {
-   zoom_level_x = getInheritedTransform(obj.offsetParent, {transform_type:"scale", xy:"x"})
-   zoom_level_y = getInheritedTransform(obj.offsetParent, {transform_type:"scale", xy:"y"})
+   zoom_level_x = getInheritedTransform(obj.offsetParent, {transform_type: "scale", xy: "x"})
+   zoom_level_y = getInheritedTransform(obj.offsetParent, {transform_type: "scale", xy: "y"})
   }
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-left-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-top-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
-  if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft * zoom_level_x
   curtop  += obj.offsetTop  * zoom_level_y
   obj = obj.offsetParent
@@ -1184,11 +1183,11 @@ function findabspos_zoom_x (obj, lastobj) {
   if (obj.offsetParent == lastobj) {
    zoom_level_x = 1
   } else {
-   zoom_level_x = getInheritedTransform(obj.offsetParent, {transform_type:"scale", xy:"x"})
+   zoom_level_x = getInheritedTransform(obj.offsetParent, {transform_type: "scale", xy: "x"})
   }
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-left-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
-  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft * zoom_level_x
   obj = obj.offsetParent
  } while (true)
@@ -1201,11 +1200,11 @@ function findabspos_zoom_y (obj, lastobj) {
   if (obj.offsetParent == lastobj) {
    zoom_level_y = 1
   } else {
-   zoom_level_y = getInheritedTransform(obj.offsetParent, {transform_type:"scale", xy:"y"})
+   zoom_level_y = getInheritedTransform(obj.offsetParent, {transform_type: "scale", xy: "y"})
   }
-  borderWidthTest = parseFloat(getComputedStyle(obj).getPropertyValue('border-top-width'))
+  borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
-  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is null, return the result.
+  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curtop += obj.offsetTop * zoom_level_y
   obj = obj.offsetParent
  } while (true)
@@ -1216,7 +1215,7 @@ function getInheritedTransform (obj, init) {
  var transform_type = init.transform_type
  var xy             = init.xy
  var transform_string = ""
- var transform_array  = new Array();
+ var transform_array  = []
  switch (transform_type) {
   case "scale":
    var scale = 1
@@ -1405,10 +1404,10 @@ function getDBData_2Dintarray (responsedatavar, bytesize, filename, xsize, ysize
   var response_value = http_request.responseText
   var i = 0, len = response_value.length, x = 0, y = 0
   switch (bytesize) {
-   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); x++; if (x==ysize) {x=0; y+=1}} break
-   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
-   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (x==ysize) {x=0; y+=1}} break
-   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (x == ysize) {x=0; y+=1}} break
+   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); y++; if (y==ysize) {y=0; x+=1}} break
+   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); y++; if (y==ysize) {y=0; x+=1}} break
+   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (y==ysize) {y=0; x+=1}} break
+   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (y == ysize) {y=0; x+=1}} break
   }
   if (typeof successparam != "undefined") {successfunc (successparam)} else {successfunc ()}
   if (typeof finishfunc != "undefined") finishfunc ()
@@ -1686,7 +1685,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
   if (header_version != 0) {messagebox.send_message ('Unable to cope with this response text header version. ('+tempdata.slice(0,30)+') (' + requeststring+', '+header_version+')'); return}
   var column_amount = tempdata.charCodeAt(1)
   var len = column_amount*9+2
-  var targetarray = new Array ()
+  var targetarray = []
   var x = 0
   for (i = 2; i < len; i += 9) {
    var cursubarray_bytetype    = tempdata.charCodeAt(i) + 1
@@ -1701,24 +1700,24 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
    switch (cursubarray_bytetype) {
     case 21: // Varchar.
      var endread1 = cursubarray_startread + cursubarray_indexlength * 2 //- 1
-     splitarray = new Array ()
+     splitarray = []
      for (j = cursubarray_startread; j <= endread1; j=j+2) {
       splitarray[k] = ((tempdata.charCodeAt(j)&0xff)<<8)+(tempdata.charCodeAt(j+1)&0xff); k++
      }
      k = 0; var curpointer = endread1
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j = 0; j < cursubarray_indexlength; j++) {
       targetarray[x][y] = tempdata.substr(curpointer, splitarray[j])
       y++; curpointer += splitarray[j]
      }
     case 22: // Varbinary.
      var endread1 = cursubarray_startread + cursubarray_indexlength * 2 //- 1
-     var splitarray  = new Array ()
+     var splitarray  = []
      for (j = cursubarray_startread; j <= endread1; j=j+2) {
       splitarray[k] = ((tempdata.charCodeAt(j)&0xff)<<8)+(tempdata.charCodeAt(j+1)&0xff); k++
      }
      k = 0; var curpointer = endread1
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j=0; j<cursubarray_indexlength; j++) {
       targetarray[x][y] = tempdata.substr(curpointer, splitarray[j])
       y++; curpointer += splitarray[j]
@@ -1726,30 +1725,30 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
     break  
     case 1: // Byte ("tinyint").
      for (j = cursubarray_startread; j<=cursubarray_endread; j++) {
-      if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+      if (typeof targetarray[x] == "undefined") targetarray[x] = []
       targetarray[x][y] = tempdata.charCodeAt(j); y++
      }
     break
     case 2: // Double-byte ("smallint").
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j = cursubarray_startread; j<=cursubarray_endread; j += 2) {
       targetarray[x][y] = ((tempdata.charCodeAt(j)&0xff)<<8)+(tempdata.charCodeAt(j+1)&0xff); y++
      }
     break
     case 3: // Three bytes ("mediumint").
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 3) {
       targetarray[x][y] = ((tempdata.charCodeAt(j)&0xff)<<16)+((tempdata.charCodeAt(j+1)&0xff)<<8)+(tempdata.charCodeAt(j+2)&0xff); y++
      }
     break
      case 4: // Unsigned integer ("int").
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 4) {
       targetarray[x][y] = (((tempdata.charCodeAt(j)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+1)&0xff)<<16)+((tempdata.charCodeAt(j+2)&0xff)<<8)+(tempdata.charCodeAt(j+3)&0xff); y++
      }
     break
     case 6: // Unsigned long integer ("bigint"). Note: accuracy is limited since Javascript can only handle 56-bit floats, not uintegers, so we drop the first char.
-     if (typeof targetarray[x] == "undefined") targetarray[x] = new Array()
+     if (typeof targetarray[x] == "undefined") targetarray[x] = []
      for (j = cursubarray_startread; j <= cursubarray_endread; j += 8) {
       targetarray[x][y] = ((tempdata.charCodeAt(j+1)&0xff)*281474976710656)+((tempdata.charCodeAt(j+2)&0xff)*1099511627776)+((tempdata.charCodeAt(j+3)&0xff)*4294967296) +
                           (((tempdata.charCodeAt(j+4)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+5)&0xff)<<16)+((tempdata.charCodeAt(j+6)&0xff)<<8)+(tempdata.charCodeAt(j+7)&0xff); y++
@@ -1882,11 +1881,9 @@ function messagebox_object () {
 function addLIMenuOptions (parent, options) {
  for (var i = 0, curlen = options.length; i < curlen; i++) {
   var temp_li = document.createElement('li')
-  var temp_a  = document.createElement('a')
-  parent.appendChild(temp_li)
-  temp_li.appendChild(temp_a)
-  temp_a.innerHTML = options[i].text
-  addEvent (temp_a, 'click', options[i].func)
+  parent.appendChild (temp_li)
+  temp_li.innerHTML = options[i].text
+  addEvent (temp_li, 'click', options[i].func)
  }
 }
 
@@ -2226,7 +2223,7 @@ function sliderbar_v2 (init) {
   if (keyCode == 13) textbox_number.blur ()
  }
  function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit*main.slider_position)/(main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
+  textbox_number.value = Math.round((point_upper_limit*main.slider_position) / (main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
  }
  function textbox_blur (evt) {
   if (textbox_enabled == false) return
@@ -2650,48 +2647,32 @@ function removeAllDescendants (cell) {
 
 // Calculate the client width plus the left and right border widths and return the result.
 function getClientWidthFull (obj, init) {
- var box_sizing = window.getComputedStyle(obj).getPropertyValue('box-sizing')
- if (box_sizing == "") {
-  var box_sizing = window.getComputedStyle(obj).getPropertyValue('-moz-box-sizing')
- }
+ var style = window.getComputedStyle(obj)
+ var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
  if (box_sizing != "border-box") {
   var padding_and_margin = 0
  } else {
-  var padding_and_margin = 
-   parseFloat(window.getComputedStyle(obj).getPropertyValue('padding-left')) +
-   parseFloat(window.getComputedStyle(obj).getPropertyValue('padding-right'))
-  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
-   padding_and_margin += 
-    parseFloat(window.getComputedStyle(obj).getPropertyValue('margin-left')) +
-    parseFloat(window.getComputedStyle(obj).getPropertyValue('margin-right'))
-  }
+  var padding_and_margin = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
  }
- return obj.clientWidth + padding_and_margin + 
- parseFloat(window.getComputedStyle(obj).getPropertyValue('border-left-width')) +
- parseFloat(window.getComputedStyle(obj).getPropertyValue('border-right-width'))
+ if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
+  padding_and_margin += parseFloat(style.marginLeft) + parseFloat(style.marginRight)
+ }
+ return obj.clientWidth + padding_and_margin + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth)
 }
- 
+
 // Calculate the client height plus the top and bottom border widths and return the result.
 function getClientHeightFull (obj, init) {
- var box_sizing = window.getComputedStyle(obj).getPropertyValue('box-sizing')
- if (box_sizing == "") {
-  var box_sizing = window.getComputedStyle(obj).getPropertyValue('-moz-box-sizing')
- }
+ var style = window.getComputedStyle(obj)
+ var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
  if (box_sizing != "border-box") {
   var padding_and_margin = 0
  } else {
-  var padding_and_margin = 
-   parseFloat(window.getComputedStyle(obj).getPropertyValue('padding-top')) +
-   parseFloat(window.getComputedStyle(obj).getPropertyValue('padding-bottom'))
-  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
-   padding_and_margin += 
-    parseFloat(window.getComputedStyle(obj).getPropertyValue('margin-top')) +
-    parseFloat(window.getComputedStyle(obj).getPropertyValue('margin-bottom'))
-  }
+  var padding_and_margin = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
  }
- return obj.clientHeight + padding_and_margin +
- parseFloat(window.getComputedStyle(obj).getPropertyValue('border-top-width')) +
- parseFloat(window.getComputedStyle(obj).getPropertyValue('border-bottom-width'))
+ if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
+  padding_and_margin += parseFloat(style.marginTop) + parseFloat(style.marginBottom)
+ }
+ return obj.clientHeight + padding_and_margin + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
 }
 
 // Merge two objects together.
@@ -2990,7 +2971,7 @@ function create_dom_option_list (option_text_array) {
  return dom_option_list
 }
 function get_data_string_from_input_list (input_object_list) {
- var data_array = new Array ()
+ var data_array = []
  for (var input_object_name in input_object_list) {
   var current_string_fragment = "&" + input_object_name + "=" + encodeURIComponent(input_object_list[input_object_name].input.value)
   data_array.push (current_string_fragment)
@@ -3133,7 +3114,7 @@ function sort_by_order (obj, order_list) {
 // </DOM manipulation functions.>
 
 
-// <Domain and directory functions. TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
+// <Domain and directory functions. TAG: form, TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
 
 // Reads a page's GET URL variables and returns them as an associative array.
 function getUrlVars (variable_object) {
@@ -3801,7 +3782,7 @@ function detect_pixels_per_inch () {
  var dom_div  = document.createElement('div')
  dom_div.style = 'width: 1in; visibility:hidden'
  dom_body.appendChild (dom_div)
- var w = document.defaultView.getComputedStyle(dom_div, null).getPropertyValue('width')
+ var w = document.defaultView.getComputedStyle(dom_div, null).width
  dom_body.removeChild (dom_div)
  return parseInt(w)
 }
@@ -3819,3 +3800,49 @@ function readcookie (name) {
  return null
 }
 // </Cookie/localStorage functions.>
+
+
+// <Font loading functions. TAG: fonts, TAG: font loading.>
+
+// Check that a list of fonts have loaded, and if so, run the specified callback functions.
+function load_web_fonts (font_list, callback) {
+ var loaded_font_amount = 0
+ var check_font_timeout = null
+ for (var i = 0; i < font_list.length; i++) {
+  var node = document.createElement('span')
+  // Set characters that vary significantly among different fonts.
+  node.innerHTML = 'giItT1WQy@!-/#'
+  // Visible - so we can measure it - but not on the screen.
+  node.style.fontFamily    = 'sans-serif'
+  node.style.position      = 'absolute'
+  node.style.left          = '-10000px'
+  node.style.top           = '-10000px'
+  // Large font size makes even subtle changes obvious.
+  node.style.fontSize      = '300px'
+  // Reset any font properties.
+  node.style.fontVariant   = 'normal'
+  node.style.fontWeight    = 'normal'
+  node.style.letterSpacing = '0'
+  document.body.appendChild (node)
+  // Remember width with no applied web font.
+  node.original_width =  node.offsetWidth
+  node.style.fontFamily = font_list[i]
+  void function (node) {check_font (node)} (node)
+ }
+ if (typeof callback != "undefined") {
+  var check_that_all_fonts_have_loaded_timeout = null
+  function check_that_all_fonts_have_loaded () {
+   if (loaded_font_amount < fonts.length) {check_that_all_fonts_have_loaded_timeout = setTimeout (check_that_all_fonts_have_loaded, 30); return}
+   callback ()
+  }
+  check_that_all_fonts_have_loaded ()
+ }
+ function check_font (node) {
+  // Compare current width with original width.
+  if (node.offsetWidth == node.original_width) {check_font_timeout = setTimeout (function () {check_font(node)}, 30); return}
+  loaded_font_amount += 1
+  node.parentNode.removeChild (node)
+  node = null
+ }
+}
+// </Font loading functions.>
