@@ -540,34 +540,31 @@ function objects_are_equal (a, b) {
  return true
 }
 
-function shallowcopy (obj) {
- if ((typeof obj !== 'object') || (obj == null)) return obj
- var c = ((obj instanceof Array) ? [] : {})
- for (var i in obj) {
-  var prop = obj[i]
-  if ((typeof prop != 'object') || (!(prop instanceof Array))) {c[i] = prop; continue}
-  c[i] = []
-  for (var j = 0, curlen = prop.length; j < curlen; j++) {
-   c[i].push(prop[j])
-  }
+function shallowcopy (source) {
+ if ((typeof source !== 'object') || (source == null)) return source
+ var copy = ((source instanceof Array) ? [] : {})
+ for (var i in source) {
+  var property = source[i]
+  if ((typeof property != 'object') || (!(property instanceof Array))) {copy[i] = property; continue}
+  copy[i] = property.slice ()
  }
- return c
+ return copy
 }
 
-function deepcopy (obj) {
- if ((typeof obj !== 'object') || (obj == null)) return obj
- var c = ((obj instanceof Array) ? [] : {})
- for (var i in obj) {
-  var prop = obj[i]
-  if (typeof prop != 'object') {c[i] = prop; continue}
-  if (!(prop instanceof Array)) {c[i] = deepcopy(prop); continue}
-  c[i] = []
-  for (var j = 0, curlen = prop.length; j < curlen; j++) {
-   if (typeof prop[j] != 'object') {c[i].push(prop[j]); continue}
-   c[i].push(deepcopy(prop[j]))
+function deepcopy (source) {
+ if ((typeof source !== 'object') || (source == null)) return source
+ var copy = ((source instanceof Array) ? [] : {})
+ for (var i in source) {
+  var property = source[i]
+  if (typeof property != 'object') {copy[i] = property; continue}
+  if (!(property instanceof Array)) {copy[i] = deepcopy(property); continue}
+  copy[i] = []
+  for (var j = 0, curlen = property.length; j < curlen; j++) {
+   if (typeof property[j] != 'object') {copy[i].push(property[j]); continue}
+   copy[i].push(deepcopy(property[j]))
   }
  }
- return c
+ return copy
 }
 
 function deep_extend (destination, source) {
