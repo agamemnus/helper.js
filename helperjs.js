@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 2.7.
+// HelperJS version 2.8.
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -798,7 +798,7 @@ function pow (a, b) {
 function get_rotated_size (width, height, degrees) {
  degrees = degrees % 180
  width = degrees < 90 ? width : - width
- var radians = Math.rad(degrees), cosine  = Math.cos(radians), sine  = Math.sin(radians)
+ var radians = Math.PI / 180 * degrees, cosine = Math.cos(radians), sine = Math.sin(radians)
  return [Math.ceil(Math.abs(cosine * width + sine * height)), Math.ceil(Math.abs(cosine * height + sine * width))]
 }
 // </Math manipulation functions.>
@@ -1773,10 +1773,8 @@ function get_data (params) {
  // Call the request function.
  var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous)
  var http_request        = http_request_result["http_request"]
-
- if (is_asynchronous == false) {
-  return process_http_request ()
- }
+ 
+ if (is_asynchronous == false) return process_http_request ()
  
  http_request.onreadystatechange = function () {
   if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()
@@ -1789,7 +1787,7 @@ function get_data (params) {
    try {
     response_text = JSON.parse (response_text)
    } catch (err) {
-    response_text = {error:true, errormessage:response_text}
+    response_text = {error: true, errormessage: response_text}
     if (is_asynchronous == false) {return response_text} else {params.error(response_text); return}
    }
    if ((response_text != null) && (response_text.error == true)) {
@@ -1879,8 +1877,14 @@ function addLIMenuOptions (parent, options) {
  for (var i = 0, curlen = options.length; i < curlen; i++) {
   var temp_li = document.createElement('li')
   parent.appendChild (temp_li)
-  temp_li.innerHTML = options[i].text
-  addEvent (temp_li, 'click', options[i].func)
+  var current_option = options[i]
+  // Add text and click function.
+  temp_li.innerHTML = current_option.text
+  temp_li.addEventListener ('click', current_option.func)
+  // Run the immediate function, if it exists.
+  if (typeof current_option.immediate_func == "function") current_option.immediate_func (temp_li)
+  // Copy properties.
+  for (var p in current_option) {if ((p != 'text') && (p != 'func') && (p != 'immediate_func')) temp_li[p] = current_option[p]}
  }
 }
 
