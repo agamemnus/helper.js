@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 2.8.
+// HelperJS version 2.9.
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -3191,7 +3191,8 @@ function modify_href_if_relative (prefix_src, current_src) {
 
 // <Audio functions. TAG: audio, TAG: play.>
 function playAudio (filename, init) {
- if (typeof init == "undefined") return new playAudio (filename, {})
+ if ((typeof this == "undefined") || (this == window)) return new playAudio (filename, init)
+ if (typeof init == "undefined") init = {}
  var main = this
  main.play_track  = function () {main.audio.play ()}
  main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; removeEvent (main.audio, 'ended', main.play_track)}
@@ -3209,19 +3210,19 @@ function playAudio (filename, init) {
    addEvent (main.audio, 'ended', main.play_track)
   }
  }
- main.set_loop    = function (loop_value) {
+ main.set_loop   = function (loop_value) {
   if (loop_value == true) {
-   main.loop    = true
+   main.loop       = true
    main.audio.loop = true
    addEvent (main.audio, 'ended', main.play_track)
   } else {
-   main.loop    = false
+   main.loop       = false
    main.audio.loop = false
    removeEvent (main.audio, 'ended', main.play_track)
   }
  }
- main.restart     = function () {main.play_track ()}
- main.set_volume  = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
+ main.restart    = function () {main.play_track ()}
+ main.set_volume = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
  main.loop     = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
  main.volume   = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
  main.start    = init.start  ; if (typeof main.start  == "undefined") main.start  = true
