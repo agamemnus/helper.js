@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 2.9.
+// HelperJS version 3.0.
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -75,6 +75,16 @@ if (typeof console.log == "undefined") console.log = function () {}
 
 
 // <DOM object prototypes. TAG: DOM, TAG: DOM objects, TAG: prototypes.>
+// Is the element attached to the DOM?
+HTMLElement.prototype.isAttached = function () {
+ var obj = this
+ while (true) {
+  obj = obj.parentNode
+  if (obj == document.documentElement) return true
+  if (obj == null) return false
+ }
+}
+
 // Others: adoptChildren, stealChildren, window.childServices. Props to averyvery on the last one!
 HTMLElement.prototype.appendChildrenOf = function (source) {
  while (source.firstChild) {this.appendChild (source.firstChild)}
@@ -972,6 +982,7 @@ Date.prototype.format = function (mask, utc) {return dateFormat(this, mask, utc)
 
 // <String manipulation functions. TAG: string, string manipulation.>
 String.prototype.repeat = function (num) {return new Array(num + 1).join(this)}
+String.prototype.toCharCode = String.prototype.charCodeAt
 // Check if any character in the search string is in any character in the target string. Otherwise, return false.
 String.prototype.indexOfMultiChar = function (searchstring, startpos) {
  if (typeof startpos == "undefined") startpos = 0
@@ -1302,8 +1313,7 @@ function queueDBDataProcess (run_array) {
    switch (function_name) {
     case 'setDBData'                   : args[6]  = queueDBDataShift; break
     case 'getTextData'                 : args[6]  = queueDBDataShift; break
-    case 'getDBData_2Dintarray'        : args[11] = queueDBDataShift; break
-    case 'getDBData_2Dintarray_zipped' : args[11] = queueDBDataShift; break
+    case 'getDBData_2Dintarray'        : args[10] = queueDBDataShift; break
     case 'getDBData_json'              : args[1]  = queueDBDataShift; break
     case 'getDBData_binary'            : args[1]  = queueDBDataShift; break
     case 'getDBData'                   : args[10] = queueDBDataShift; break
@@ -1313,7 +1323,6 @@ function queueDBDataProcess (run_array) {
    case 'setDBData'                   : setDBData.apply                   (null, args); break
    case 'getTextData'                 : getTextData.apply                 (null, args); break
    case 'getDBData_2Dintarray'        : getDBData_2Dintarray.apply        (null, args); break
-   case 'getDBData_2Dintarray_zipped' : getDBData_2Dintarray_zipped.apply (null, args); break
    case 'getDBData_json'              : getDBData_json.apply              (null, args); break
    case 'getDBData_binary'            : getDBData_binary.apply            (null, args); break
    case 'getDBData'                   : getDBData.apply                   (null, args); break
@@ -1347,7 +1356,7 @@ function setDBData (input_tablename, params, successfunc, errorfunc, successpara
  
  function process_http_request () {
   if (http_request.responseText.substr(0, 5) == 'Error') {
-   if (typeof errorfunc == "undefined") errorfunc = function (errormessage) {messagebox.send_message (errormessage)}
+   if (typeof errorfunc == "undefined") errorfunc = function (errormessage) {alert (errormessage)}
    errorfunc (http_request.responseText); if (typeof finishfunc != "undefined") finishfunc ()
    return
   }
@@ -1382,35 +1391,6 @@ function getTextData (filename, successfunc, errorfunc, successparam, send_data_
   if (typeof finishfunc != "undefined") finishfunc ()
  }
 }
-
-
-// Use XMLHttpRequest to get a 32-bit integer 2D array from a static file.
-function getDBData_2Dintarray (responsedatavar, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam, async, request_method, finishfunc) {
- async = (typeof async != "undefined") ? async : true
- if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
- if (typeof responsedatavar != "object") return false
- 
- for (var x = 0; x < xsize; x++) {responsedatavar[x] = []}
- var make_request_result = make_request (filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
- var http_request        = make_request_result["http_request"]
-
- if (async == false) return process_http_request ()
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
- 
- function process_http_request () {
-  var response_value = http_request.responseText
-  var i = 0, len = response_value.length, x = 0, y = 0
-  switch (bytesize) {
-   case 1: for (i = 0; i < len; i += 1) {responsedatavar[x][y] = response_value.charCodeAt(i); y++; if (y==ysize) {y=0; x+=1}} break
-   case 2: for (i = 0; i < len; i += 2) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<8)       +(response_value.charCodeAt(i+1)&0xff); y++; if (y==ysize) {y=0; x+=1}} break
-   case 3: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = ((response_value.charCodeAt(i)&0xff)<<16)      +((response_value.charCodeAt(i+1)&0xff)<<8)+(response_value.charCodeAt(i+2)&0xff); x++; if (y==ysize) {y=0; x+=1}} break
-   case 4: for (i = 0; i < len; i += 3) {responsedatavar[x][y] = (((response_value.charCodeAt(j)&0xff)<<24)>>>0)+((response_value.charCodeAt(j+1)&0xff)<<16)+((response_value.charCodeAt(j+2)&0xff)<<8)+(response_value.charCodeAt(j+3)&0xff); x++; if (y == ysize) {y=0; x+=1}} break
-  }
-  if (typeof successparam != "undefined") {successfunc (successparam)} else {successfunc ()}
-  if (typeof finishfunc != "undefined") finishfunc ()
- }
-}
-
 
 // Use XMLHttpRequest to get a 32-bit integer 2D array from a set of static zipped files.
 // Requires the JSZip library: http://stuartk.com/jszip.
@@ -1547,7 +1527,7 @@ if (typeof JSZip != "undefined") {
     importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip.js')
     importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-deflate.js', 'http://capitalopoly.com/js/plugins/jszip/jszip-inflate.js')
     importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-load.js')
-    var zip = new JSZip (response)
+    var zip = new JSZip (response, {base64: false})
     var buffer_list = {}
     for (var filename_in_loop in zip.files) {
      if (filename_in_loop.trim().substr(-1, 1) == "/") continue
@@ -1563,40 +1543,44 @@ if (typeof JSZip != "undefined") {
    web_worker.postMessage (http_request.response)
   }
  }
+}
+
+function getDBData_2Dintarray (container_list, bytesize, filename, filename_to_index_list, xsize, ysize, successfunc, async, request_method, callback) {
+ var async = (typeof async != "undefined") ? async : true
+ var use_zip = (typeof filename_to_index_list != "string")
+ if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  
- var getDBData_2Dintarray_zipped = function (responsedatavar_list, bytesize, filename, xsize, ysize, successfunc, errorfunc, successparam_list, async, request_method, callback) {
-  if (typeof errorfunc == "undefined") errorfunc = function () {}
-  async = (typeof async != "undefined") ? async : true
-  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
-  for (var filename_in_loop in responsedatavar_list) {
-   var responsedatavar = responsedatavar_list[filename_in_loop]
-   if (typeof responsedatavar != "object") return false
-  }
-  var make_request_result = make_request(filename, "", undefined, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
-  var http_request        = make_request_result["http_request"]
+ var make_request_result = make_request(filename, "", undefined, undefined, async, 'arraybuffer', undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var http_request        = make_request_result["http_request"]
+
+ if (async == false) return process_http_request ()
+ http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
-  if (async == false) return process_http_request ()
-  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
-  
-  function process_http_request () {
-   var response_value_zipped = http_request.responseText
-   // Take the response_value data and unzip it with JSUnzip.
-   var zip = new JSZip(response_value_zipped)
-   for (var filename_in_loop in zip.files) {
-    var buffer = zip.file(filename_in_loop).asArrayBuffer()
-    var offset = 0
-    var responsedatavar = responsedatavar_list[filename_in_loop]
-    for (var x = 0; x < xsize; x++)  {
-     switch (bytesize) {
-      case 1: responsedatavar[x] = new Uint8Array (buffer, offset); offset += ysize    ; break
-      case 2: responsedatavar[x] = new Uint16Array(buffer, offset); offset += ysize * 2; break
-      case 4: responsedatavar[x] = new Uint32Array(buffer, offset); offset += ysize * 4; break
-     }
+ function process_http_request () {
+  function inner () {
+   var container = container_list[container_name]
+   for (var x = 0; x < xsize; x++)  {
+    switch (bytesize) {
+     case 1: container[x] = new Uint8Array (buffer, offset); offset += ysize    ; break
+     case 2: container[x] = new Uint16Array(buffer, offset); offset += ysize * 2; break
+     case 4: container[x] = new Uint32Array(buffer, offset); offset += ysize * 4; break
     }
-    if (typeof successparam_list[filename_in_loop] != "undefined") {successfunc (successparam_list[filename_in_loop])} else {successfunc ()}
    }
-   if (typeof callback != "undefined") callback ()
+   if (typeof successfunc != "undefined") successfunc (container_name)
   }
+  if (use_zip == true) {
+   var response_value_zipped = http_request.response
+   // Take the response_value data and unzip it with JSUnzip.
+   var zip = new JSZip(response_value_zipped, {base64: false})
+   for (var filename_in_loop in zip.files) {
+    var container_name = filename_to_index_list[filename_in_loop], buffer = zip.file(filename_in_loop).asArrayBuffer(), offset = 0
+    inner ()
+   }
+  } else {
+   var container_name = filename_to_index_list, buffer = http_request.response, offset = 0
+   inner ()
+  }
+  if (typeof callback != "undefined") callback ()
  }
 }
 
@@ -1654,9 +1638,8 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
  
  function process_http_request () {
-  if (http_request.responseText.substr(0, 5) == 'Error') {messagebox.send_message (http_request.responseText); return}
   if (http_request.responseText.substr(0, 5) == 'Error') {
-   if (typeof errorfunc == "undefined") errorfunc = function (errormessage) {messagebox.send_message (errormessage)}
+   if (typeof errorfunc == "undefined") errorfunc = function (errormessage) {alert (errormessage)}
    errorfunc (http_request.responseText); if (typeof finishfunc != "undefined") finishfunc ()
    return
   }
@@ -1679,7 +1662,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
   // Get the data if it is sent back as binary. Note: the byte array response type can't handle signed values!
   var tempdata = http_request.responseText
   var header_version = tempdata.charCodeAt(0)
-  if (header_version != 0) {messagebox.send_message ('Unable to cope with this response text header version. ('+tempdata.slice(0,30)+') (' + requeststring+', '+header_version+')'); return}
+  if (header_version != 0) {alert ('Unable to cope with this response text header version. ('+tempdata.slice(0,30)+') (' + requeststring+', '+header_version+')'); return}
   var column_amount = tempdata.charCodeAt(1)
   var len = column_amount*9+2
   var targetarray = []
@@ -1744,13 +1727,6 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
       targetarray[x][y] = (((tempdata.charCodeAt(j)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+1)&0xff)<<16)+((tempdata.charCodeAt(j+2)&0xff)<<8)+(tempdata.charCodeAt(j+3)&0xff); y++
      }
     break
-    case 6: // Unsigned long integer ("bigint"). Note: accuracy is limited since Javascript can only handle 56-bit floats, not uintegers, so we drop the first char.
-     if (typeof targetarray[x] == "undefined") targetarray[x] = []
-     for (j = cursubarray_startread; j <= cursubarray_endread; j += 8) {
-      targetarray[x][y] = ((tempdata.charCodeAt(j+1)&0xff)*281474976710656)+((tempdata.charCodeAt(j+2)&0xff)*1099511627776)+((tempdata.charCodeAt(j+3)&0xff)*4294967296) +
-                          (((tempdata.charCodeAt(j+4)&0xff)<<24)>>>0)+((tempdata.charCodeAt(j+5)&0xff)<<16)+((tempdata.charCodeAt(j+6)&0xff)<<8)+(tempdata.charCodeAt(j+7)&0xff); y++
-     }
-    break
    }
    x += 1
   }
@@ -1806,7 +1782,7 @@ function make_request (url, data, send_data_as_plaintext, charset, is_asynchrono
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
  if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
  var http_request = new XMLHttpRequest()
- if (!http_request) {messagebox.send_message ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page."); return false}
+ if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
  if (typeof request_method == "undefined") var request_method = ((data == null) ? "GET" : "POST")
  if (request_method == "GET") {url = url + "?" + data; data = null}
  http_request.open (request_method, url, is_asynchronous)
@@ -1847,29 +1823,26 @@ function set_innerHTML_from_url (file, obj, success_func) {
 
 
 // <DOM-widget functions. TAG: DOM, TAG: widgets, TAG: DOM widgets.>
-function helpbox (helpstring) {
- alert (helpstring)
-}
-
-var messagebox = new messagebox_object
-function messagebox_object () {
+function message_emitter_create () {
+ if ((typeof this == "undefined") || (this == window)) return new message_emitter ()
  var main = this
- main.handle_function = {}
+ main.event_list = {}
+ main.event_listener_list = []
+ main.addEvent = function (event_name, func) {main.event_list[event_name] = func}
+ main.addEventListener = function (event_name, func) {
+  if (typeof main.event_listener_list[event_name] == "undefined") main.event_listener_list[event_name] = []
+  main.event_listener_list[event_name].push (func)
+ }
  main.messagebox_silent = false
  main.send_message = function (message) {
-  if (main.messagebox_silent == true) return
-  var error_type = {}
-  error_type.too_many_queries = (message.substr(0, 27) == "Error: for security reasons")
-  error_type.world_disabled   = (message.substr(0, 40) == "Error: this world is currently disabled.")
-  error_type.logged_out       = (message.substr(0, 33) == "Error: looks like you logged out.")
-  for (var i in error_type) {
-   if (error_type[i] == false) continue
-   if (typeof main.handle_function[i] != "undefined") {
-    main.handle_function[i]()
-   }
-   main.messagebox_silent = true
+  var triggered_events = {}
+  for (var evt_name in main.event_list) {var evt = main.event_list[evt_name]; if (evt(message)) triggered_events[evt_name] = main.event_listener_list[evt_name]}
+  for (var evt_name in triggered_events) {
+   var event_listener_sublist = main.event_listener_list[evt_name]
+   for (var i = 0, curlen = event_listener_sublist.length; i < curlen; i++) {event_listener_sublist[i] ()}
   }
-  alert (message)
+  if (main.messagebox_silent == true) alert (message)
+  main.messagebox_silent = true
  }
 }
 
@@ -1939,25 +1912,27 @@ function gui_close_button (init) {
 
 function sliderbar (init) {
  var main                        = this
- var parent                      = init['parent']
- var style_background            = init['style background']
- var style_foreground            = init['style foreground']
- var style_background_beyond_max = init['style background beyond max']
- var style_pivot_slice           = init['style pivot slice']
- var style_control               = init['style control']
- var starting_point_value        = init['tracking var']
- var do_not_start_function       = init['do not start function']
- var update_function             = init['update function']
- var final_update_function       = init['final update function']
- var point_maximum               = init['point maximum']; if (typeof point_maximum == 'undefined') point_maximum = 100
- var pivot_point                 = init['pivot point']; if (typeof pivot_point == 'undefined') pivot_point = 0
- var use_update_function_param   = init['use update function param']
- var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 100
- if (point_upper_limit == 0) point_upper_limit = 1
- var textbox_enabled             = init['textbox enabled'] || false
+ var parent                      = main.parent                      = init['parent']
+ var style_background            = main.style_background            = init['style background'] || ""
+ var style_foreground            = main.style_foreground            = init['style foreground'] || ""
+ var class_background            = main.class_background            = init['background class']
+ var class_foreground            = main.class_foreground            = init['foreground class']
+ var style_background_beyond_max = main.style_background_beyond_max = init['style background beyond max']
+ var style_pivot_slice           = main.style_pivot_slice           = init['style pivot slice']
+ var style_control               = main.style_control               = init['style control'] || ""
+ var class_control               = main.class_control               = init['control class']
+ var starting_point_value        = main.starting_point_value        = init['tracking var']
+ var do_not_start_function       = main.do_not_start_function       = init['do not start function']
+ var update_function             = main.update_function             = init['update function']
+ var final_update_function       = main.final_update_function       = init['final update function']
+ var point_maximum               = main.point_maximum               = (typeof init['point maximum'] == "number") ? init['point maximum'] : 100
+ var pivot_point                 = main.pivot_point                 = (typeof init['point pivot']   == "number") ? init['point pivot'] : 0
+ var use_update_function_param   = main.use_update_function_param   = init['use update function param']
+ var point_upper_limit           = main.point_upper_limit           = (typeof init['point upper limit'] == "number") ? init['point upper limit'] : 100
+ var textbox_enabled             = main.textbox_enabled             = init['textbox enabled'] || false
  
  if (textbox_enabled == true) {
-  var style_textbox  = init['style textbox']  || ''
+  var style_textbox = init['style textbox'] || ''
   var textbox = document.createElement('div')
   setStyle (textbox, style_textbox)
   parent.appendChild (textbox)
@@ -1976,8 +1951,8 @@ function sliderbar (init) {
   setStyle (textbox_number, style_textbox_number)
   textbox_number.type = "text"
   textbox_number.readOnly = false
-  addEvent (textbox_number, 'input', textbox_change)
-  addEvent (textbox_number, 'keypress', textbox_keypress)
+  textbox_number.addEventListener ('input'   , textbox_change)
+  textbox_number.addEventListener ('keypress', textbox_keypress)
   textbox.appendChild (textbox_number)
   
   var textbox_suffix_text = init['textbox suffix'] || ''
@@ -2002,7 +1977,7 @@ function sliderbar (init) {
   if (keyCode == 13) textbox_number.blur ()
  }
  function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit*main.slider_position)/main.slider_position_upper_limit)
+  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / main.slider_position_upper_limit) // (main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
  }
  function textbox_blur (evt) {
   if (textbox_enabled == false) return
@@ -2011,22 +1986,24 @@ function sliderbar (init) {
  }
  
  main.sliderbar_background = document.createElement('div'); parent.appendChild(main.sliderbar_background)
+ if (typeof class_background != "undefined") main.sliderbar_background.className = class_background
  setStyle (main.sliderbar_background, style_background)
  
- var zoom_level = getInheritedTransform(main.sliderbar_background, {transform_type:"scale", xy:"x"})
+ var zoom_level = getInheritedTransform(main.sliderbar_background, {transform_type: "scale", xy: "x"})
  
- main.slider_position_upper_limit = main.sliderbar_background.clientWidth
+ main.slider_position_upper_limit = main.sliderbar_background.clientWidth // var preliminary_position_max     = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
  
- main.slider_position_max         = Math.round(main.sliderbar_background.clientWidth * (point_maximum / point_upper_limit))
- main.slider_position             = (starting_point_value * main.slider_position_upper_limit) / point_upper_limit
+ main.slider_position_max         = Math.round(main.sliderbar_background.clientWidth * (point_maximum / point_upper_limit)) // Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
+ main.slider_position             = (starting_point_value * main.slider_position_upper_limit) / point_upper_limit // (starting_point_value * preliminary_position_max) / point_upper_limit
  
  main.sliderbar_foreground = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_foreground)
+ if (typeof class_foreground != "undefined") main.sliderbar_foreground.className = class_foreground
  setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
   main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
   setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
-  main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px'
+  main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px' // (preliminary_position_max - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
  }
  
@@ -2034,7 +2011,7 @@ function sliderbar (init) {
   main.sliderbar_pivot_slice = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_pivot_slice)
   setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
   
-  main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit))
+  main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
   main.slider_pivot_end    = parseFloat(main.slider_position)
   if (main.slider_pivot_end > main.slider_pivot_start) {
    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
@@ -2045,43 +2022,46 @@ function sliderbar (init) {
   }
  }
  
- var sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild(sliderbar_control)
+ var sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild (sliderbar_control)
  setStyle (sliderbar_control, style_control)
- sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'
+ sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'  // sliderbar_control.style.left = main.slider_position + 'px'
  if (textbox_enabled == true) textbox_update_value ()
  
- var startscroll          = false
- var startx               = 0
- var offsetx              = 0
- addEvent (document.body             , 'mousemove', sliderbar_mousemove)
- addEvent (document.body             , 'mouseup'  , sliderbar_mouseup_or_blur)
- addEvent (document.body             , 'mousedown', textbox_blur)
- addEvent (window                    , 'blur'     , sliderbar_mouseup_or_blur)
- addEvent (window                    , 'mouseout' , sliderbar_mouseout)
- addEvent (sliderbar_control         , 'mousedown', sliderbar_control_mousedown)
- addEvent (main.sliderbar_background , 'mousedown', sliderbar_mousedown)
+ var startscroll = false
+ var startx      = 0
+ var offsetx     = 0            
+ document.body.addEventListener             ('mousemove', sliderbar_mousemove)
+ document.body.addEventListener             ('mouseup'  , sliderbar_mouseup_or_blur)
+ document.body.addEventListener             ('mousedown', textbox_blur)
+ window.addEventListener                    ('blur'     , sliderbar_mouseup_or_blur)
+ window.addEventListener                    ('mouseout' , sliderbar_mouseout)
+ sliderbar_control.addEventListener         ('mousedown', sliderbar_control_mousedown)
+ main.sliderbar_background.addEventListener ('mousedown', sliderbar_mousedown)
  
  main.update_position = function () {
-  startx = (findabspos_zoom_x(main.sliderbar_background)/zoom_level - parseFloat(sliderbar_control.style.width) / 2)
+  startx = (findabspos_zoom_x(main.sliderbar_background) / zoom_level - parseFloat(sliderbar_control.style.width) / 2)
  }
  
  main.destroy = function () {
-  removeEvent (document.body            , 'mousemove', sliderbar_mousemove)
-  removeEvent (document.body            , 'mouseup'  , sliderbar_mouseup_or_blur)
-  removeEvent (window                   , 'blur'     , sliderbar_mouseup_or_blur)
-  removeEvent (document.body            , 'mousedown', textbox_blur)
-  removeEvent (window                   , 'mouseout' , sliderbar_mouseout)
-  removeEvent (sliderbar_control        , 'mousedown', sliderbar_control_mousedown)
-  removeEvent (main.sliderbar_background, 'mousedown', sliderbar_mousedown)
+  document.body.removeEventListener             ('mousemove', sliderbar_mousemove)
+  document.body.removeEventListener             ('mouseup'  , sliderbar_mouseup_or_blur)
+  window.removeEventListener                    ('blur'     , sliderbar_mouseup_or_blur)
+  document.body.removeEventListener             ('mousedown', textbox_blur)
+  window.removeEventListener                    ('mouseout' , sliderbar_mouseout)
+  sliderbar_control.removeEventListener         ('mousedown', sliderbar_control_mousedown)
+  main.sliderbar_background.removeEventListener ('mousedown', sliderbar_mousedown)
   if (textbox_enabled == true) {
-   removeEvent (textbox_number, 'click'   , textbox_toggle)
-   removeEvent (textbox_number, 'input'   , textbox_change)
-   removeEvent (textbox_number, 'keypress', textbox_keypress)
+   textbox_number.removeEventListener ('click'   , textbox_toggle)
+   textbox_number.removeEventListener ('input'   , textbox_change)
+   textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
+  var current_parent = main.sliderbar_background.parentNode; current_parent.removeChild (main.sliderbar_background)
  }
  
  main.set_position = function (new_position) {
   main.slider_position = new_position
+  //var preliminary_position_max = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
+  //main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
   
   if (main.slider_position > main.slider_position_max) {
    main.slider_position = main.slider_position_max
@@ -2089,11 +2069,11 @@ function sliderbar (init) {
    if (main.slider_position < 0) main.slider_position = 0
   }
   
-  sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'
+  sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px' // sliderbar_control.style.left = main.slider_position + 'px'
   main.sliderbar_foreground.style.width = main.slider_position + 'px'
   
  if (typeof style_pivot_slice != 'undefined') {
-   main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit))
+   main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
    main.slider_pivot_end    = main.slider_position
    if (main.slider_pivot_end > main.slider_pivot_start) {
     main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
@@ -2108,36 +2088,40 @@ function sliderbar (init) {
  }
  
  function sliderbar_mousemove (evt) {
+  evt.preventDefault ()
   if (startscroll == false) return
-  var x = evt.pageX/zoom_level
+  var x = evt.pageX / zoom_level
   main.set_position (x - offsetx - startx)
  }
  
  main.set_position_by_point_value = function (new_position) {
-  main.set_position ((new_position * main.slider_position_upper_limit) / point_upper_limit)
+  main.set_position ((new_position * main.slider_position_upper_limit) / point_upper_limit) // main.set_position ((new_position * main.sliderbar_background.clientWidth) / point_upper_limit)
  }
  
     
  function sliderbar_mousedown (evt) {
+  evt.preventDefault ()
   if (getRightClick(evt)) return
   if (do_not_start_function()) return
   if (startscroll == true) return
   main.update_position ()
-  offsetx = parseFloat(sliderbar_control.style.width) / 2
+  offsetx = parseFloat(sliderbar_control.style.width) / 2 // offsetx = main.sliderbar_control.clientWidth / 2
   startscroll = true
   sliderbar_mousemove (evt)
  }
  
  function sliderbar_control_mousedown (evt) {
+  evt.preventDefault ()
   if (getRightClick(evt)) return
   if (do_not_start_function()) return
   if (startscroll == true) return
   main.update_position ()
-  offsetx = (evt.pageX - findabspos_zoom_x (evt.target))/zoom_level
+  offsetx = (evt.pageX - findabspos_zoom_x (evt.target)) / zoom_level
   startscroll = true
  }
  
  function sliderbar_mouseout (evt) {
+  evt.preventDefault ()
   var mouseX = evt.pageX; var mouseY = evt.pageY
   var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
   var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
@@ -2169,13 +2153,10 @@ function sliderbar_v2 (init) {
  var do_not_start_function       = main.do_not_start_function       = init['do not start function']
  var update_function             = main.update_function             = init['update function']
  var final_update_function       = main.final_update_function       = init['final update function']
- var point_maximum               = init['point maximum']; if (typeof point_maximum == 'undefined') point_maximum = 100
- main.point_maximum = point_maximum
- var pivot_point                 = main.pivot_point                 = init['pivot point']; if (typeof pivot_point == 'undefined') pivot_point = 0
+ var point_maximum               = main.point_maximum               = (typeof init['point maximum'] == "number") ? init['point maximum'] : 100
+ var pivot_point                 = main.pivot_point                 = (typeof init['point pivot']   == "number") ? init['point pivot'] : 0
  var use_update_function_param   = main.use_update_function_param   = init['use update function param']
- var point_upper_limit           = init['point upper limit']; if (typeof point_upper_limit == 'undefined') point_upper_limit = 100
- if (point_upper_limit == 0) point_upper_limit = 1
- main.point_upper_limit = point_upper_limit
+ var point_upper_limit           = main.point_upper_limit           = (typeof init['point upper limit'] == "number") ? init['point upper limit'] : 100
  var textbox_enabled             = main.textbox_enabled             = init['textbox enabled'] || false
  
  if (textbox_enabled == true) {
@@ -2274,9 +2255,9 @@ function sliderbar_v2 (init) {
  
  if (textbox_enabled == true) textbox_update_value ()
  
- var startscroll          = false
- var startx               = 0
- var offsetx              = 0
+ var startscroll = false
+ var startx      = 0
+ var offsetx     = 0
  addEvent (document.body             , 'mousemove', sliderbar_mousemove)
  addEvent (document.body             , 'mouseup'  , sliderbar_mouseup_or_blur)
  addEvent (document.body             , 'mousedown', textbox_blur)
@@ -2335,6 +2316,7 @@ function sliderbar_v2 (init) {
  }
  
  function sliderbar_mousemove (evt) {
+  evt.preventDefault ()
   if (startscroll == false) return
   var x = evt.pageX/zoom_level
   main.set_position (x - offsetx - startx)
@@ -2346,6 +2328,7 @@ function sliderbar_v2 (init) {
  
     
  function sliderbar_mousedown (evt) {
+  evt.preventDefault ()
   if (getRightClick(evt)) return
   if (do_not_start_function()) return
   if (startscroll == true) return
@@ -2356,6 +2339,7 @@ function sliderbar_v2 (init) {
  }
  
  function sliderbar_control_mousedown (evt) {
+  evt.preventDefault ()
   if (getRightClick(evt)) return
   if (do_not_start_function()) return
   if (startscroll == true) return
@@ -2365,6 +2349,7 @@ function sliderbar_v2 (init) {
  }
  
  function sliderbar_mouseout (evt) {
+  evt.preventDefault ()
   var mouseX = evt.pageX; var mouseY = evt.pageY
   var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
   var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
@@ -2692,7 +2677,7 @@ function get_document_scroll_position () {
 }
 
 
-// Set this object to selectable or otherwise.
+// Prevent the context menu from appearing (or allow it) on this object. TAGS: select, TAGS: selectable.
 function prevent_context_menu (obj, do_prevent, omitformtags) {
  if ((typeof do_prevent == "undefined") || (do_prevent == true)) {
   if (typeof omitformtags == "undefined") {
@@ -2722,7 +2707,7 @@ function move_to_top (evt) {
  parent.appendChild (obj)
 }
 
-// Set this page to selectable or otherwise.
+// Set this page to selectable or otherwise. TAGS: select, TAGS: selectable.
 function disable_selection (obj, sub_rules) {
  obj.setAttribute ('unselectable', 'on')
  obj.style.WebkitTapHighlightColor = 'rgba(255, 255, 255, 0)'
@@ -3068,13 +3053,13 @@ function table_add_headers (init) {
    sort_order.splice (i, 1)
    sort_order.splice (0, 0, [attribute_name, attribute_direction])
   }
-  refresh_function ()
+  if (typeof sort_callback != "undefined") sort_callback ()
  }
  
- var parent           = init.parent
- var header_list      = init.header_list
- var sort_order       = init.sort_order
- var refresh_function = init.refresh_function
+ var parent        = init.parent
+ var header_list   = init.header_list
+ var sort_order    = init.sort_order
+ var sort_callback = init.sort_callback
  
  var temp_tr = document.createElement ('tr')
  parent.appendChild (temp_tr)
@@ -3163,18 +3148,9 @@ function strip_domain (url) {
  if (first_index == 0) return url
  return url.substring(first_index)
 }
-function get_domain_and_directory (url) {
- var last_index = url.lastIndexOf("/") + 1
- return url.substring(0, last_index)
-}
-function strip_directory (url) {
- var last_index = url.lastIndexOf("/") + 1
- if (last_index == 0) return url
- return url.substring(last_index)
-}
-function strip_extension (url) {
- return url.substring(0, url.lastIndexOf("."))
-}
+function get_domain_and_directory (url) {var last_index = url.lastIndexOf("/") + 1; return url.substring(0, last_index)}
+function strip_directory (url) {var last_index = url.lastIndexOf("/") + 1; if (last_index == 0) return url; return url.substring(last_index)}
+function strip_extension (url) {return url.substring(0, url.lastIndexOf("."))}
 function remove_base_url (url) {
  var base_url_pattern = /^https?:\/\/[a-z\:0-9.]+/
  var result = ""
@@ -3268,9 +3244,7 @@ window.requestAnimFrame = function () {
          window.mozRequestAnimationFrame    || 
          window.oRequestAnimationFrame      || 
          window.msRequestAnimationFrame     || 
-         function (callback) {
-          window.setTimeout (callback, 1000 / 60)
-         }
+         function (callback) {window.setTimeout (callback, 1000 / 60)}
 } ()
 
 // Function to help preload an image or list of images.
@@ -3305,15 +3279,15 @@ function image_preload (cursrc, init) {
 
 // Colorize (eg: grayscale if the values are 1/1/1)
 function canvas_colorize (ctx, rpercent, gpercent, bpercent, octx) {
- var i = 0, curwidth = ctx.width, curheight = ctx.height
+ var i = 0, curwidth = ctx.canvas.width, curheight = ctx.canvas.height
  var pixels = ctx.getImageData (0, 0, curwidth, curheight)
  var pixels_data = pixels.data
  for (var x = 0; x < curwidth; x++) {
   for (var y = 0; y < curheight; y++) {
    var pixelavg = (pixels_data[i] + pixels_data[i + 1] + pixels_data[i + 2]) / 3
-   pixels_data[i] = parseInt (pixelavg * rpercent); i++
-   pixels_data[i] = parseInt (pixelavg * gpercent); i++
-   pixels_data[i] = parseInt (pixelavg * bpercent); i++
+   var r = Math.round(pixelavg * rpercent); pixels_data[i] = (r <= 255) ? r : 255; i++
+   var g = Math.round(pixelavg * gpercent); pixels_data[i] = (g <= 255) ? g : 255; i++
+   var b = Math.round(pixelavg * bpercent); pixels_data[i] = (b <= 255) ? b : 255; i++
    i++
   }
  }
@@ -3433,9 +3407,7 @@ function hex_to_rgb (hex) {
  } : null
 }
 
-function rgb_to_hex (r, g, b) {
- return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
-}
+function rgb_to_hex (r, g, b) {return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}
 
 function create_single_color_image_elements (init) {
  var obj_list = {}
@@ -3513,7 +3485,7 @@ function color_fill (init) {
 // })
 function canvas_filter (source, target, filter_function) {
  var ctx = source.getContext ('2d')
- var canvas_width  = source.width, canvas_height = source.height
+ var canvas_width = source.width, canvas_height = source.height
  var source_data = source.getContext('2d').getImageData (0, 0, canvas_width, canvas_height)
  var source_data_buffer = source_data.data
  for (var i = 0, curlen = source_data_buffer.length; i < curlen; i += 4) {
