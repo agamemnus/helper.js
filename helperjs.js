@@ -64,7 +64,6 @@
 // function getDBData_binary
 // function getDBData
 // function addLIMenuOptions
-// function loadingbarObject
 // function getUrlVars
 // function formUrlVars
 // function playAudio
@@ -155,8 +154,8 @@ function removeCustomEvent (event_handle, event_name) {
 }
 
 // setTimeOut replacement.
-window.setTimeoutUpgraded = function (func_param, delay, returnObject) {
- if ((typeof returnObject != "undefined") && (returnObject)) {
+window.setTimeoutUpgraded = function (func_param, delay, return_object) {
+ if ((typeof return_object != "undefined") && (return_object)) {
   var curtime = new Date().getTime()
   return {
           timeLeft : delay,
@@ -188,13 +187,13 @@ window.setTimeoutUpgraded = function (func_param, delay, returnObject) {
 }
 
 // setInterval replacement.
-window.setIntervalUpgraded = function (func_param, delay, returnObject) {
- if ((typeof returnObject != "undefined") && (returnObject)) {
+window.setIntervalUpgraded = function (func_param, delay, return_object) {
+ if ((typeof return_object != "undefined") && (return_object)) {
   return {
-          paused   : false,
-          pause    : function () {if (this.paused == false) {window.clearInterval (this.id); this.paused = true}},
-          resume   : function () {if (this.paused == true) {this.id = setInterval (func_param, delay); this.paused = false}},
-          id       : setInterval (func_param, delay)
+          paused : false,
+          pause  : function () {if (this.paused == false) {window.clearInterval (this.id); this.paused = true}},
+          resume : function () {if (this.paused == true) {this.id = setInterval (func_param, delay); this.paused = false}},
+          id     : setInterval (func_param, delay)
          }
  } else {
   return setInterval (func_param, delay)
@@ -1870,7 +1869,9 @@ function button (init) {
  var clicked_function   = init['clicked function']
  var mouseover_function = init['mouseover function']
  var mouseout_function  = init['mouseout function']
-
+ 
+ Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
+ 
  button_div.mousedown = function (evt) {
   if (getRightClick(evt)) return
   clicked_function (evt)
@@ -1921,7 +1922,7 @@ function sliderbar (init) {
  var style_pivot_slice           = main.style_pivot_slice           = init['style pivot slice']
  var style_control               = main.style_control               = init['style control'] || ""
  var class_control               = main.class_control               = init['control class']
- var starting_point_value        = main.starting_point_value        = init['tracking var']
+ var starting_point_value        = main.starting_point_value        = init['starting point value']
  var do_not_start_function       = main.do_not_start_function       = init['do not start function']
  var update_function             = main.update_function             = init['update function']
  var final_update_function       = main.final_update_function       = init['final update function']
@@ -2149,7 +2150,7 @@ function sliderbar_v2 (init) {
  var style_pivot_slice           = main.style_pivot_slice           = init['style pivot slice']
  var style_control               = main.style_control               = init['style control'] || ""
  var class_control               = main.class_control               = init['control class']
- var starting_point_value        = main.starting_point_value        = init['tracking var']
+ var starting_point_value        = main.starting_point_value        = init['starting point value']
  var do_not_start_function       = main.do_not_start_function       = init['do not start function']
  var update_function             = main.update_function             = init['update function']
  var final_update_function       = main.final_update_function       = init['final update function']
@@ -2390,7 +2391,7 @@ function red_blue_arrow (init) {
 }
 
 
-function loadingbarObject (init) {
+function loadingbar_object (init) {
  var loadingbar = document.createElement ('div')
  
  loadingbar.parent          = init.parent
