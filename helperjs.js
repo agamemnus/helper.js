@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.0.
+// HelperJS version 3.1.
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -59,7 +59,6 @@
 // function setDBData
 // function getTextData
 // function getDBData_2Dintarray
-// function getDBData_2Dintarray_zipped
 // function getDBData_json
 // function getDBData_binary
 // function getDBData
@@ -111,30 +110,8 @@ HTMLElement.prototype.setPositionOnCenter = function () {
 }
 
 // <Event and interval handler/wrapper functions. TAG: event listener, TAG: event, TAG: setInterval, TAG: setTimeout.>
-if (typeof addEvent != 'function') {
- var addEvent = function (o, t, f, l) {
-  var d = 'addEventListener', n = 'on' + t
-  if (o[d] && !l) return o[d](t, f, false)
-  if (!o._evts) o._evts = {}
-  if (!o._evts[t]) {
-   o._evts[t] = {}
-   if (o[n]) addEvent(o, t, o[n], l)
-   o[n] = new Function('e',
-    'var r = true, o = this, a = o._evts["' + t + '"], i; for (i in a) {' +
-    'o._f = a[i]; if (o._f._i) r = o._f(e||window.event) != false && r;' +
-    '} o._f = null; return r')
-  }
-  if (!f._i) f._i = addEvent._i++
-  o._evts[t][f._i] = f
-  if (t != 'unload') addEvent(window, 'unload', function() {removeEvent(o, t, f, l)})
- }
- addEvent._i = 1
- var removeEvent = function (o, t, f, l) {
-  var d = 'removeEventListener'
-  if (o[d] && !l) return o[d](t, f, false)
-  if (o._evts && o._evts[t] && f._i) delete o._evts[t][f._i]
- }
-}
+if (typeof addEvent    != 'function') var addEvent    = function (evt_target, evt_type, evt_listener, use_capture) {evt_target.addEventListener    (evt_type, evt_listener, use_capture)}
+if (typeof removeEvent != 'function') var removeEvent = function (evt_target, evt_type, evt_listener, use_capture) {evt_target.removeEventListener (evt_type, evt_listener, use_capture)}
 
 // Custom events.
 var customEventList = []
@@ -154,49 +131,44 @@ function removeCustomEvent (event_handle, event_name) {
 }
 
 // setTimeOut replacement.
-window.setTimeoutUpgraded = function (func_param, delay, return_object) {
- if ((typeof return_object != "undefined") && (return_object)) {
+window.setTimeoutUpgraded = function () {
+ var args = Array.prototype.slice.call(arguments)
   var curtime = new Date().getTime()
   return {
-          timeLeft : delay,
-          start    : curtime,
-          pause    : function () {
-                      if (this.paused) return
-                      this.paused = true
-                      this.timeLeft = new Date().getTime() - this.start
-                      if (this.timeLeft <= 0) return
-                      window.clearTimeout (this.id)
-                     },
-          resume   : function () {
-                      if (!this.paused) return
-                      delete (this.paused)
-                      this.start = new Date().getTime()
-                      this.id = setTimeout (func_param, this.timeLeft)
-                     },
-          restart  : function () {
-                      if (this.paused) delete (this.paused)
-                      window.clearTimeout (this.id)
-                      this.start = new Date().getTime()
-                      this.id = setTimeout (func_param, delay)
-                     },
-          id       : setTimeout (func_param, delay)
-         }
- } else {
-  return setTimeout (func_param, delay)
+   timeLeft : args[1],
+   start    : curtime,
+   pause    : function () {
+               if (this.paused) return
+               this.paused = true
+               this.timeLeft = new Date().getTime() - this.start
+               if (this.timeLeft <= 0) return
+               window.clearTimeout (this.id)
+              },
+  resume   : function () {
+              if (!this.paused) return
+              delete (this.paused)
+              this.start = new Date().getTime()
+              args[1] = this.timeLeft
+              console.log (args[1])
+              this.id = window.setTimeout.apply (window, args)
+             },
+  restart  : function () {
+              if (this.paused) delete (this.paused)
+              window.clearTimeout (this.id)
+              this.start = new Date().getTime()
+              this.id = window.setTimeout.apply (window, args)
+             },
+  id       : setTimeout.apply (window, args)
  }
 }
 
 // setInterval replacement.
-window.setIntervalUpgraded = function (func_param, delay, return_object) {
- if ((typeof return_object != "undefined") && (return_object)) {
-  return {
-          paused : false,
-          pause  : function () {if (this.paused == false) {window.clearInterval (this.id); this.paused = true}},
-          resume : function () {if (this.paused == true) {this.id = setInterval (func_param, delay); this.paused = false}},
-          id     : setInterval (func_param, delay)
-         }
- } else {
-  return setInterval (func_param, delay)
+window.setIntervalUpgraded = function () {
+ var args = Array.prototype.slice.call(arguments)
+ return {
+  pause  : function () {if (typeof this.paused == "undefined") {window.clearInterval (this.id); this.paused = true}},
+  resume : function () {if (typeof this.paused != "undefined") {this.id = window.setInterval.apply (window, args); delete (this.paused)}},
+  id     : window.setInterval.apply (window, args)
  }
 }
 
@@ -1310,21 +1282,23 @@ function queueDBDataProcess (run_array) {
   // Only do auto-shift for single queues.
   if (run_array.length == 1) {
    switch (function_name) {
-    case 'setDBData'                   : args[6]  = queueDBDataShift; break
-    case 'getTextData'                 : args[6]  = queueDBDataShift; break
-    case 'getDBData_2Dintarray'        : args[10] = queueDBDataShift; break
-    case 'getDBData_json'              : args[1]  = queueDBDataShift; break
-    case 'getDBData_binary'            : args[1]  = queueDBDataShift; break
-    case 'getDBData'                   : args[10] = queueDBDataShift; break
+    case 'get_data'             : args[1]  = queueDBDataShift; break
+    case 'setDBData'            : args[6]  = queueDBDataShift; break
+    case 'getTextData'          : args[4]  = queueDBDataShift; break
+    case 'getDBData_2Dintarray' : args[10] = queueDBDataShift; break
+    case 'getDBData_json'       : args[1]  = queueDBDataShift; break
+    case 'getDBData_binary'     : args[1]  = queueDBDataShift; break
+    case 'getDBData'            : args[10] = queueDBDataShift; break
    }
   }
   switch (function_name) {
-   case 'setDBData'                   : setDBData.apply                   (null, args); break
-   case 'getTextData'                 : getTextData.apply                 (null, args); break
-   case 'getDBData_2Dintarray'        : getDBData_2Dintarray.apply        (null, args); break
-   case 'getDBData_json'              : getDBData_json.apply              (null, args); break
-   case 'getDBData_binary'            : getDBData_binary.apply            (null, args); break
-   case 'getDBData'                   : getDBData.apply                   (null, args); break
+   case 'get_data'                    : get_data.apply             (null, args); break
+   case 'setDBData'                   : setDBData.apply            (null, args); break
+   case 'getTextData'                 : getTextData.apply          (null, args); break
+   case 'getDBData_2Dintarray'        : getDBData_2Dintarray.apply (null, args); break
+   case 'getDBData_json'              : getDBData_json.apply       (null, args); break
+   case 'getDBData_binary'            : getDBData_binary.apply     (null, args); break
+   case 'getDBData'                   : getDBData.apply            (null, args); break
   }
  }
 }
@@ -1375,20 +1349,8 @@ function setDBData (input_tablename, params, successfunc, errorfunc, successpara
 
 
 // Use XMLHttpRequest to get text data from a file.
-function getTextData (filename, successfunc, errorfunc, successparam, send_data_as_plaintext, async, finishfunc) {
- async = (typeof async != "undefined") ? async : true
- if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
- var make_request_result = make_request(filename, '', false, send_data_as_plaintext, async)
- var http_request        = make_request_result["http_request"]
- 
- if (async == false) return process_http_request ()
- http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
- 
- function process_http_request () {
-  var response_value = http_request.responseText
-  if (typeof successparam != "undefined") {successfunc (response_value, successparam)} else {successfunc (response_value)}
-  if (typeof finishfunc != "undefined") finishfunc ()
- }
+function getTextData (filename, successfunc, errorfunc, async) {
+ return get_data ({'file': filename, 'success': successfunc, 'error': errorfunc, 'plaintext': true, 'async': async})
 }
 
 // Use XMLHttpRequest to get a 32-bit integer 2D array from a set of static zipped files.
@@ -1737,16 +1699,14 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
 
 function get_data (params) {
  // Convert request into POST data.
- var send_data_as_plaintext = params.send_data_as_plaintext
- if (typeof send_data_as_plaintext == "undefined") send_data_as_plaintext = params.plaintext
- var is_asynchronous = params.is_asynchronous
- if ((typeof is_asynchronous == "undefined")) is_asynchronous = params.async
- var charset         = params.charset
+ var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
+ var is_asynchronous = params.is_asynchronous || params.async
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- if (typeof charset == "undefined") charset = ''
+ var charset = params.charset || ''
+ var params_data = params.data || null
  // Call the request function.
- var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous)
+ var http_request_result = make_request (params.file, params_data, send_data_as_plaintext, charset, is_asynchronous)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1763,7 +1723,7 @@ function get_data (params) {
     response_text = JSON.parse (response_text)
    } catch (err) {
     response_text = {error: true, errormessage: response_text}
-    if (is_asynchronous == false) {return response_text} else {params.error(response_text); return}
+    if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
    }
    if ((response_text != null) && (response_text.error == true)) {
     if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
@@ -1832,7 +1792,7 @@ function message_emitter_create () {
   if (typeof main.event_listener_list[event_name] == "undefined") main.event_listener_list[event_name] = []
   main.event_listener_list[event_name].push (func)
  }
- main.messagebox_silent = false
+ main.message_silent = false
  main.send_message = function (message) {
   var triggered_events = {}
   for (var evt_name in main.event_list) {var evt = main.event_list[evt_name]; if (evt(message)) triggered_events[evt_name] = main.event_listener_list[evt_name]}
@@ -1840,8 +1800,8 @@ function message_emitter_create () {
    var event_listener_sublist = main.event_listener_list[evt_name]
    for (var i = 0, curlen = event_listener_sublist.length; i < curlen; i++) {event_listener_sublist[i] ()}
   }
-  if (main.messagebox_silent == true) alert (message)
-  main.messagebox_silent = true
+  if (main.message_silent == true) alert (message)
+  main.message_silent = true
  }
 }
 
@@ -1912,7 +1872,7 @@ function gui_close_button (init) {
 }
 
 function sliderbar (init) {
- var main                        = this
+ var main = document.createElement('div')
  var parent                      = main.parent                      = init['parent']
  var style_background            = main.style_background            = init['style background'] || ""
  var style_foreground            = main.style_foreground            = init['style foreground'] || ""
@@ -1978,7 +1938,7 @@ function sliderbar (init) {
   if (keyCode == 13) textbox_number.blur ()
  }
  function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / main.slider_position_upper_limit) // (main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
+  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / main.slider_position_upper_limit) // (main.clientWidth - getClientWidthFull(sliderbar_control)))
  }
  function textbox_blur (evt) {
   if (textbox_enabled == false) return
@@ -1986,33 +1946,33 @@ function sliderbar (init) {
   textbox_number.blur ()
  }
  
- main.sliderbar_background = document.createElement('div'); parent.appendChild(main.sliderbar_background)
- if (typeof class_background != "undefined") main.sliderbar_background.className = class_background
- setStyle (main.sliderbar_background, style_background)
+ parent.appendChild (main)
+ if (typeof class_background != "undefined") main.className = class_background
+ setStyle (main, style_background)
  
- var zoom_level = getInheritedTransform(main.sliderbar_background, {transform_type: "scale", xy: "x"})
+ var zoom_level = getInheritedTransform(main, {transform_type: "scale", xy: "x"})
  
- main.slider_position_upper_limit = main.sliderbar_background.clientWidth // var preliminary_position_max     = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
+ main.slider_position_upper_limit = main.clientWidth // var preliminary_position_max     = main.clientWidth - getClientWidthFull(sliderbar_control)
  
- main.slider_position_max         = Math.round(main.sliderbar_background.clientWidth * (point_maximum / point_upper_limit)) // Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
+ main.slider_position_max         = Math.round(main.clientWidth * (point_maximum / point_upper_limit)) // Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
  main.slider_position             = (starting_point_value * main.slider_position_upper_limit) / point_upper_limit // (starting_point_value * preliminary_position_max) / point_upper_limit
  
- main.sliderbar_foreground = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_foreground)
+ main.sliderbar_foreground = document.createElement('div'); main.appendChild(main.sliderbar_foreground)
  if (typeof class_foreground != "undefined") main.sliderbar_foreground.className = class_foreground
  setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
+  main.sliderbar_background_beyond_max = document.createElement('div'); main.appendChild(main.sliderbar_background_beyond_max)
   setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px' // (preliminary_position_max - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
  }
  
  if (typeof style_pivot_slice != 'undefined') {
-  main.sliderbar_pivot_slice = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_pivot_slice)
+  main.sliderbar_pivot_slice = document.createElement('div'); main.appendChild(main.sliderbar_pivot_slice)
   setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
   
-  main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
+  main.slider_pivot_start  = Math.round(main.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
   main.slider_pivot_end    = parseFloat(main.slider_position)
   if (main.slider_pivot_end > main.slider_pivot_start) {
    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
@@ -2023,7 +1983,7 @@ function sliderbar (init) {
   }
  }
  
- var sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild (sliderbar_control)
+ var sliderbar_control = document.createElement('div'); main.appendChild (sliderbar_control)
  setStyle (sliderbar_control, style_control)
  sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'  // sliderbar_control.style.left = main.slider_position + 'px'
  if (textbox_enabled == true) textbox_update_value ()
@@ -2031,37 +1991,53 @@ function sliderbar (init) {
  var startscroll = false
  var startx      = 0
  var offsetx     = 0            
- document.body.addEventListener             ('mousemove', sliderbar_mousemove)
- document.body.addEventListener             ('mouseup'  , sliderbar_mouseup_or_blur)
- document.body.addEventListener             ('mousedown', textbox_blur)
- window.addEventListener                    ('blur'     , sliderbar_mouseup_or_blur)
- window.addEventListener                    ('mouseout' , sliderbar_mouseout)
- sliderbar_control.addEventListener         ('mousedown', sliderbar_control_mousedown)
- main.sliderbar_background.addEventListener ('mousedown', sliderbar_mousedown)
+ document.addEventListener          ('mousemove', sliderbar_mousemove)
+ document.addEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
+ document.addEventListener          ('mousedown', textbox_blur)
+ window.addEventListener            ('blur'     , sliderbar_mouseup_or_blur)
+ window.addEventListener            ('mouseout' , sliderbar_mouseout)
+ sliderbar_control.addEventListener ('mousedown', sliderbar_control_mousedown)
+ main.addEventListener              ('mousedown', sliderbar_mousedown)
  
  main.update_position = function () {
-  startx = (findabspos_zoom_x(main.sliderbar_background) / zoom_level - parseFloat(sliderbar_control.style.width) / 2)
+  startx = (findabspos_zoom_x(main) / zoom_level - parseFloat(sliderbar_control.style.width) / 2)
  }
  
  main.destroy = function () {
-  document.body.removeEventListener             ('mousemove', sliderbar_mousemove)
-  document.body.removeEventListener             ('mouseup'  , sliderbar_mouseup_or_blur)
-  window.removeEventListener                    ('blur'     , sliderbar_mouseup_or_blur)
-  document.body.removeEventListener             ('mousedown', textbox_blur)
-  window.removeEventListener                    ('mouseout' , sliderbar_mouseout)
-  sliderbar_control.removeEventListener         ('mousedown', sliderbar_control_mousedown)
-  main.sliderbar_background.removeEventListener ('mousedown', sliderbar_mousedown)
+  document.removeEventListener          ('mousemove', sliderbar_mousemove)
+  document.removeEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
+  window.removeEventListener            ('blur'     , sliderbar_mouseup_or_blur)
+  document.removeEventListener          ('mousedown', textbox_blur)
+  window.removeEventListener            ('mouseout' , sliderbar_mouseout)
+  sliderbar_control.removeEventListener ('mousedown', sliderbar_control_mousedown)
+  main.removeEventListener              ('mousedown', sliderbar_mousedown)
   if (textbox_enabled == true) {
    textbox_number.removeEventListener ('click'   , textbox_toggle)
    textbox_number.removeEventListener ('input'   , textbox_change)
    textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
-  var current_parent = main.sliderbar_background.parentNode; current_parent.removeChild (main.sliderbar_background)
+  var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild (main)
+ }
+ 
+ // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
+ MutationObserver = MutationObserver || WebkitMutationObserver
+ if (typeof MutationObserver != "undefined") {
+  var observer = new MutationObserver (function (mutation_list) {
+   for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
+    var mutation_item = mutation_list[i]
+    if (mutation_item.type != 'childList') return
+    for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
+     if (mutation_item.removedNodes[j] != main) continue
+     main.destroy (); observer.disconnect (); return
+    }
+   }
+  })
+  observer.observe (parent, {attributes: false, childList: true, subtree: false})
  }
  
  main.set_position = function (new_position) {
   main.slider_position = new_position
-  //var preliminary_position_max = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
+  //var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
   //main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
   
   if (main.slider_position > main.slider_position_max) {
@@ -2074,7 +2050,7 @@ function sliderbar (init) {
   main.sliderbar_foreground.style.width = main.slider_position + 'px'
   
  if (typeof style_pivot_slice != 'undefined') {
-   main.slider_pivot_start  = Math.round(main.sliderbar_background.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
+   main.slider_pivot_start  = Math.round(main.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
    main.slider_pivot_end    = main.slider_position
    if (main.slider_pivot_end > main.slider_pivot_start) {
     main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
@@ -2096,7 +2072,7 @@ function sliderbar (init) {
  }
  
  main.set_position_by_point_value = function (new_position) {
-  main.set_position ((new_position * main.slider_position_upper_limit) / point_upper_limit) // main.set_position ((new_position * main.sliderbar_background.clientWidth) / point_upper_limit)
+  main.set_position ((new_position * main.slider_position_upper_limit) / point_upper_limit) // main.set_position ((new_position * main.clientWidth) / point_upper_limit)
  }
  
     
@@ -2136,11 +2112,12 @@ function sliderbar (init) {
   final_update_function ()
   return
  }
+ return main
 }
 
 
 function sliderbar_v2 (init) {
- var main                        = this
+ var main = document.createElement('div')
  var parent                      = main.parent                      = init['parent']
  var style_background            = main.style_background            = init['style background'] || ""
  var style_foreground            = main.style_foreground            = init['style foreground'] || ""
@@ -2206,7 +2183,7 @@ function sliderbar_v2 (init) {
   if (keyCode == 13) textbox_number.blur ()
  }
  function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit*main.slider_position) / (main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)))
+  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / (main.clientWidth - getClientWidthFull(sliderbar_control)))
  }
  function textbox_blur (evt) {
   if (textbox_enabled == false) return
@@ -2214,33 +2191,33 @@ function sliderbar_v2 (init) {
   textbox_number.blur ()
  }
  
- main.sliderbar_background = document.createElement('div'); parent.appendChild(main.sliderbar_background)
- if (typeof class_background != "undefined") main.sliderbar_background.className = class_background
- setStyle (main.sliderbar_background, style_background)
+ parent.appendChild (main)
+ if (typeof class_background != "undefined") main.className = class_background
+ setStyle (main, style_background)
  
- var sliderbar_control = main.sliderbar_control = document.createElement('div'); main.sliderbar_background.appendChild(sliderbar_control)
+ var sliderbar_control = main.sliderbar_control = document.createElement('div'); main.appendChild(sliderbar_control)
  if (typeof class_control != "undefined") sliderbar_control.className = class_control
  setStyle (sliderbar_control, style_control)
  sliderbar_control.style.left = main.slider_position + 'px'
  
- var zoom_level = getInheritedTransform(main.sliderbar_background, {transform_type:"scale", xy:"x"})
- var preliminary_position_max     = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
- main.slider_position_max         = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
- main.slider_position             = (starting_point_value * preliminary_position_max) / point_upper_limit
+ var zoom_level = getInheritedTransform(main, {transform_type:"scale", xy:"x"})
+ var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
+ main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
+ main.slider_position         = (starting_point_value * preliminary_position_max) / point_upper_limit
  
- main.sliderbar_foreground = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_foreground)
+ main.sliderbar_foreground = document.createElement('div'); main.appendChild(main.sliderbar_foreground)
  if (typeof class_foreground != "undefined") main.sliderbar_foreground.className = class_foreground
  setStyle (main.sliderbar_foreground, style_foreground)
  main.sliderbar_foreground.style.width = main.slider_position + 'px'
  if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_background_beyond_max)
+  main.sliderbar_background_beyond_max = document.createElement('div'); main.appendChild(main.sliderbar_background_beyond_max)
   setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
   main.sliderbar_background_beyond_max.style.width = (preliminary_position_max - main.slider_position_max) + 'px'
   main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
  }
  
  if (typeof style_pivot_slice != 'undefined') {
-  main.sliderbar_pivot_slice = document.createElement('div'); main.sliderbar_background.appendChild(main.sliderbar_pivot_slice)
+  main.sliderbar_pivot_slice = document.createElement('div'); main.appendChild(main.sliderbar_pivot_slice)
   setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
   
   main.slider_pivot_start  = Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
@@ -2258,38 +2235,52 @@ function sliderbar_v2 (init) {
  
  var startscroll = false
  var startx      = 0
- var offsetx     = 0
- addEvent (document.body             , 'mousemove', sliderbar_mousemove)
- addEvent (document.body             , 'mouseup'  , sliderbar_mouseup_or_blur)
- addEvent (document.body             , 'mousedown', textbox_blur)
- addEvent (window                    , 'blur'     , sliderbar_mouseup_or_blur)
- addEvent (window                    , 'mouseout' , sliderbar_mouseout)
- addEvent (sliderbar_control         , 'mousedown', sliderbar_control_mousedown)
- addEvent (main.sliderbar_background , 'mousedown', sliderbar_mousedown)
+ var offsetx     = 0            
+ document.addEventListener          ('mousemove', sliderbar_mousemove)
+ document.addEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
+ document.addEventListener          ('mousedown', textbox_blur)
+ window.addEventListener            ('blur'     , sliderbar_mouseup_or_blur)
+ window.addEventListener            ('mouseout' , sliderbar_mouseout)
+ sliderbar_control.addEventListener ('mousedown', sliderbar_control_mousedown)
+ main.addEventListener ('mousedown', sliderbar_mousedown)
  
- main.update_position = function () {
-  startx = findabspos_zoom_x(main.sliderbar_background)/zoom_level
- }
+ main.update_position = function () {startx = findabspos_zoom_x(main) / zoom_level}
  
  main.destroy = function () {
-  removeEvent (document.body            , 'mousemove', sliderbar_mousemove)
-  removeEvent (document.body            , 'mouseup'  , sliderbar_mouseup_or_blur)
-  removeEvent (window                   , 'blur'     , sliderbar_mouseup_or_blur)
-  removeEvent (document.body            , 'mousedown', textbox_blur)
-  removeEvent (window                   , 'mouseout' , sliderbar_mouseout)
-  removeEvent (sliderbar_control        , 'mousedown', sliderbar_control_mousedown)
-  removeEvent (main.sliderbar_background, 'mousedown', sliderbar_mousedown)
+  document.removeEventListener          ('mousemove', sliderbar_mousemove)
+  document.removeEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
+  window.removeEventListener            ('blur'     , sliderbar_mouseup_or_blur)
+  document.removeEventListener          ('mousedown', textbox_blur)
+  window.removeEventListener            ('mouseout' , sliderbar_mouseout)
+  sliderbar_control.removeEventListener ('mousedown', sliderbar_control_mousedown)
+  main.removeEventListener ('mousedown', sliderbar_mousedown)
   if (textbox_enabled == true) {
-   removeEvent (textbox_number, 'click'   , textbox_toggle)
-   removeEvent (textbox_number, 'input'   , textbox_change)
-   removeEvent (textbox_number, 'keypress', textbox_keypress)
+   textbox_number.removeEventListener ('click'   , textbox_toggle)
+   textbox_number.removeEventListener ('input'   , textbox_change)
+   textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
-  var current_parent = main.sliderbar_background.parentNode; current_parent.removeChild (main.sliderbar_background)
+  var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild (main)
+ }
+ 
+ // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
+ MutationObserver = MutationObserver || WebkitMutationObserver
+ if (typeof MutationObserver != "undefined") {
+  var observer = new MutationObserver (function (mutation_list) {
+   for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
+    var mutation_item = mutation_list[i]
+    if (mutation_item.type != 'childList') return
+    for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
+     if (mutation_item.removedNodes[j] != main) continue
+     main.destroy (); observer.disconnect (); return
+    }
+   }
+  })
+  observer.observe (parent, {attributes: false, childList: true, subtree: false})
  }
  
  main.set_position = function (new_position) {
   main.slider_position         = new_position
-  var preliminary_position_max = main.sliderbar_background.clientWidth - getClientWidthFull(sliderbar_control)
+  var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
   main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
   
   if (main.slider_position > main.slider_position_max) {
@@ -2324,7 +2315,7 @@ function sliderbar_v2 (init) {
  }
  
  main.set_position_by_point_value = function (new_position) {
-  main.set_position ((new_position * main.sliderbar_background.clientWidth) / point_upper_limit)
+  main.set_position ((new_position * main.clientWidth) / point_upper_limit)
  }
  
     
@@ -2364,19 +2355,20 @@ function sliderbar_v2 (init) {
   final_update_function ()
   return
  }
+ return main
 }
 
 
 function red_blue_arrow (init) {
  var parent      = init['parent']
  var style       = init['style']
- var main        = document.createElement('div'); parent.appendChild(main)
+ var main        = document.createElement('div'); parent.appendChild (main)
  main.thickness  = parseFloat(init['thickness'])
  main.bar_length = parseFloat(init['bar length'])
  main.tip_length = parseFloat(init['tip length'])
- main.left   = document.createElement('img') ; main.appendChild(main.left)
- main.middle = document.createElement('img') ; main.appendChild(main.middle)
- main.right  = document.createElement('img') ; main.appendChild(main.right)
+ main.left   = document.createElement('img') ; main.appendChild (main.left)
+ main.middle = document.createElement('img') ; main.appendChild (main.middle)
+ main.right  = document.createElement('img') ; main.appendChild( main.right)
  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
@@ -2612,20 +2604,16 @@ function removeAllStyleSheetRules (obj) {
 }
 
 function removeAllDescendantsAndSelf (cell) {
- if (cell.hasChildNodes()) {
-  while (cell.childNodes.length >= 1) {
-   removeAllDescendants (cell.firstChild)
-   cell.removeChild(cell.firstChild)
-  }
- }
- if (cell.parentNode) {(cell.parentNode).removeChild(cell)}
+ if (cell.hasChildNodes()) {while (cell.childNodes.length > 0) {removeAllDescendantsAndSelf (cell.firstChild)}}
+ if (cell.parentNode) (cell.parentNode).removeChild (cell)
+ if (cell == window.cell) delete (window.cell)
  cell = null
 }
 
 function removeAllDescendants (cell) {
  if (cell.hasChildNodes()) {
   var curlen = cell.childNodes.length
-  while (cell.childNodes.length >= 1) {
+  while (cell.childNodes.length > 0) {
    removeAllDescendants (cell.firstChild)
    cell.removeChild(cell.firstChild)
   }
