@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.1.
+// HelperJS version 3.2.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1313,7 +1313,7 @@ function queueDBDataShift () {
 function setDBData (input_tablename, params, successfunc, errorfunc, successparam, async, finishfunc) {
  async = (typeof async != "undefined") ? async : true
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
- if (typeof errorfunc   != "undefined") {if (errorfunc == null)   errorfunc = undefined}
+ if (typeof errorfunc   != "undefined") {if (errorfunc   == null) errorfunc   = undefined}
  
  // Trim the column list of spaces, and don't do anything if the column list is blank!
  params = params.trim(); if (params == '') return
@@ -1738,16 +1738,16 @@ function get_data (params) {
 
 
 function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
- if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
+ if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
  if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
  var http_request = new XMLHttpRequest()
  if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
- if (typeof request_method == "undefined") var request_method = ((data == null) ? "GET" : "POST")
+ if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
  if (request_method == "GET") {url = url + "?" + data; data = null}
  http_request.open (request_method, url, is_asynchronous)
  if (typeof response_type != "undefined") http_request.responseType = response_type
- if (send_data_as_plaintext == true) {
+ if (send_data_as_plaintext === true) {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
  } else {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
@@ -2979,7 +2979,7 @@ function dom_object_intersects_line (obj, x, y) {
 }
 
 function timed_remove (element, ms) {
- setTimeout (function () {
+ return setTimeout (function () {
   parent = element.parentNode
   if (parent == null) return
   parent.removeChild (element)
@@ -2989,12 +2989,12 @@ function timed_remove (element, ms) {
 function getCaretPosition (obj) { 
  if (obj.selectionStart) return obj.selectionStart
  if (document.selection) { 
-  obj.focus()
- var r = document.selection.createRange() 
+  obj.focus ()
+  var r = document.selection.createRange () 
   if (r == null) return 0
-  var re = obj.createTextRange()
+  var re = obj.createTextRange ()
   rc = re.duplicate()
-  re.moveToBookmark(r.getBookmark())
+  re.moveToBookmark(r.getBookmark ())
   rc.setEndPoint('EndToStart', re)
   return rc.text.length
  }
