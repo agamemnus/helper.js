@@ -1,5 +1,7 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
 // HelperJS version 3.1.
+// Easter Egg in plain sight: (thanks to Brigand)
+// function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
 // Prototypes and Math. property-functions always camel-case.
 
@@ -149,7 +151,6 @@ window.setTimeoutUpgraded = function () {
               delete (this.paused)
               this.start = new Date().getTime()
               args[1] = this.timeLeft
-              console.log (args[1])
               this.id = window.setTimeout.apply (window, args)
              },
   restart  : function () {
@@ -1703,8 +1704,8 @@ function get_data (params) {
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
  var is_asynchronous = params.is_asynchronous || params.async
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- var charset = params.charset || ''
- var params_data = params.data || null
+ var charset     = (typeof params.charset == "undefined") ? params.charset : ""
+ var params_data = (typeof params.data    == "undefined") ? params.data    : ""
  // Call the request function.
  var http_request_result = make_request (params.file, params_data, send_data_as_plaintext, charset, is_asynchronous)
  var http_request        = http_request_result["http_request"]
@@ -1821,44 +1822,29 @@ function addLIMenuOptions (parent, options) {
 }
 
 function button (init) {
- var button_div         = document.createElement ('div')
- var parent             = init['parent']
- var className          = init['className']
- var style              = init['style']
- var text               = init['text']
- var clicked_function   = init['clicked function']
- var mouseover_function = init['mouseover function']
- var mouseout_function  = init['mouseout function']
+ var button_div = document.createElement ('div')
+ var parent     = init.parent
+ var className  = init.className
+ var style      = init.style
+ var text       = init.text
  
- Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
- 
- button_div.mousedown = function (evt) {
-  if (getRightClick(evt)) return
-  clicked_function (evt)
- }
-
- button_div.mouseover = function (evt) {
-  mouseover_function (evt)
- }
-
- button_div.mouseout = function (evt) {
-  mouseout_function (evt)
- }
-
  button_div.destroy = function () {
-  removeEvent (button_div, 'mousedown', button_div.mousedown)
-  if (typeof mouseover_function != 'undefined') removeEvent (button_div, 'mouseover', button_div.mouseover)
-  if (typeof mouseout_function  != 'undefined') removeEvent (button_div, 'mouseout', button_div.mouseout)
+  for (var property in init) {
+   if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.removeEventListener (property, init[property])
+  }
+  button_div.parentNode.removeChild (button_div)
+  button_div = null
  }
  
- button_div.innerHTML = text
- if (typeof className != "undefined")  button_div.className = className
- if (typeof style != "undefined") setStyle (button_div, style)
+ for (var property in init) {
+  if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.addEventListener (property, init[property])
+ }
+ 
+ if (typeof text      != "undefined") button_div.innerHTML = text
+ if (typeof className != "undefined") button_div.className = className
+ if (typeof style     != "undefined") setStyle (button_div, style)
+ Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
  parent.appendChild (button_div)
-
- addEvent (button_div, 'mousedown', button_div.mousedown)
- if (typeof mouseover_function != 'undefined') addEvent (button_div, 'mouseover', button_div.mouseover)
- if (typeof mouseout_function  != 'undefined') addEvent (button_div, 'mouseout', button_div.mouseout)
  
  return button_div
 }
