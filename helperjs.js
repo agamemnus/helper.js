@@ -76,6 +76,7 @@ if (typeof console.log == "undefined") console.log = function () {}
 
 // <DOM object prototypes. TAG: DOM, TAG: DOM objects, TAG: prototypes.>
 // Is the element attached to the DOM?
+// (Don't hate me cause I'm a prototype!)
 HTMLElement.prototype.isAttached = function () {
  var obj = this
  while (true) {
@@ -2636,13 +2637,35 @@ function getClientHeightFull (obj, init) {
  return obj.clientHeight + padding_and_margin + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
 }
 
-// Merge two objects together.
-function merge_objects (primary, secondary) {
- // The primary object's duplicate keys are superior. The secondary object's duplicate keys are inferior.
+// Merge two objects together. If the primary object has the same key as the secondary object, use the primary object's value.
+function merge_objects (secondary, primary) {
  if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
  var new_object = {}
  for (var property in secondary) {new_object[property] = secondary[property]}
  for (var property in primary)   {new_object[property] = primary  [property]}
+ return new_object
+}
+
+// Merge two objects together.
+// If the primary object has the same key as the secondary object:
+// If both keys' values are function, merge the functions, secondary first.
+// If that key's value is an object, use the primary object's value.
+function merge_objects_with_options (secondary, primary, options) {
+if (typeof options == "undefined") options = {}
+ if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
+ var new_object = {}
+ for (var property in secondary) {new_object[property] = secondary[property]}
+ for (var property in primary)   {
+	 if ((options.merge_sub_functions) && (typeof secondary[property] == "function") && (typeof primary[property] == "function")) {
+ 	 new_object[property] = function () {
+	 	 var args = Array.prototype.slice.call(arguments)
+	 	 secondary[property].apply (this, args)
+	 	 primary[property]  .apply (this, args)
+	 	}
+			continue
+		}
+	 new_object[property] = primary[property]
+	}
  return new_object
 }
 
