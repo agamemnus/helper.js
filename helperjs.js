@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.2.
+// HelperJS version 3.1.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1704,8 +1704,8 @@ function get_data (params) {
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
  var is_asynchronous = params.is_asynchronous || params.async
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- var charset     = (typeof params.charset == "undefined") ? params.charset : ""
- var params_data = (typeof params.data    == "undefined") ? params.data    : ""
+ var charset     = (typeof params.charset != "undefined") ? params.charset : ""
+ var params_data = (typeof params.data    != "undefined") ? params.data    : ""
  // Call the request function.
  var http_request_result = make_request (params.file, params_data, send_data_as_plaintext, charset, is_asynchronous)
  var http_request        = http_request_result["http_request"]
