@@ -2656,7 +2656,7 @@ if (typeof options == "undefined") options = {}
  var new_object = {}
  for (var property in secondary) {new_object[property] = secondary[property]}
  for (var property in primary)   {
-	 if ((options.merge_sub_functions) && (typeof secondary[property] == "function") && (typeof primary[property] == "function")) {
+	 if ((options.merge_subfunctions) && (typeof secondary[property] == "function") && (typeof primary[property] == "function")) {
  	 new_object[property] = function () {
 	 	 var args = Array.prototype.slice.call(arguments)
 	 	 secondary[property].apply (this, args)
