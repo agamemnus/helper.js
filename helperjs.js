@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.1.
+// HelperJS version 3.3.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -198,7 +198,7 @@ function getRightClick (evt) {
 function getWheelData (evt) {
  return evt.detail ? evt.detail * -1 : evt.wheelDelta / 40;
 }
-	
+ 
 function getKeyCodeString (evt) {
  var keyCode = evt.keyCode
  switch (keyCode) {
@@ -263,6 +263,7 @@ function add_swipe_controls (init) {
    if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) == false)) return
    if (evt.touches.length != 1) return
    var xy = getXY_zoom(evt.touches[0], target_obj); initial_x = xy[0]; initial_y = xy[1]
+   current_x = initial_x; current_y = initial_y
    if (swipe_in_effect == true) return
    swipe_in_effect = true
    if (typeof init.start_effect != "undefined") init.start_effect (evt)
@@ -1700,7 +1701,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
 }
 
 function get_data (params) {
- // Convert request into POST data.
+ // Convert request into GET or POST data.
  var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
  var is_asynchronous = params.is_asynchronous || params.async
@@ -1802,8 +1803,8 @@ function message_emitter_create () {
    var event_listener_sublist = main.event_listener_list[evt_name]
    for (var i = 0, curlen = event_listener_sublist.length; i < curlen; i++) {event_listener_sublist[i] ()}
   }
-  if (main.message_silent == true) alert (message)
-  main.message_silent = true
+  if (main.message_silent == true) alert (message, {}, function () {main.message_silent = true})
+  main.message_silent = false
  }
 }
 
@@ -2651,21 +2652,21 @@ function merge_objects (secondary, primary) {
 // If both keys' values are function, merge the functions, secondary first.
 // If that key's value is an object, use the primary object's value.
 function merge_objects_with_options (secondary, primary, options) {
-if (typeof options == "undefined") options = {}
+ if (typeof options == "undefined") options = {}
  if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
  var new_object = {}
  for (var property in secondary) {new_object[property] = secondary[property]}
  for (var property in primary)   {
-	 if ((options.merge_subfunctions) && (typeof secondary[property] == "function") && (typeof primary[property] == "function")) {
- 	 new_object[property] = function () {
-	 	 var args = Array.prototype.slice.call(arguments)
-	 	 secondary[property].apply (this, args)
-	 	 primary[property]  .apply (this, args)
-	 	}
-			continue
-		}
-	 new_object[property] = primary[property]
-	}
+  if ((options.merge_subfunctions) && (typeof secondary[property] == "function") && (typeof primary[property] == "function")) {
+   new_object[property] = function () {
+    var args = Array.prototype.slice.call(arguments)
+    secondary[property].apply (this, args)
+    primary[property]  .apply (this, args)
+   }
+   continue
+  }
+  new_object[property] = primary[property]
+ }
  return new_object
 }
 
@@ -3709,6 +3710,8 @@ function on_background_image_url_load (current_div, callback) {
 // <Feature/property detection functions. TAG: detection functions, TAG: detect device type, TAG: detect scrollbar size.>
 function detect_device_type (obj) {
  var ua = navigator.userAgent.toLowerCase()
+ obj.is_iphone          = (ua.match(/iphone/i) != null)
+ obj.is_ipad            = (ua.match(/ipad/i) != null)
  obj.is_idevice         = (ua.match(/ipad/i) || ua.match(/iphone/i) != null)
  obj.is_android         = (ua.match(/android/i) != null)
  obj.is_chromium        = (ua.match(/chrome/i) != null)
