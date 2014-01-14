@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.3.
+// HelperJS version 3.4.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -250,7 +250,7 @@ function add_swipe_controls (init) {
  void function (init) {
   var target_obj = init.target, initial_x, initial_y, current_x, current_y, swipe_in_effect = false
   target_obj.addEventListener ('touchstart' , swipe_start_event)
-  target_obj.addEventListener ('touchmove'  , function (evt) {swipe_event (evt)})
+  target_obj.addEventListener ('touchmove'  , swipe_event)
   target_obj.addEventListener ('touchend'   , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
   target_obj.addEventListener ('touchleave' , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
   target_obj.addEventListener ('touchcancel', function (evt) {if (swipe_in_effect == false) return; swipe_end (evt)})
