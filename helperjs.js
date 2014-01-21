@@ -75,6 +75,23 @@ if (typeof console.log == "undefined") console.log = function () {}
 
 
 // <DOM object prototypes. TAG: DOM, TAG: DOM objects, TAG: prototypes.>
+
+// IE .innerHTML shim/polyfill.
+if (/(msie|trident)/i.test(navigator.userAgent)) {
+ var innerhtml_get = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").get
+ var innerhtml_set = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").set
+ Object.defineProperty(HTMLElement.prototype, "innerHTML", {
+  get: function () {return innerhtml_get.call (this)},
+  set: function(new_html) {
+   var childNodes = this.childNodes
+   for (var curlen = childNodes.length, i = curlen; i > 0; i--) {
+    this.removeChild (childNodes[0])
+   }
+   innerhtml_set.call (this, new_html)
+  }
+ })
+}
+
 // Is the element attached to the DOM?
 // (Don't hate me cause I'm a prototype!)
 HTMLElement.prototype.isAttached = function () {
@@ -3101,24 +3118,25 @@ function sort_by_order (obj, order_list) {
 
 // <Domain and directory functions. TAG: form, TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
 
-// Reads a page's GET URL variables and returns them as an associative array.
+// Get URL variables from window.location and put them into variable_object as key/value pairs. Returns variable_object.
 function getUrlVars (variable_object) {
- if ((typeof variable_object != "object") || (variable_object == null)) var variable_object = {}
- var current_variable
+ if ((typeof variable_object != "object") || (variable_object == null)) variable_object = {}
  var variable_list = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
  var curlen = variable_list.length
  for (var i = 0; i < curlen; i++) {
-  current_variable = variable_list[i].split('=')
+  var current_variable = variable_list[i].split('=')
   if (typeof current_variable[1] == "undefined") continue
   variable_object[current_variable[0]] = decodeURIComponent(current_variable[1])
  }
  return variable_object
 }
-
 // Form a GET URL string from an array.
-function formUrlVars (variable_list) {
+function formUrlVars (variable_list, options) {
+ if (typeof options                         == "undefined") options = {}
+ if (typeof options.record_undefined_values == "undefined") options.record_undefined_values = true
  var return_value = ""
- for (var i in variable_list) {return_value += "&" + i + "=" + variable_list[i]}
+ for (var i in variable_list) {
+ if ((typeof variable_list[i] != "undefined") || (options.record_undefined_values == true)) return_value += "&" + i + "=" + variable_list[i]}
  if (return_value != "") return_value = "?" + return_value.slice(1, return_value.length)
  return return_value
 }
