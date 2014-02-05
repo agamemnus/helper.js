@@ -3166,14 +3166,36 @@ function strip_domain (url) {
  return url.substring(first_index)
 }
 function get_domain_and_directory (url) {var last_index = url.lastIndexOf("/") + 1; return url.substring(0, last_index)}
+function strip_from_base_href (url) {
+ var startAt = url.indexOf('://');
+ if (startAt == -1) return url
+ startAt = startAt == -1 ? 0 : startAt+3;
+ var first_index = url.indexOf("/", startAt) + 1
+ if (first_index == 0) return url
+ return url.substring(first_index)
+}
 function strip_directory (url) {var last_index = url.lastIndexOf("/") + 1; if (last_index == 0) return url; return url.substring(last_index)}
 function strip_extension (url) {return url.substring(0, url.lastIndexOf("."))}
 function remove_base_url (url) {
+ var url_original = url
  var base_url_pattern = /^https?:\/\/[a-z\:0-9.]+/
  var result = ""
  var match = base_url_pattern.exec (url)
  if (match != null) result = match[0]
  if (result.length > 0) url = url.replace(result, "").substr(1)
+ 
+ // Check if there is a base element in the head and if so, add to the URL.
+ var head_element = document.getElementsByTagName('head')
+ head_element = head_element[head_element.length - 1]
+ if (head_element != null) {
+  var base_element = document.getElementsByTagName('base')
+  base_element = base_element[base_element.length - 1]
+  if (base_element != null) {
+   var base_href = base_element.getAttribute("href")
+   base_href = base_href.substr (base_href.indexOf('/') + 1) + "/"
+   url = url.replace (base_href, "")
+  }
+ }
  return url
 }
 function modify_href_if_relative (prefix_src, current_src) {
