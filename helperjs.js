@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.4.
+// HelperJS version 3.5.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3817,7 +3817,7 @@ function readcookie (name) {
 // </Cookie/localStorage functions.>
 
 
-// <Font loading functions. TAG: fonts, TAG: font loading.>
+// <Font loading/handling functions. TAG: text, TAG: fonts, TAG: font loading.>
 
 // Check that a list of fonts have loaded, and if so, run the specified callback functions.
 function load_web_fonts (font_list, callback) {
@@ -3860,4 +3860,66 @@ function load_web_fonts (font_list, callback) {
   node = null
  }
 }
-// </Font loading functions.>
+
+
+
+// Thanks to ImBcmDth for this!
+function fit_text_to_parent (element, init) {
+ var parent_rectangle = element.parentNode.getBoundingClientRect()
+ var height = parent_rectangle.height
+ var width  = parent_rectangle.width
+ // Might have to change the decimal precision above to work with "large" units like inches and cm.
+ 
+ function find_best_size (min_size, max_size, best_size) {
+  var middle_size = +((max_size + min_size) / 2).toFixed(2)
+  element.style.fontSize = middle_size + init.unit_type
+  
+  var inner_height = element.scrollHeight
+  var inner_width  = element.scrollWidth
+  
+  if (min_size === middle_size || max_size === middle_size) return best_size
+  
+  if (inner_height > height || inner_width > width)   return find_best_size (min_size, middle_size, best_size)
+  if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
+  return best_size
+ }
+ if (typeof init == "undefined") init = {}
+ if (typeof init.unit_type == "undefined") init.unit_type = "px"
+ var best = find_best_size (
+  (typeof init.min_size  != "undefined") ? init.min_size  : 0,
+  (typeof init.max_size  != "undefined") ? init.max_size  : 120,
+  (typeof init.best_size != "undefined") ? init.best_size : 0
+ )
+ element.style.fontSize = best + init.unit_type
+}
+
+// Thanks to ImBcmDth for this!
+function fit_text_to_parent (element, init) {
+ var parent_rectangle = element.parentNode.getBoundingClientRect()
+ var height = parent_rectangle.height
+ var width  = parent_rectangle.width
+ // Might have to change the decimal precision above to work with "large" units like inches and cm.
+ 
+ function find_best_size (min_size, max_size, best_size) {
+  var middle_size = +((max_size + min_size) / 2).toFixed(2)
+  element.style.fontSize = middle_size + init.unit_type
+  
+  var inner_height = element.scrollHeight
+  var inner_width  = element.scrollWidth
+  
+  if (min_size === middle_size || max_size === middle_size) return best_size
+  
+  if (inner_height > height || inner_width > width)   return find_best_size (min_size, middle_size, best_size)
+  if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
+  return best_size
+ }
+ if (typeof init == "undefined") init = {}
+ if (typeof init.unit_type == "undefined") init.unit_type = "px"
+ var best = find_best_size (
+  (typeof init.min_size  != "undefined") ? init.min_size  : 0,
+  (typeof init.max_size  != "undefined") ? init.max_size  : 120,
+  (typeof init.best_size != "undefined") ? init.best_size : 0
+ )
+ element.style.fontSize = best + init.unit_type
+}
+// </Font loading/handling functions.>
