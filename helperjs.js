@@ -3909,7 +3909,7 @@ function fit_text_to_parent (element, init) {
   
   if (min_size === middle_size || max_size === middle_size) return best_size
   
-  if (inner_height > height || inner_width > width)   return find_best_size (min_size, middle_size, best_size)
+  if (inner_height >  height || inner_width >  width) return find_best_size (min_size, middle_size, best_size)
   if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
   return best_size
  }
