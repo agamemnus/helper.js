@@ -2444,6 +2444,10 @@ function convert_to_px_units (parent, measure) {
  return w
 }
 
+function get_rem_units (obj, property) {
+ return parseFloat(window.getComputedStyle(obj)[property]) / parseFloat(document.documentElement.style.fontSize)
+}
+
 function css_set_scale (sw, sh, obj) {obj.setAttribute('transform', 'scale(' + sw + ' ' + sh +')')}
 
 function setScrollTop (amount, obj) {
