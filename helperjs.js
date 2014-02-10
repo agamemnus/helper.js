@@ -3874,7 +3874,6 @@ function fit_text_to_parent (element, init) {
   var rect = element.getBoundingClientRect()
   var inner_height = element.scrollHeight + (parseInt(rect.height) - rect.height)
   var inner_width  = element.scrollWidth  + (parseInt(rect.width)  - rect.width)
-  console.log (rect.width + " " + element.scrollWidth)
   if (min_size === middle_size || max_size === middle_size) return best_size
   
   if (inner_height > height || inner_width > width) return find_best_size (min_size, middle_size, best_size)
