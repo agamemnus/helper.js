@@ -1505,9 +1505,9 @@ if (typeof JSZip != "undefined") {
    var webworker_func = function (evt) {
     var response = evt.data
     window = {}
-    importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip.js')
-    importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-deflate.js', 'http://capitalopoly.com/js/plugins/jszip/jszip-inflate.js')
-    importScripts ('http://capitalopoly.com/js/plugins/jszip/jszip-load.js')
+    importScripts ('/js/plugins/jszip/jszip.js')
+    importScripts ('/js/plugins/jszip/jszip-deflate.js', '/js/plugins/jszip/jszip-inflate.js')
+    importScripts ('/js/plugins/jszip/jszip-load.js')
     var zip = new JSZip (response, {base64: false})
     var buffer_list = {}
     for (var filename_in_loop in zip.files) {
