@@ -3888,6 +3888,7 @@ function fit_text_to_parent (element, init) {
   (typeof init.max_size  != "undefined") ? init.max_size  : 120,
   (typeof init.best_size != "undefined") ? init.best_size : 0
  )
+ if (typeof init.min_size  != "undefined") {if (best < init.min_size) best = init.min_size}
  element.style.fontSize = best + init.unit_type
 }
 // </Font loading/handling functions.>
