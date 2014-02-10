@@ -3871,11 +3871,9 @@ function fit_text_to_parent (element, init) {
  function find_best_size (min_size, max_size, best_size) {
   var middle_size = +((max_size + min_size) / 2).toFixed(2)
   element.style.fontSize = middle_size + init.unit_type
-  element.style.position = "absolute"
   var rect = element.getBoundingClientRect()
-  var inner_height = rect.height
-  var inner_width  = rect.width
-  element.style.position = "relative"
+  var inner_height = element.scrollHeight + (parseInt(rect.height) - rect.height)
+  var inner_width  = element.scrollWidth  + (parseInt(rect.width)  - rect.width)
   console.log (rect.width + " " + element.scrollWidth)
   if (min_size === middle_size || max_size === middle_size) return best_size
   
@@ -3883,17 +3881,14 @@ function fit_text_to_parent (element, init) {
   if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
   return best_size
  }
- //element.parentNode.style.width = '5000px'
  if (typeof init == "undefined") init = {}
  if (typeof init.unit_type == "undefined") init.unit_type = "px"
- var style_position_saved = element.style.position
  var best = find_best_size (
   (typeof init.min_size  != "undefined") ? init.min_size : 0,
   (typeof init.max_size  != "undefined") ? init.max_size : 120,
   (typeof init.best_size != "undefined") ? init.best_size : 0
  )
  if (typeof init.min_size != "undefined") {if (best < init.min_size) best = init.min_size}
- element.style.position = style_position_saved
  element.style.fontSize = best + init.unit_type
 }
 // </Font loading/handling functions.>
