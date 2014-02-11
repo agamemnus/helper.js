@@ -3751,11 +3751,12 @@ function on_background_image_url_load (current_div, callback) {
 
 // Creates a solid one color copy (plus transparency) of the source image in a <canvas> object with the specified rgb colors.
 // Each pixel will receive this color if it does not have an alpha value of 0;
-// the alpha value of the color would then be set to 255.
-function create_single_color_canvas_copy (source, r, g, b, unit_style_size, source_width, source_height) {
+// the alpha value of the color would then be set to a user-defined value -- 255 by default.
+function create_single_color_canvas_copy (source, r, g, b, a, unit_style_size, source_width, source_height) {
  if (typeof r == "undefined") r = 0
  if (typeof g == "undefined") g = 0
  if (typeof b == "undefined") b = 0
+ if (typeof a == "undefined") a = 255
  if (typeof source_width  == "undefined") {if (source.style.width  == null) {var source_width  = source.width } else {var source_width  = parseFloat(source.style.width)  * unit_style_size}}
  if (typeof source_height == "undefined") {if (source.style.height == null) {var source_height = source.height} else {var source_height = parseFloat(source.style.height) * unit_style_size}}
  
@@ -3772,7 +3773,7 @@ function create_single_color_canvas_copy (source, r, g, b, unit_style_size, sour
    imagedata_target_data[i]     = r
    imagedata_target_data[i + 1] = g
    imagedata_target_data[i + 2] = b
-   imagedata_target_data[i + 3] = 255
+   imagedata_target_data[i + 3] = a
   } else {
    imagedata_target_data[i]     = 0
    imagedata_target_data[i + 1] = 0
