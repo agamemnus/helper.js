@@ -3748,41 +3748,6 @@ function on_background_image_url_load (current_div, callback) {
  temp_image.onload = function () {callback (temp_image)}
  temp_image.src = background_image_raw
 }
-
-// Creates a solid one color copy (plus transparency) of the source image in a <canvas> object with the specified rgb colors.
-// Each pixel will receive this color if it does not have an alpha value of 0;
-// the alpha value of the color would then be set to a user-defined value -- 255 by default.
-function create_single_color_canvas_copy (source, r, g, b, a, unit_style_size, source_width, source_height) {
- if (typeof r == "undefined") r = 0
- if (typeof g == "undefined") g = 0
- if (typeof b == "undefined") b = 0
- if (typeof a == "undefined") a = 255
- if (typeof source_width  == "undefined") {if (source.style.width  == null) {var source_width  = source.width } else {var source_width  = parseFloat(source.style.width)  * unit_style_size}}
- if (typeof source_height == "undefined") {if (source.style.height == null) {var source_height = source.height} else {var source_height = parseFloat(source.style.height) * unit_style_size}}
- 
- var target = document.createElement ('canvas')
- var ctx_target = target.getContext('2d')
- target.width  = source_width
- target.height = source_height
- ctx_target.drawImage (source, 0, 0, target.width, target.height)
- var imagedata_target = ctx_target.getImageData(0, 0, target.width, target.height)
- var imagedata_target_data = imagedata_target.data
- var curlen = imagedata_target.data.length
- for (var i = 0; i < curlen; i+=4) {
-  if (imagedata_target_data[i + 3] != 0) {
-   imagedata_target_data[i]     = r
-   imagedata_target_data[i + 1] = g
-   imagedata_target_data[i + 2] = b
-   imagedata_target_data[i + 3] = a
-  } else {
-   imagedata_target_data[i]     = 0
-   imagedata_target_data[i + 1] = 0
-   imagedata_target_data[i + 2] = 0
-  }
- }
- ctx_target.putImageData (imagedata_target, 0, 0)
- return target
-}
 // </Graphics/image/canvas functions.>
 
 
