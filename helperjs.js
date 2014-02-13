@@ -790,7 +790,11 @@ Math.eval = function (expression, replace_list) {
  } while (true)
  return eval (expression)
 }
-
+// Weighted sample / distribution selection function.
+Math.weightedSample = function (obj) {
+ var total = 0; for (var i in obj) {total += obj[i]}; total *= Math.random ()
+ for (var i in obj) {total -= obj[i]; if (total < 0) return i}
+}
 function pow (a, b) {
  return Math.pow (a,b)
 }
