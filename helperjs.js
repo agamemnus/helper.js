@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.5.
+// HelperJS version 3.6.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -26,9 +26,6 @@
 // function getXY
 // function getX
 // function getY
-// function getXY_zoom
-// function getX_zoom
-// function getY_zoom
 // function getInheritedTransform
 // function getTransformString
 //
@@ -152,8 +149,8 @@ function removeCustomEvent (event_handle, event_name) {
 
 // setTimeOut replacement.
 window.setTimeoutUpgraded = function () {
- var args = Array.prototype.slice.call(arguments)
-  var curtime = new Date().getTime()
+ var args = Array.prototype.slice.call (arguments)
+  var curtime = new Date().getTime ()
   return {
    timeLeft : args[1],
    start    : curtime,
@@ -248,8 +245,8 @@ function add_pinch_controls (init) {
   } else {
    if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) === false)) return
   }
-  var xy0 = getXY_zoom(evt.touches[0], target_obj); var x0 = xy0[0]; var y0 = xy0[1]
-  var xy1 = getXY_zoom(evt.touches[1], target_obj); var x1 = xy1[0]; var y1 = xy1[1]
+  var xy0 = getXY(evt.touches[0], target_obj); var x0 = xy0[0]; var y0 = xy0[1]
+  var xy1 = getXY(evt.touches[1], target_obj); var x1 = xy1[0]; var y1 = xy1[1]
   if ((init.always_recalculate_zoom_target === true) || (current_distance == false)) {
    zoom_x = (x0 + x1) / 2, zoom_y = (y0 + y1) / 2
   }
@@ -279,7 +276,7 @@ function add_swipe_controls (init) {
   function swipe_start_event (evt) {
    if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) == false)) return
    if (evt.touches.length != 1) return
-   var xy = getXY_zoom(evt.touches[0], target_obj); initial_x = xy[0]; initial_y = xy[1]
+   var xy = getXY(evt.touches[0], target_obj); initial_x = xy[0]; initial_y = xy[1]
    current_x = initial_x; current_y = initial_y
    if (swipe_in_effect == true) return
    swipe_in_effect = true
@@ -287,7 +284,7 @@ function add_swipe_controls (init) {
   }
   function swipe_event (evt) {
    if ((evt.touches.length != 1) || ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false))) {swipe_end (evt); return}
-   var xy = getXY_zoom(evt.touches[0], target_obj); current_x = xy[0]; current_y = xy[1]
+   var xy = getXY(evt.touches[0], target_obj); current_x = xy[0]; current_y = xy[1]
   }
   function swipe_end_event (evt) {
    if ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false)) {swipe_end (evt); return}
@@ -1069,51 +1066,17 @@ function (curstring) {
 
 // <Mouse/DOM object position functions. TAG: mouse, TAG: mouse position, TAG: positions, TAG: object positions, TAG: element positions.>
 
-// Does not account for CSS transforms.
 function getXY (evt, target) {
  if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageX  != "undefined") {
-  var obj = findabspos (target)
-  return [evt.pageX - obj[0], evt.pageY - obj[1]]
- }
- if (typeof evt.offsetX != "undefined") return [evt.offsetX, evt.offsetY]
- if (typeof evt.layerY != "undefined") return [evt.layerX, evt.layerY]
+ var rect = target.getBoundingClientRect(); return [evt.clientX - rect.left, evt.clientY - rect.top]
 }
 function getX (evt, target) {
  if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageX   != "undefined") return evt.pageX - findabspos_x (target)
- if (typeof evt.offsetX != "undefined") return evt.offsetX
- if (typeof evt.layerX  != "undefined") return evt.layerX
+ return evt.clientX - target.getBoundingClientRect().left
 }
 function getY (evt, target) {
  if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageY   != "undefined") return evt.pageY - findabspos_y (target)
- if (typeof evt.offsetY != "undefined") return evt.offsetY
- if (typeof evt.layerY  != "undefined") return evt.layerY
-}
-
-
-// Accounts for scale-type CSS transforms.
-function getXY_zoom (evt, target) {
- if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageX  != "undefined") {
-  var obj = findabspos_zoom (target)
-  return [evt.pageX - obj[0], evt.pageY - obj[1]]
- }
- if (typeof evt.offsetX != "undefined") return [evt.offsetX, evt.offsetY]
- if (typeof evt.layerY != "undefined") return [evt.layerX, evt.layerY]
-}
-function getX_zoom (evt, target) {
- if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageX   != "undefined") return evt.pageX - findabspos_zoom_x (target)
- if (typeof evt.offsetX != "undefined") return evt.offsetX
- if (typeof evt.layerX  != "undefined") return evt.layerX
-}
-function getY_zoom (evt, target) {
- if (typeof target == "undefined") target = evt.target
- if (typeof evt.pageY   != "undefined") return evt.pageY - findabspos_zoom_y (target)
- if (typeof evt.offsetY != "undefined") return evt.offsetY
- if (typeof evt.layerY  != "undefined") return evt.layerY
+ return evt.clientY - target.getBoundingClientRect().top
 }
 
 
@@ -1345,7 +1308,7 @@ function setDBData (input_tablename, params, successfunc, errorfunc, successpara
  var requeststring = "&request_type=write&input_tablename=" + input_tablename + params
  console.log (requeststring)
  // Call the request function.
- var make_request_result = make_request("dbrequest.php", requeststring, undefined, undefined, async)
+ var make_request_result = make_request("/dbrequest.php", requeststring, undefined, undefined, async)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) return process_http_request ()
@@ -1498,6 +1461,8 @@ if (typeof JSZip != "undefined") {
   var callback = (typeof init.callback != "undefined") ? init.callback : function () {}
   var charset  = (typeof init.charset  != "undefined") ? init.charset  : true
   
+  var base_url = window.location.protocol + "//" + window.location.host + '/'
+  
   var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', undefined, 'GET')
   var http_request        = make_request_result["http_request"]
   
@@ -1508,10 +1473,11 @@ if (typeof JSZip != "undefined") {
    var URL = window.URL | window.webkitURL
    var webworker_func = function (evt) {
     var response = evt.data
+    if (typeof response == "string") {self.base_url = response; return}
     window = {}
-    importScripts ('/js/plugins/jszip/jszip.js')
-    importScripts ('/js/plugins/jszip/jszip-deflate.js', '/js/plugins/jszip/jszip-inflate.js')
-    importScripts ('/js/plugins/jszip/jszip-load.js')
+    importScripts (self.base_url + 'js/plugins/jszip/jszip.js')
+    importScripts (self.base_url + 'js/plugins/jszip/jszip-deflate.js', self.base_url + 'js/plugins/jszip/jszip-inflate.js')
+    importScripts (self.base_url + 'js/plugins/jszip/jszip-load.js')
     var zip = new JSZip (response, {base64: false})
     var buffer_list = {}
     for (var filename_in_loop in zip.files) {
@@ -1525,6 +1491,7 @@ if (typeof JSZip != "undefined") {
     var buffer_list = evt.data
     if (typeof callback != "undefined") callback (buffer_list)
    }
+   web_worker.postMessage (base_url)
    web_worker.postMessage (http_request.response)
   }
  }
@@ -1616,7 +1583,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) + orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
  console.log (requeststring)
  // Set up the temp string and call the request function.
- var make_request_result = make_request ("dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request ("/dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) {return process_http_request ()}
