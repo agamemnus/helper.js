@@ -3837,32 +3837,33 @@ function load_web_fonts (font_list, callback) {
 }
 
 // Thanks to ImBcmDth for this!
-function fit_text_to_parent (element, init) {
+function fit_text_to_parent (element, init, transform_scale) {
+ if (typeof init == "undefined") init = {}
+ var unit_type       = (typeof init.unit_type       != "undefined") ? init.unit_type       : "px"
+ var transform_scale = (typeof init.transform_scale != "undefined") ? init.transform_scale : 1
  var parent_rectangle = element.parentNode.getBoundingClientRect()
- var height = parent_rectangle.height
- var width = parent_rectangle.width
+ var height = parent_rectangle.height / transform_scale
+ var width  = parent_rectangle.width  / transform_scale
  // Might have to change the decimal precision above to work with "large" units like inches and cm.
  
  function find_best_size (min_size, max_size, best_size) {
   var middle_size = +((max_size + min_size) / 2).toFixed(2)
-  element.style.fontSize = middle_size + init.unit_type
+  element.style.fontSize = middle_size + unit_type
   var rect = element.getBoundingClientRect()
-  var inner_height = element.scrollHeight + (parseInt(rect.height) - rect.height)
-  var inner_width  = element.scrollWidth  + (parseInt(rect.width)  - rect.width)
+  var inner_height = element.scrollHeight + (parseInt(rect.height / transform_scale) - rect.height / transform_scale)
+  var inner_width  = element.scrollWidth  + (parseInt(rect.width  / transform_scale)  - rect.width / transform_scale)
   if (min_size === middle_size || max_size === middle_size) return best_size
   
-  if (inner_height > height || inner_width > width) return find_best_size (min_size, middle_size, best_size)
+  if (inner_height > height || inner_width > width)   return find_best_size (min_size, middle_size, best_size)
   if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
   return best_size
  }
- if (typeof init == "undefined") init = {}
- if (typeof init.unit_type == "undefined") init.unit_type = "px"
  var best = find_best_size (
-  (typeof init.min_size  != "undefined") ? init.min_size : 0,
-  (typeof init.max_size  != "undefined") ? init.max_size : 120,
+  (typeof init.min_size  != "undefined") ? init.min_size  : 0,
+  (typeof init.max_size  != "undefined") ? init.max_size  : 120,
   (typeof init.best_size != "undefined") ? init.best_size : 0
  )
  if (typeof init.min_size != "undefined") {if (best < init.min_size) best = init.min_size}
- element.style.fontSize = best + init.unit_type
+ element.style.fontSize = best + unit_type
 }
 // </Font loading/handling functions.>
