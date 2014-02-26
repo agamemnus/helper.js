@@ -2699,7 +2699,7 @@ function move_to_top (evt) {
 }
 
 // Set this page to selectable or otherwise. TAGS: select, TAGS: selectable.
-function disable_selection (obj, sub_rules) {
+function disable_selection (obj) {
  obj.setAttribute ('unselectable', 'on')
  obj.style.WebkitTapHighlightColor = 'rgba(255, 255, 255, 0)'
  obj.style.WebkitHighlightColor    = 'transparent'
