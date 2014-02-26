@@ -3224,10 +3224,14 @@ function playAudio (filename, init) {
  main.filename = filename
  main.stopped = false
  main.audio = new Audio()
- var source = document.createElement("source"); source.type = "audio/ogg"; source.src  = main.filename.slice(0, -4) + ".ogg"
- main.audio.appendChild (source)
- var source = document.createElement("source"); source.type = "audio/mp3"; source.src  = main.filename.slice(0, -4) + ".mp3"
- main.audio.appendChild (source)
+ if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
+  main.audio.src = main.filename
+ } else {
+  var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
+  main.audio.appendChild (source)
+  var source = document.createElement("source"); source.type = "audio/mp3"; source.src = main.filename.slice(0, -4) + ".mp3"
+  main.audio.appendChild (source)
+ }
  main.audio.volume = main.volume
  if (main.start == true) {
   main.audio.play ()
