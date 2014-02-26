@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.6.
+// HelperJS version 3.7.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3185,8 +3185,8 @@ function playAudio (filename, init) {
  if (typeof init == "undefined") init = {}
  var main = this
  main.play_track  = function () {main.audio.play ()}
- main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; removeEvent (main.audio, 'ended', main.play_track)}
- main.pause       = function () {main.stopped = true; main.audio.pause (); removeEvent (main.audio, 'ended', main.play_track)}
+ main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.audio.removeEventListener ('ended', main.play_track)}
+ main.pause       = function () {main.stopped = true; main.audio.pause (); main.audio.removeEventListener ('ended', main.play_track)}
  main.play        = function () {main.resume ()}
  main.resume      = function () {
   if (main.stopped == true) {
@@ -3197,18 +3197,18 @@ function playAudio (filename, init) {
   }
   if (main.loop == true) {
    main.audio.loop = true
-   addEvent (main.audio, 'ended', main.play_track)
+   main.audio.addEventListener ('ended', main.play_track)
   }
  }
  main.set_loop   = function (loop_value) {
   if (loop_value == true) {
    main.loop       = true
    main.audio.loop = true
-   addEvent (main.audio, 'ended', main.play_track)
+   main.audio.addEventListener ('ended', main.play_track)
   } else {
    main.loop       = false
    main.audio.loop = false
-   removeEvent (main.audio, 'ended', main.play_track)
+   main.audio.removeEventListener ('ended', main.play_track)
   }
  }
  main.restart    = function () {main.play_track ()}
@@ -3223,26 +3223,15 @@ function playAudio (filename, init) {
  main.loaded = true
  main.filename = filename
  main.stopped = false
- main.source = document.createElement("source")
  main.audio = new Audio()
- if (main.filename.slice(main.filename.length - 4) == ".ogg") {
-  if (main.audio.canPlayType("audio/ogg")) {
-   main.source.type = "audio/ogg"; main.source.src  = main.filename
-  } else {
-   main.source.type = "audio/mp3"; main.source.src  = main.filename.slice(0, -4) + ".mp3"
-  }
- } else if (main.filename.slice(main.filename.length - 4) == ".mp3") {
-  if (main.audio.canPlayType("audio/mp3")) {
-   main.source.type = "audio/mp3"; main.source.src  = main.filename
-  } else {
-   main.source.type = "audio/ogg"; main.source.src  = main.filename.slice(0, -4) + ".ogg"
-  }
- }
- main.audio.appendChild (main.source)
+ var source = document.createElement("source"); source.type = "audio/ogg"; source.src  = main.filename.slice(0, -4) + ".ogg"
+ main.audio.appendChild (source)
+ var source = document.createElement("source"); source.type = "audio/mp3"; source.src  = main.filename.slice(0, -4) + ".mp3"
+ main.audio.appendChild (source)
  main.audio.volume = main.volume
  if (main.start == true) {
   main.audio.play ()
-  if (main.loop == true) addEvent (main.audio, 'ended', main.play_track)
+  if (main.loop == true) main.audio.addEventListener ('ended', main.play_track)
  } else {
   if (main.loop == true) {main.audio.loop = true}
  }
