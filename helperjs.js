@@ -2106,7 +2106,7 @@ function sliderbar (init) {
    }
   }
   if (main.textbox_enabled == true) textbox_update_value (pxc)
-  if (main.use_update_function_param == true) {main.update_function (main.update_function_param)} else {main.update_function ()}
+  if (main.use_update_function_param == true) {main.update_function (main.update_function_param)} else {main.update_function (main)}
  }
  main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
@@ -2123,7 +2123,7 @@ function sliderbar (init) {
  }
  function mousedown (evt) {
   evt.preventDefault ()
-  if (getRightClick(evt) || main.do_not_start_function () || startscroll == true) return
+  if (getRightClick(evt) || main.do_not_start_function (main) || startscroll == true) return
   var pxc = px_to_css_unit_type ()
   main.update_position (pxc)
   offsetx = (main.control.getBoundingClientRect()[width_height] / 2) / pxc
@@ -2139,7 +2139,7 @@ function sliderbar (init) {
   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
   mouseup_or_blur ()
  }
- function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function ()}
+ function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function (main)}
  return main
 }
 
