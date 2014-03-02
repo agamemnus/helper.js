@@ -1893,32 +1893,48 @@ function sliderbar (init) {
  main.css_unit_type              = init.css_unit_type || "px"
  main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
  
- var width_height = (orientation == "horizontal") ? "width" : "height"
- var left_top     = (orientation == "horizontal") ? "left"  : "top"
+ var width_height         = (orientation == "horizontal") ? "width"           : "height"
+ var left_top             = (orientation == "horizontal") ? "left"            : "top"
+ var pageXY               = (orientation == "horizontal") ? "pageX"           : "pageY"
+ var orientation_xy       = (orientation == "horizontal") ? "x"               : "y"
+ var get_position_func_xy = (orientation == "horizontal") ? findabspos_zoom_x : findabspos_zoom_y
  
- var px_to_css_unit_type_calc = undefined
+ var px_to_css_unit_type_fixed = undefined
  function px_to_css_unit_type () {
   if (main.css_unit_type == "px") return 1
-  if ((!main.recalculate_size) && (typeof px_to_css_unit_type_calc != "undefined")) return px_to_css_unit_type_calc
+  if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
   var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
   parent.appendChild (mydiv); w = mydiv.getBoundingClientRect().width; parent.removeChild (mydiv)
-  if (!main.recalculate_size) px_to_css_unit_type_calc = w
+  if (!main.recalculate_size) px_to_css_unit_type_fixed = w
   return w
  }
- function calculate_physical_max (pxc) {
-  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+ function calculate_physical_max (pxc, zoom_level) {
+  if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
+  if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
   var style = window.getComputedStyle (main)
   var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
   if (box_sizing == "border-box") {
-   var border_adjustment = 0
+   var border_and_padding_adjustment = 0
   } else {
-   var border_adjustment = (orientation == "horizontal"
+   var border_and_padding_adjustment = (orientation == "horizontal"
     ? parseFloat(window.getComputedStyle(main).borderLeftWidth) + parseFloat(window.getComputedStyle(main).borderRightWidth)
     : parseFloat(window.getComputedStyle(main).borderTopWidth)  + parseFloat(window.getComputedStyle(main).borderBottomWidth)
    )
   }
+  border_and_padding_adjustment += (orientation == "horizontal"
+   ? parseFloat(window.getComputedStyle(main).paddingLeft) + parseFloat(window.getComputedStyle(main).paddingRight)
+   : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
+  )
   var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
-  return main.control_logical_offset * 2 + (main.getBoundingClientRect()[width_height] - border_adjustment - main.control.getBoundingClientRect()[width_height]) / pxc
+  return (main.getBoundingClientRect()[width_height] - border_and_padding_adjustment - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - main.control_logical_offset * 2
+ }
+ 
+ var zoom_level_fixed = undefined
+ function calculate_zoom_level () {
+  if ((!main.recalculate_size) && (typeof zoom_level_fixed != "undefined")) return zoom_level_fixed
+  var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: orientation_xy})
+  if (!main.recalculate_size) zoom_level_fixed = zoom_level
+  return zoom_level
  }
  
  // Add a linked textbox object if it is enabled.
@@ -1984,17 +2000,17 @@ function sliderbar (init) {
  main.appendChild (main.control)
  
  // Calculate the physical control position max, calculate the logical control position max, and set the initial physical control position.
- var pxc = px_to_css_unit_type ()
- main.position_physical_max = calculate_physical_max ()
+ var pxc        = px_to_css_unit_type ()
+ var zoom_level = calculate_zoom_level ()
+ main.position_physical_max = calculate_physical_max (pxc, zoom_level)
  main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
  main.position              = main.position_physical_max * (point_initial      / main.point_upper_limit)
- 
  // Set the control left/top position and the foreground width/height.
- main.control.style[left_top] = (main.position - main.control_logical_offset) + main.css_unit_type
- main.foreground.style[width_height] = (((main.position - main.control_logical_offset) >= 0) ? (main.position - main.control_logical_offset) : 0) + main.css_unit_type
+ main.control.style[left_top] = (main.position + main.control_logical_offset) + main.css_unit_type
+ main.foreground.style[width_height] = (((main.position + main.control_logical_offset) >= 0) ? (main.position + main.control_logical_offset) : 0) + main.css_unit_type
  if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
   main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
-  main.background_beyond_max.style[left_top]  = main.position_logical_max + main.css_unit_type
+  main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
  }
  
  // Now make the pivot slice element.
@@ -2014,7 +2030,7 @@ function sliderbar (init) {
  
  if (main.textbox_enabled == true) textbox_update_value (pxc)
  
- var startscroll = false, startx = 0, offsetx = 0            
+ var startscroll = false, startxy = 0, offsetxy = 0            
  if (!use_touch_events) {
   main.addEventListener     ('mousedown', mousedown)
   main.addEventListener     ('mouseover', mousemove)
@@ -2036,10 +2052,10 @@ function sliderbar (init) {
   textbox_number.removeEventListener ('keypress', textbox_keypress)
  }
  
- main.update_position = function (pxc) {
-  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
-  var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: "x"})
-  startx = (findabspos_zoom_x (main) / zoom_level) / pxc
+ main.update_position = function (pxc, zoom_level) {
+  if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
+  if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
+  startxy = get_position_func_xy (main) / (pxc * zoom_level)
  }
  
  main.destroy = function () {
@@ -2091,10 +2107,10 @@ function sliderbar (init) {
    if (main.position < 0) main.position = 0
   }
   
- main.control.style[left_top]        = (main.position - main.control_logical_offset) + main.css_unit_type
- main.foreground.style[width_height] = (((main.position - main.control_logical_offset) >= 0) ? (main.position - main.control_logical_offset) : 0) + main.css_unit_type
+  main.control.style[left_top]        = (main.position + main.control_logical_offset) + main.css_unit_type
+  main.foreground.style[width_height] = (((main.position + main.control_logical_offset) >= 0) ? (main.position + main.control_logical_offset) : 0) + main.css_unit_type
   
- if (typeof pivot_slice_style != 'undefined') {
+  if (typeof pivot_slice_style != 'undefined') {
    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
    main.pivot_end   = main.position
    if (main.pivot_end > main.pivot_start) {
@@ -2109,26 +2125,29 @@ function sliderbar (init) {
   if (main.use_update_function_param == true) {main.update_function (main.update_function_param)} else {main.update_function (main)}
  }
  main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
- main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
+ main.get_position_percent = function () {
+  return (main.position / main.position_physical_max * main.point_upper_limit)
+ }
  
  function touchstart (evt) {mousemove (evt); mousedown (evt)}
- function mousemove (evt, pxc) {
+ function mousemove (evt, pxc, zoom_level) {
   evt.preventDefault ()
   if (startscroll == false) return
-  var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: "x"})
-  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+  if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
+  if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
-  var x = (evt.pageX / zoom_level) / pxc
-  main.set_position (x - offsetx - startx, pxc)
+  var xy = evt[pageXY] / (zoom_level * pxc)
+  main.set_position (xy - offsetxy - startxy, pxc)
  }
  function mousedown (evt) {
   evt.preventDefault ()
   if (getRightClick(evt) || main.do_not_start_function (main) || startscroll == true) return
-  var pxc = px_to_css_unit_type ()
-  main.update_position (pxc)
-  offsetx = (main.control.getBoundingClientRect()[width_height] / 2) / pxc
+  var pxc        = px_to_css_unit_type ()
+  var zoom_level = calculate_zoom_level ()
+  main.update_position (pxc, zoom_level)
+  offsetxy = (main.control.getBoundingClientRect()[width_height] / 2) / (zoom_level * pxc)
   startscroll = true
-  mousemove (evt, pxc)
+  mousemove (evt, pxc, zoom_level)
  }
  function mouseout (evt) {
   evt.preventDefault ()
