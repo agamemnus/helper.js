@@ -1186,7 +1186,7 @@ function getInheritedTransform (obj, init) {
   case "scale":
    var scale = 1
    while (true) {
-    transform_string = getTransformString ()
+    transform_string = getTransformString (obj)
     if (transform_string != false) {
      transform_array = (transform_string.slice(7, transform_string.length - 6)).split(",")
      switch (xy) {
@@ -1200,7 +1200,7 @@ function getInheritedTransform (obj, init) {
   return scale
  }
  
- function getTransformString () {
+ function getTransformString (obj) {
   var transform_string = window.getComputedStyle(obj)["Transform"]
   if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["msTransform"]}
   if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["webkitTransform"]}
@@ -1847,148 +1847,219 @@ function gui_close_button (init) {
  return close_button
 }
 
+
 function sliderbar (init) {
- var main = document.createElement('div')
- var parent                      = main.parent                      = init['parent']
- var style_background            = main.style_background            = init['style background'] || ""
- var style_foreground            = main.style_foreground            = init['style foreground'] || ""
- var class_background            = main.class_background            = init['background class']
- var class_foreground            = main.class_foreground            = init['foreground class']
- var style_background_beyond_max = main.style_background_beyond_max = init['style background beyond max']
- var style_pivot_slice           = main.style_pivot_slice           = init['style pivot slice']
- var style_control               = main.style_control               = init['style control'] || ""
- var class_control               = main.class_control               = init['control class']
- var starting_point_value        = main.starting_point_value        = init['starting point value']
- var do_not_start_function       = main.do_not_start_function       = init['do not start function']
- var update_function             = main.update_function             = init['update function']
- var final_update_function       = main.final_update_function       = init['final update function']
- var point_maximum               = main.point_maximum               = (typeof init['point maximum'] == "number") ? init['point maximum'] : 100
- var pivot_point                 = main.pivot_point                 = (typeof init['point pivot']   == "number") ? init['point pivot'] : 0
- var use_update_function_param   = main.use_update_function_param   = init['use update function param']
- var point_upper_limit           = main.point_upper_limit           = (typeof init['point upper limit'] == "number") ? init['point upper limit'] : 100
- var textbox_enabled             = main.textbox_enabled             = init['textbox enabled'] || false
+ var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
+ function addStyle (element, text) {
+  if ((typeof element == "object") && (element instanceof Array)) {element.forEach (function (current_element) {setStyle (current_element, text)}); return}
+  if (element.getAttribute("style") == null) {element.setAttribute("style", checkForMissingProperties(element, text)); return}
+  element.setAttribute("style", checkForMissingProperties(element, element.getAttribute("style")) + "; " + text)
+ }
+ function checkForMissingProperties (element, text) {
+  if (!(getComputedStyle(document.documentElement,null)["BoxSizing"]) && !!(getComputedStyle(document.documentElement,null)["MozBoxSizing"])) text = text.replace(/box-sizing/g, '-moz-box-sizing')
+  return text
+ }
+ Object.defineProperty (main, 'parent', {
+  get: function () {return parent},
+  set: function (new_parent) {
+   if ((typeof new_parent != "object") || (!(new_parent instanceof HTMLElement))) return
+   parent = new_parent
+   parent.appendChild (main)
+   if ((main.textbox_enabled == true) && (typeof textbox != "undefined")) parent.appendChild (textbox)
+  }
+ })
+ var parent = main.parent        = init.parent
+ var background_style            = init.background_style
+ var foreground_style            = init.foreground_style
+ var background_class            = init.background_class
+ var foreground_class            = init.foreground_class
+ var background_beyond_max_style = init.background_beyond_max_style
+ var pivot_slice_style           = init.pivot_slice_style
+ var pivot_slice_class           = init.pivot_slice_class
+ var control_style               = init.control_style
+ var control_class               = init.control_class
+ var point_initial               = init.point_initial
+ var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
+ var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
+ main.do_not_start_function      = init.do_not_start_function
+ main.update_function            = init.update_function
+ main.final_update_function      = init.final_update_function
+ main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
+ main.pivot_point                = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
+ main.use_update_function_param  = init.use_update_function_param
+ main.point_upper_limit          = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
+ main.textbox_enabled            = init.textbox_enabled || false
+ main.control_logical_offset     = (init.control_logical_offset   == "number") ? init.control_logical_offset : 0
+ main.css_unit_type              = init.css_unit_type || "px"
+ main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
  
- if (textbox_enabled == true) {
-  var style_textbox = init['style textbox'] || ''
+ var width_height = (orientation == "horizontal") ? "width" : "height"
+ var left_top     = (orientation == "horizontal") ? "left"  : "top"
+ 
+ var px_to_css_unit_type_calc = undefined
+ function px_to_css_unit_type () {
+  if (main.css_unit_type == "px") return 1
+  if ((!main.recalculate_size) && (typeof px_to_css_unit_type_calc != "undefined")) return px_to_css_unit_type_calc
+  var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
+  parent.appendChild (mydiv); w = mydiv.getBoundingClientRect().width; parent.removeChild (mydiv)
+  if (!main.recalculate_size) px_to_css_unit_type_calc = w
+  return w
+ }
+ function calculate_physical_max (pxc) {
+  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+  var style = window.getComputedStyle (main)
+  var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
+  if (box_sizing == "border-box") {
+   var border_adjustment = 0
+  } else {
+   var border_adjustment = (orientation == "horizontal"
+    ? parseFloat(window.getComputedStyle(main).borderLeftWidth) + parseFloat(window.getComputedStyle(main).borderRightWidth)
+    : parseFloat(window.getComputedStyle(main).borderTopWidth)  + parseFloat(window.getComputedStyle(main).borderBottomWidth)
+   )
+  }
+  var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
+  return main.control_logical_offset * 2 + (main.getBoundingClientRect()[width_height] - border_adjustment - main.control.getBoundingClientRect()[width_height]) / pxc
+ }
+ 
+ // Add a linked textbox object if it is enabled.
+ if (main.textbox_enabled != true) {
+  var textbox = undefined
+ } else {
   var textbox = document.createElement('div')
-  setStyle (textbox, style_textbox)
+  textbox.className = init.textbox_class || ''; addStyle (textbox, init.textbox_style || '')
   parent.appendChild (textbox)
-  
-  var textbox_prefix_text = init['textbox prefix'] || ''
-  if (textbox_prefix_text != '') {
-   var style_textbox_prefix = init['style textbox prefix']  || ''
-   var textbox_prefix       = document.createElement('div')
-   setStyle (textbox_prefix, style_textbox_prefix)
-   textbox_prefix.innerHTML = textbox_prefix_text
+  if (typeof init.textbox_prefix != "undefined") {
+   var textbox_prefix = document.createElement('div')
+   textbox_prefix.className = init.textbox_prefix_class || ''; addStyle (textbox_prefix, init.textbox_prefix_style || '')
+   textbox_prefix.innerHTML = init.textbox_prefix || ''
    textbox.appendChild (textbox_prefix)
   }
-  
-  var style_textbox_number = init['style textbox number']  || ''
-  var textbox_number       = document.createElement('input')
-  setStyle (textbox_number, style_textbox_number)
+  var textbox_number = document.createElement('input')
+  addStyle (textbox_number, init.textbox_number_style || ''); textbox_number.className = init.textbox_number_class || ''
   textbox_number.type = "text"
   textbox_number.readOnly = false
-  textbox_number.addEventListener ('input'   , textbox_change)
+  textbox_number.addEventListener ('input', textbox_change)
   textbox_number.addEventListener ('keypress', textbox_keypress)
   textbox.appendChild (textbox_number)
-  
-  var textbox_suffix_text = init['textbox suffix'] || ''
-  if (textbox_suffix_text != '') {
-   var style_textbox_suffix = init['style textbox suffix']  || ''
+  if (typeof init.textbox_suffix != "undefined") {
    var textbox_suffix = document.createElement('div')
-   setStyle (textbox_suffix, style_textbox_suffix)
-   textbox_suffix.innerHTML = textbox_suffix_text
+   textbox_suffix.className = init.textbox_suffix_class  || ''; addStyle (textbox_suffix, init.textbox_suffix_style || '')
+   textbox_suffix.innerHTML = init.textbox_suffix || ''
    textbox.appendChild (textbox_suffix)
   }
- }
- 
- function textbox_change (evt) {
-  var curvalue = parseFloat(textbox_number.value)
-  if (isNaN(curvalue)) curvalue = 0
-  if (curvalue < 0)    curvalue = 0
-  if (curvalue > point_upper_limit) curvalue = point_upper_limit
-  main.set_position_by_point_value (curvalue)
- }
- function textbox_keypress (evt) {
-  var keyCode = evt.keyCode
-  if (keyCode == 13) textbox_number.blur ()
- }
- function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / main.slider_position_upper_limit) // (main.clientWidth - getClientWidthFull(sliderbar_control)))
- }
- function textbox_blur (evt) {
-  if (textbox_enabled == false) return
-  if (evt.currentTarget == textbox_number) return
-  textbox_number.blur ()
- }
- 
- parent.appendChild (main)
- if (typeof class_background != "undefined") main.className = class_background
- setStyle (main, style_background)
- 
- var zoom_level = getInheritedTransform(main, {transform_type: "scale", xy: "x"})
- 
- main.slider_position_upper_limit = main.clientWidth // var preliminary_position_max     = main.clientWidth - getClientWidthFull(sliderbar_control)
- 
- main.slider_position_max         = Math.round(main.clientWidth * (point_maximum / point_upper_limit)) // Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
- main.slider_position             = (starting_point_value * main.slider_position_upper_limit) / point_upper_limit // (starting_point_value * preliminary_position_max) / point_upper_limit
- 
- main.sliderbar_foreground = document.createElement('div'); main.appendChild(main.sliderbar_foreground)
- if (typeof class_foreground != "undefined") main.sliderbar_foreground.className = class_foreground
- setStyle (main.sliderbar_foreground, style_foreground)
- main.sliderbar_foreground.style.width = main.slider_position + 'px'
- if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.appendChild(main.sliderbar_background_beyond_max)
-  setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
-  main.sliderbar_background_beyond_max.style.width = (main.slider_position_upper_limit - main.slider_position_max) + 'px' // (preliminary_position_max - main.slider_position_max) + 'px'
-  main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
- }
- 
- if (typeof style_pivot_slice != 'undefined') {
-  main.sliderbar_pivot_slice = document.createElement('div'); main.appendChild(main.sliderbar_pivot_slice)
-  setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
-  
-  main.slider_pivot_start  = Math.round(main.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
-  main.slider_pivot_end    = parseFloat(main.slider_position)
-  if (main.slider_pivot_end > main.slider_pivot_start) {
-   main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
-   main.sliderbar_pivot_slice.style.left  = main.slider_pivot_start + 'px'
-  } else {
-   main.sliderbar_pivot_slice.style.width = (main.slider_pivot_start - main.slider_pivot_end) + 'px'
-   main.sliderbar_pivot_slice.style.left  = main.slider_pivot_end + 'px'
+  function textbox_change (evt) {
+   var curvalue = parseFloat(textbox_number.value)
+   if ((isNaN(curvalue)) || (curvalue < 0)) curvalue = 0
+   if (curvalue > main.point_upper_limit) curvalue = main.point_upper_limit
+   main.set_position_by_point_value (curvalue)
+  }
+  function textbox_keypress (evt) {var keyCode = evt.keyCode; if (keyCode == 13) textbox_number.blur ()}
+  function textbox_update_value (pxc) {
+   if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+   textbox_number.value = Math.round((main.point_upper_limit * main.position) / calculate_physical_max (pxc))
+  }
+  function textbox_blur (evt) {
+   if (main.textbox_enabled == false) return
+   if (evt.currentTarget == textbox_number) return
+   textbox_number.blur ()
   }
  }
  
- var sliderbar_control = document.createElement('div'); main.appendChild (sliderbar_control)
- setStyle (sliderbar_control, style_control)
- sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px'  // sliderbar_control.style.left = main.slider_position + 'px'
- if (textbox_enabled == true) textbox_update_value ()
+ // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
+ main.className = init.background_class || ''; if (typeof background_style != "undefined") addStyle (main, background_style)
  
- var startscroll = false
- var startx      = 0
- var offsetx     = 0            
- document.addEventListener          ('mousemove', sliderbar_mousemove)
- document.addEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
- document.addEventListener          ('mousedown', textbox_blur)
- window.addEventListener            ('blur'     , sliderbar_mouseup_or_blur)
- window.addEventListener            ('mouseout' , sliderbar_mouseout)
- sliderbar_control.addEventListener ('mousedown', sliderbar_control_mousedown)
- main.addEventListener              ('mousedown', sliderbar_mousedown)
+ // Create the "background_beyond_max" object and set its class and style.
+ if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
+  main.background_beyond_max = document.createElement('div'); main.background_beyond_max.className = init.background_beyond_max_class || ''; addStyle (main.background_beyond_max, background_beyond_max_style || '')
+  main.appendChild (main.background_beyond_max)
+ }
  
- main.update_position = function () {
-  startx = (findabspos_zoom_x(main) / zoom_level - parseFloat(sliderbar_control.style.width) / 2)
+ // Create the foreground object and set its class and style.
+ main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; addStyle (main.foreground, foreground_style || '')
+ main.appendChild (main.foreground)
+ 
+ // Create the control object and set its class and style.
+ main.control = document.createElement('div'); main.control.className = control_class || ''; addStyle (main.control, control_style || '')
+ main.control.style.pointerEvents = "none"
+ main.appendChild (main.control)
+ 
+ // Calculate the physical control position max, calculate the logical control position max, and set the initial physical control position.
+ var pxc = px_to_css_unit_type ()
+ main.position_physical_max = calculate_physical_max ()
+ main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
+ main.position              = main.position_physical_max * (point_initial      / main.point_upper_limit)
+ 
+ // Set the control left/top position and the foreground width/height.
+ main.control.style[left_top] = (main.position - main.control_logical_offset) + main.css_unit_type
+ main.foreground.style[width_height] = (((main.position - main.control_logical_offset) >= 0) ? (main.position - main.control_logical_offset) : 0) + main.css_unit_type
+ if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
+  main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
+  main.background_beyond_max.style[left_top]  = main.position_logical_max + main.css_unit_type
+ }
+ 
+ // Now make the pivot slice element.
+ if (typeof pivot_slice_style != 'undefined') {
+  main.pivot_slice = document.createElement('div'); main.pivot_slice.className = pivot_slice_class || ''; addStyle (main.pivot_slice, pivot_slice_style || '')
+  main.appendChild (main.pivot_slice)
+  main.pivot_start  = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
+  main.pivot_end    = main.position
+  if (main.pivot_end > main.pivot_start) {
+   main.pivot_slice.style[width_height] = (main.pivot_end - main.pivot_start) + main.css_unit_type
+   main.pivot_slice.style[left_top]  = main.pivot_start + main.css_unit_type
+  } else {
+   main.pivot_slice.style[width_height] = (main.pivot_start - main.pivot_end) + main.css_unit_type
+   main.pivot_slice.style[left_top]  = main.pivot_end + main.css_unit_type
+  }
+ }
+ 
+ if (main.textbox_enabled == true) textbox_update_value (pxc)
+ 
+ var startscroll = false, startx = 0, offsetx = 0            
+ if (!use_touch_events) {
+  main.addEventListener         ('mousedown', mousedown)
+  main.addEventListener         ('mouseover', mousemove)
+  document.addEventListener     ('mousemove', mousemove)
+  document.addEventListener     ('mouseup'  , mouseup_or_blur)
+  window.addEventListener       ('blur'     , mouseup_or_blur)
+  window.addEventListener       ('mouseout' , mouseout)
+ } else {
+  main.addEventListener         ('touchstart' , function (evt) {mousemove (evt); mousedown (evt)})
+  document.addEventListener     ('touchmove'  , mousemove)
+  document.addEventListener     ('touchend'   , mouseup_or_blur)
+  window.addEventListener       ('touchcancel', mouseup_or_blur)
+  window.addEventListener       ('touchleave' , mouseup_or_blur)
+ }
+ if (main.textbox_enabled == true) {
+  document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
+  textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend', textbox_toggle)
+  textbox_number.removeEventListener ('input'   , textbox_change)
+  textbox_number.removeEventListener ('keypress', textbox_keypress)
+ }
+ 
+ main.update_position = function (pxc) {
+  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+  var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: "x"})
+  startx = (findabspos_zoom_x (main) / zoom_level) / pxc
  }
  
  main.destroy = function () {
-  document.removeEventListener          ('mousemove', sliderbar_mousemove)
-  document.removeEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
-  window.removeEventListener            ('blur'     , sliderbar_mouseup_or_blur)
-  document.removeEventListener          ('mousedown', textbox_blur)
-  window.removeEventListener            ('mouseout' , sliderbar_mouseout)
-  sliderbar_control.removeEventListener ('mousedown', sliderbar_control_mousedown)
-  main.removeEventListener              ('mousedown', sliderbar_mousedown)
-  if (textbox_enabled == true) {
-   textbox_number.removeEventListener ('click'   , textbox_toggle)
+  if (!use_touch_events) {
+   main.removeEventListener         ('mousedown', mousedown)
+   main.removeEventListener         ('mouseover', mousemove)
+   document.removeEventListener     ('mousemove', mousemove)
+   document.removeEventListener     ('mouseup'  , mouseup_or_blur)
+   window.removeEventListener       ('blur'     , mouseup_or_blur)
+   window.removeEventListener       ('mouseout' , mouseout)
+  } else {
+   main.removeEventListener         ('touchstart' , function (evt) {mousemove (evt); mousedown (evt)})
+   document.removeEventListener     ('touchmove'  , mousemove)
+   document.removeEventListener     ('touchend'   , mouseup_or_blur)
+   window.removeEventListener       ('touchcancel', mouseup_or_blur)
+   window.removeEventListener       ('touchleave' , mouseup_or_blur)
+  }
+  if (main.textbox_enabled == true) {
+   document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
+   textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend', textbox_toggle)
    textbox_number.removeEventListener ('input'   , textbox_change)
    textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
@@ -2012,325 +2083,62 @@ function sliderbar (init) {
  }
  
  main.set_position = function (new_position) {
-  main.slider_position = new_position
-  //var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
-  //main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
-  
-  if (main.slider_position > main.slider_position_max) {
-   main.slider_position = main.slider_position_max
+  main.position = new_position
+  main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
+  if (main.position > main.position_logical_max) {
+   main.position = main.position_logical_max
   } else {
-   if (main.slider_position < 0) main.slider_position = 0
+   if (main.position < 0) main.position = 0
   }
   
-  sliderbar_control.style.left = main.slider_position - parseFloat(sliderbar_control.style.width) / 2 + 'px' // sliderbar_control.style.left = main.slider_position + 'px'
-  main.sliderbar_foreground.style.width = main.slider_position + 'px'
+ main.control.style[left_top]        = (main.position - main.control_logical_offset) + main.css_unit_type
+ main.foreground.style[width_height] = (((main.position - main.control_logical_offset) >= 0) ? (main.position - main.control_logical_offset) : 0) + main.css_unit_type
   
- if (typeof style_pivot_slice != 'undefined') {
-   main.slider_pivot_start  = Math.round(main.clientWidth * (pivot_point / point_upper_limit)) // Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
-   main.slider_pivot_end    = main.slider_position
-   if (main.slider_pivot_end > main.slider_pivot_start) {
-    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
-    main.sliderbar_pivot_slice.style.left  = main.slider_pivot_start + 'px'
+ if (typeof pivot_slice_style != 'undefined') {
+   main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
+   main.pivot_end   = main.position
+   if (main.pivot_end > main.pivot_start) {
+    main.pivot_slice.style[width_height] = (main.pivot_end - main.pivot_start) + main.css_unit_type
+    main.pivot_slice.style[left_top]  = main.pivot_start + main.css_unit_type
    } else {
-    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_start - main.slider_pivot_end) + 'px'
-    main.sliderbar_pivot_slice.style.left  = main.slider_pivot_end + 'px'
+    main.pivot_slice.style[width_height] = (main.pivot_start - main.pivot_end) + main.css_unit_type
+    main.pivot_slice.style[left_top]  = main.pivot_end + main.css_unit_type
    }
   }
-  if (textbox_enabled == true) textbox_update_value ()
-  if (use_update_function_param == true) {update_function (main.update_function_param)} else {update_function ()}
+  if (main.textbox_enabled == true) textbox_update_value (pxc)
+  if (main.use_update_function_param == true) {main.update_function (main.update_function_param)} else {main.update_function ()}
  }
+ main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
+ main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
  
- function sliderbar_mousemove (evt) {
+ function mousemove (evt, pxc) {
   evt.preventDefault ()
   if (startscroll == false) return
-  var x = evt.pageX / zoom_level
-  main.set_position (x - offsetx - startx)
+  var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: "x"})
+  if (typeof pxc == "undefined") pxc = px_to_css_unit_type ()
+  if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
+  var x = (evt.pageX / zoom_level) / pxc
+  main.set_position (x - offsetx - startx, pxc)
  }
- 
- main.set_position_by_point_value = function (new_position) {
-  main.set_position ((new_position * main.slider_position_upper_limit) / point_upper_limit) // main.set_position ((new_position * main.clientWidth) / point_upper_limit)
- }
- 
-    
- function sliderbar_mousedown (evt) {
+ function mousedown (evt) {
   evt.preventDefault ()
-  if (getRightClick(evt)) return
-  if (do_not_start_function()) return
-  if (startscroll == true) return
-  main.update_position ()
-  offsetx = parseFloat(sliderbar_control.style.width) / 2 // offsetx = main.sliderbar_control.clientWidth / 2
+  if (getRightClick(evt) || main.do_not_start_function () || startscroll == true) return
+  var pxc = px_to_css_unit_type ()
+  main.update_position (pxc)
+  offsetx = (main.control.getBoundingClientRect()[width_height] / 2) / pxc
   startscroll = true
-  sliderbar_mousemove (evt)
+  mousemove (evt, pxc)
  }
- 
- function sliderbar_control_mousedown (evt) {
+ function mouseout (evt) {
   evt.preventDefault ()
-  if (getRightClick(evt)) return
-  if (do_not_start_function()) return
-  if (startscroll == true) return
-  main.update_position ()
-  offsetx = (evt.pageX - findabspos_zoom_x (evt.target)) / zoom_level
-  startscroll = true
- }
- 
- function sliderbar_mouseout (evt) {
-  evt.preventDefault ()
+  if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
   var mouseX = evt.pageX; var mouseY = evt.pageY
-  var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
-  var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
+  var windowScrollX = (typeof window.scrollX != "undefined") ? window.scrollX : document.body.scrollLeft
+  var windowScrollY = (typeof window.scrollY != "undefined") ? window.scrollY : document.body.scrollTop
   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
-  sliderbar_mouseup_or_blur (evt)
+  mouseup_or_blur ()
  }
- 
- function sliderbar_mouseup_or_blur (evt) {
-  if (startscroll == false) return
-  startscroll = false
-  final_update_function ()
-  return
- }
- return main
-}
-
-
-function sliderbar_v2 (init) {
- var main = document.createElement('div')
- var parent                      = main.parent                      = init['parent']
- var style_background            = main.style_background            = init['style background'] || ""
- var style_foreground            = main.style_foreground            = init['style foreground'] || ""
- var class_background            = main.class_background            = init['background class']
- var class_foreground            = main.class_foreground            = init['foreground class']
- var style_background_beyond_max = main.style_background_beyond_max = init['style background beyond max']
- var style_pivot_slice           = main.style_pivot_slice           = init['style pivot slice']
- var style_control               = main.style_control               = init['style control'] || ""
- var class_control               = main.class_control               = init['control class']
- var starting_point_value        = main.starting_point_value        = init['starting point value']
- var do_not_start_function       = main.do_not_start_function       = init['do not start function']
- var update_function             = main.update_function             = init['update function']
- var final_update_function       = main.final_update_function       = init['final update function']
- var point_maximum               = main.point_maximum               = (typeof init['point maximum'] == "number") ? init['point maximum'] : 100
- var pivot_point                 = main.pivot_point                 = (typeof init['point pivot']   == "number") ? init['point pivot'] : 0
- var use_update_function_param   = main.use_update_function_param   = init['use update function param']
- var point_upper_limit           = main.point_upper_limit           = (typeof init['point upper limit'] == "number") ? init['point upper limit'] : 100
- var textbox_enabled             = main.textbox_enabled             = init['textbox enabled'] || false
- 
- if (textbox_enabled == true) {
-  var style_textbox  = init['style textbox']  || ''
-  var textbox = document.createElement('div')
-  setStyle (textbox, style_textbox)
-  parent.appendChild (textbox)
-  
-  var textbox_prefix_text = init['textbox prefix'] || ''
-  if (textbox_prefix_text != '') {
-   var style_textbox_prefix = init['style textbox prefix']  || ''
-   var textbox_prefix       = document.createElement('div')
-   setStyle (textbox_prefix, style_textbox_prefix)
-   textbox_prefix.innerHTML = textbox_prefix_text
-   textbox.appendChild (textbox_prefix)
-  }
-  
-  var style_textbox_number = init['style textbox number']  || ''
-  var textbox_number       = document.createElement('input')
-  setStyle (textbox_number, style_textbox_number)
-  textbox_number.type = "text"
-  textbox_number.readOnly = false
-  addEvent (textbox_number, 'input', textbox_change)
-  addEvent (textbox_number, 'keypress', textbox_keypress)
-  textbox.appendChild (textbox_number)
-  
-  var textbox_suffix_text = init['textbox suffix'] || ''
-  if (textbox_suffix_text != '') {
-   var style_textbox_suffix = init['style textbox suffix']  || ''
-   var textbox_suffix = document.createElement('div')
-   setStyle (textbox_suffix, style_textbox_suffix)
-   textbox_suffix.innerHTML = textbox_suffix_text
-   textbox.appendChild (textbox_suffix)
-  }
- }
- 
- function textbox_change (evt) {
-  var curvalue = parseFloat(textbox_number.value)
-  if (isNaN(curvalue)) curvalue = 0
-  if (curvalue < 0)    curvalue = 0
-  if (curvalue > point_upper_limit) curvalue = point_upper_limit
-  main.set_position_by_point_value (curvalue)
- }
- function textbox_keypress (evt) {
-  var keyCode = evt.keyCode
-  if (keyCode == 13) textbox_number.blur ()
- }
- function textbox_update_value () {
-  textbox_number.value = Math.round((point_upper_limit * main.slider_position) / (main.clientWidth - getClientWidthFull(sliderbar_control)))
- }
- function textbox_blur (evt) {
-  if (textbox_enabled == false) return
-  if (evt.currentTarget == textbox_number) return
-  textbox_number.blur ()
- }
- 
- parent.appendChild (main)
- if (typeof class_background != "undefined") main.className = class_background
- setStyle (main, style_background)
- 
- var sliderbar_control = main.sliderbar_control = document.createElement('div'); main.appendChild(sliderbar_control)
- if (typeof class_control != "undefined") sliderbar_control.className = class_control
- setStyle (sliderbar_control, style_control)
- sliderbar_control.style.left = main.slider_position + 'px'
- 
- var zoom_level = getInheritedTransform(main, {transform_type:"scale", xy:"x"})
- var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
- main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
- main.slider_position         = (starting_point_value * preliminary_position_max) / point_upper_limit
- 
- main.sliderbar_foreground = document.createElement('div'); main.appendChild(main.sliderbar_foreground)
- if (typeof class_foreground != "undefined") main.sliderbar_foreground.className = class_foreground
- setStyle (main.sliderbar_foreground, style_foreground)
- main.sliderbar_foreground.style.width = main.slider_position + 'px'
- if (typeof style_background_beyond_max != 'undefined') {
-  main.sliderbar_background_beyond_max = document.createElement('div'); main.appendChild(main.sliderbar_background_beyond_max)
-  setStyle (main.sliderbar_background_beyond_max, style_background_beyond_max)
-  main.sliderbar_background_beyond_max.style.width = (preliminary_position_max - main.slider_position_max) + 'px'
-  main.sliderbar_background_beyond_max.style.left  = (main.slider_position_max + 1) + 'px'
- }
- 
- if (typeof style_pivot_slice != 'undefined') {
-  main.sliderbar_pivot_slice = document.createElement('div'); main.appendChild(main.sliderbar_pivot_slice)
-  setStyle (main.sliderbar_pivot_slice, style_pivot_slice)
-  
-  main.slider_pivot_start  = Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
-  main.slider_pivot_end    = parseFloat(main.slider_position)
-  if (main.slider_pivot_end > main.slider_pivot_start) {
-   main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
-   main.sliderbar_pivot_slice.style.left  = main.slider_pivot_start + 'px'
-  } else {
-   main.sliderbar_pivot_slice.style.width = (main.slider_pivot_start - main.slider_pivot_end) + 'px'
-   main.sliderbar_pivot_slice.style.left  = main.slider_pivot_end + 'px'
-  }
- }
- 
- if (textbox_enabled == true) textbox_update_value ()
- 
- var startscroll = false
- var startx      = 0
- var offsetx     = 0            
- document.addEventListener          ('mousemove', sliderbar_mousemove)
- document.addEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
- document.addEventListener          ('mousedown', textbox_blur)
- window.addEventListener            ('blur'     , sliderbar_mouseup_or_blur)
- window.addEventListener            ('mouseout' , sliderbar_mouseout)
- sliderbar_control.addEventListener ('mousedown', sliderbar_control_mousedown)
- main.addEventListener ('mousedown', sliderbar_mousedown)
- 
- main.update_position = function () {startx = findabspos_zoom_x(main) / zoom_level}
- 
- main.destroy = function () {
-  document.removeEventListener          ('mousemove', sliderbar_mousemove)
-  document.removeEventListener          ('mouseup'  , sliderbar_mouseup_or_blur)
-  window.removeEventListener            ('blur'     , sliderbar_mouseup_or_blur)
-  document.removeEventListener          ('mousedown', textbox_blur)
-  window.removeEventListener            ('mouseout' , sliderbar_mouseout)
-  sliderbar_control.removeEventListener ('mousedown', sliderbar_control_mousedown)
-  main.removeEventListener ('mousedown', sliderbar_mousedown)
-  if (textbox_enabled == true) {
-   textbox_number.removeEventListener ('click'   , textbox_toggle)
-   textbox_number.removeEventListener ('input'   , textbox_change)
-   textbox_number.removeEventListener ('keypress', textbox_keypress)
-  }
-  var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild (main)
- }
- 
- // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
- MutationObserver = MutationObserver || WebkitMutationObserver
- if (typeof MutationObserver != "undefined") {
-  var observer = new MutationObserver (function (mutation_list) {
-   for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
-    var mutation_item = mutation_list[i]
-    if (mutation_item.type != 'childList') return
-    for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
-     if (mutation_item.removedNodes[j] != main) continue
-     main.destroy (); observer.disconnect (); return
-    }
-   }
-  })
-  observer.observe (parent, {attributes: false, childList: true, subtree: false})
- }
- 
- main.set_position = function (new_position) {
-  main.slider_position         = new_position
-  var preliminary_position_max = main.clientWidth - getClientWidthFull(sliderbar_control)
-  main.slider_position_max     = Math.round(preliminary_position_max * (point_maximum / point_upper_limit))
-  
-  if (main.slider_position > main.slider_position_max) {
-   main.slider_position = main.slider_position_max
-  } else {
-   if (main.slider_position < 0) main.slider_position = 0
-  }
-  
-  sliderbar_control.style.left = main.slider_position + 'px'
-  main.sliderbar_foreground.style.width = main.slider_position + 'px'
-  
- if (typeof style_pivot_slice != 'undefined') {
-   main.slider_pivot_start  = Math.round(preliminary_position_max * (pivot_point / point_upper_limit))
-   main.slider_pivot_end    = main.slider_position
-   if (main.slider_pivot_end > main.slider_pivot_start) {
-    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_end - main.slider_pivot_start) + 'px'
-    main.sliderbar_pivot_slice.style.left  = main.slider_pivot_start + 'px'
-   } else {
-    main.sliderbar_pivot_slice.style.width = (main.slider_pivot_start - main.slider_pivot_end) + 'px'
-    main.sliderbar_pivot_slice.style.left  = main.slider_pivot_end + 'px'
-   }
-  }
-  if (textbox_enabled == true) textbox_update_value ()
-  if (use_update_function_param == true) {update_function (main.update_function_param)} else {update_function ()}
- }
- 
- function sliderbar_mousemove (evt) {
-  evt.preventDefault ()
-  if (startscroll == false) return
-  var x = evt.pageX/zoom_level
-  main.set_position (x - offsetx - startx)
- }
- 
- main.set_position_by_point_value = function (new_position) {
-  main.set_position ((new_position * main.clientWidth) / point_upper_limit)
- }
- 
-    
- function sliderbar_mousedown (evt) {
-  evt.preventDefault ()
-  if (getRightClick(evt)) return
-  if (do_not_start_function()) return
-  if (startscroll == true) return
-  main.update_position ()
-  offsetx = main.sliderbar_control.clientWidth / 2
-  startscroll = true
-  sliderbar_mousemove (evt)
- }
- 
- function sliderbar_control_mousedown (evt) {
-  evt.preventDefault ()
-  if (getRightClick(evt)) return
-  if (do_not_start_function()) return
-  if (startscroll == true) return
-  main.update_position ()
-  offsetx = (evt.pageX - findabspos_zoom_x (evt.target))/zoom_level
-  startscroll = true
- }
- 
- function sliderbar_mouseout (evt) {
-  evt.preventDefault ()
-  var mouseX = evt.pageX; var mouseY = evt.pageY
-  var windowScrollX = window.scrollX; if (typeof windowScrollX == "undefined") windowScrollX = document.body.scrollLeft
-  var windowScrollY = window.scrollY; if (typeof windowScrollY == "undefined") windowScrollY = document.body.scrollTop
-  if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
-  sliderbar_mouseup_or_blur (evt)
- }
- 
- function sliderbar_mouseup_or_blur (evt) {
-  if (startscroll == false) return
-  startscroll = false
-  final_update_function ()
-  return
- }
+ function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function ()}
  return main
 }
 
@@ -2406,12 +2214,10 @@ function loadingbar_object (init) {
 // </DOM-widget functions.>
 
 
-// <DOM manipulation functions. TAG: DOM, TAG: dom, TAG: style.>
+// <DOM manipulation functions. TAG: px, TAG: CSS, TAG: DOM, TAG: dom, TAG: style.>
 function convert_to_px_units (parent, measure) {
- var mydiv = document.createElement('div')
- mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + measure
- parent.appendChild(mydiv); w = mydiv.offsetWidth; parent.removeChild(mydiv)
- mydiv = null
+ var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + measure
+ parent.appendChild (mydiv); w = mydiv.getBoundingClientRect().width; parent.removeChild (mydiv)
  return w
 }
 
@@ -2437,31 +2243,16 @@ function clearfocus () {
 }
 
 function setStyle (element, text) {
- // Multiple-element support.
- if (typeof element == "object") {
-  if (element instanceof Array) {
-   var curlen = element.length
-   for (var i = 0; i < curlen; i++) {setStyle (element[i], text)}
-   return
-  }
- }
+ // Multiple element support.
+ if ((typeof element == "object") && (element instanceof Array)) {element.forEach (function (current_element) {setStyle (current_element, text)}); return}
  element.setAttribute("style", checkForMissingProperties (element, text))
 }
 
 function addStyle (element, text) {
- // Multiple-element support.
- if (typeof element == "object") {
-  if (element instanceof Array) {
-   var curlen = element.length
-   for (var i = 0; i < curlen; i++) {addStyle (element[i], text)}
-   return
-  }
- }
- if (element.getAttribute("style") == null) {
-  element.setAttribute("style", checkForMissingProperties(element, text))
- } else {
-  element.setAttribute("style", checkForMissingProperties(element, element.getAttribute("style")) + "; " + text)
- }
+ // Multiple element support.
+ if ((typeof element == "object") && (element instanceof Array)) {element.forEach (function (current_element) {addStyle (current_element, text)}); return}
+ if (element.getAttribute("style") == null) {element.setAttribute("style", checkForMissingProperties(element, text)); return}
+ element.setAttribute("style", checkForMissingProperties(element, element.getAttribute("style")) + "; " + text)
 }
 function checkForMissingProperties (element, text) {
  if (!(getComputedStyle(document.documentElement,null)["BoxSizing"]) && !!(getComputedStyle(document.documentElement,null)["MozBoxSizing"])) text = text.replace(/box-sizing/g, '-moz-box-sizing')
