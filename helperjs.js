@@ -2016,18 +2016,18 @@ function sliderbar (init) {
  
  var startscroll = false, startx = 0, offsetx = 0            
  if (!use_touch_events) {
-  main.addEventListener         ('mousedown', mousedown)
-  main.addEventListener         ('mouseover', mousemove)
-  document.addEventListener     ('mousemove', mousemove)
-  document.addEventListener     ('mouseup'  , mouseup_or_blur)
-  window.addEventListener       ('blur'     , mouseup_or_blur)
-  window.addEventListener       ('mouseout' , mouseout)
+  main.addEventListener     ('mousedown', mousedown)
+  main.addEventListener     ('mouseover', mousemove)
+  document.addEventListener ('mousemove', mousemove)
+  document.addEventListener ('mouseup'  , mouseup_or_blur)
+  window.addEventListener   ('blur'     , mouseup_or_blur)
+  window.addEventListener   ('mouseout' , mouseout)
  } else {
-  main.addEventListener         ('touchstart' , function (evt) {mousemove (evt); mousedown (evt)})
-  document.addEventListener     ('touchmove'  , mousemove)
-  document.addEventListener     ('touchend'   , mouseup_or_blur)
-  window.addEventListener       ('touchcancel', mouseup_or_blur)
-  window.addEventListener       ('touchleave' , mouseup_or_blur)
+  main.addEventListener     ('touchstart' , touchstart)
+  document.addEventListener ('touchmove'  , mousemove)
+  document.addEventListener ('touchend'   , mouseup_or_blur)
+  window.addEventListener   ('touchcancel', mouseup_or_blur)
+  window.addEventListener   ('touchleave' , mouseup_or_blur)
  }
  if (main.textbox_enabled == true) {
   document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
@@ -2044,18 +2044,18 @@ function sliderbar (init) {
  
  main.destroy = function () {
   if (!use_touch_events) {
-   main.removeEventListener         ('mousedown', mousedown)
-   main.removeEventListener         ('mouseover', mousemove)
-   document.removeEventListener     ('mousemove', mousemove)
-   document.removeEventListener     ('mouseup'  , mouseup_or_blur)
-   window.removeEventListener       ('blur'     , mouseup_or_blur)
-   window.removeEventListener       ('mouseout' , mouseout)
+   main.removeEventListener     ('mousedown', mousedown)
+   main.removeEventListener     ('mouseover', mousemove)
+   document.removeEventListener ('mousemove', mousemove)
+   document.removeEventListener ('mouseup'  , mouseup_or_blur)
+   window.removeEventListener   ('blur'     , mouseup_or_blur)
+   window.removeEventListener   ('mouseout' , mouseout)
   } else {
-   main.removeEventListener         ('touchstart' , function (evt) {mousemove (evt); mousedown (evt)})
-   document.removeEventListener     ('touchmove'  , mousemove)
-   document.removeEventListener     ('touchend'   , mouseup_or_blur)
-   window.removeEventListener       ('touchcancel', mouseup_or_blur)
-   window.removeEventListener       ('touchleave' , mouseup_or_blur)
+   main.removeEventListener     ('touchstart' , touchstart)
+   document.removeEventListener ('touchmove'  , mousemove)
+   document.removeEventListener ('touchend'   , mouseup_or_blur)
+   window.removeEventListener   ('touchcancel', mouseup_or_blur)
+   window.removeEventListener   ('touchleave' , mouseup_or_blur)
   }
   if (main.textbox_enabled == true) {
    document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
@@ -2067,7 +2067,7 @@ function sliderbar (init) {
  }
  
  // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
- MutationObserver = MutationObserver || WebkitMutationObserver
+ MutationObserver = window.MutationObserver || window.WebkitMutationObserver
  if (typeof MutationObserver != "undefined") {
   var observer = new MutationObserver (function (mutation_list) {
    for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
@@ -2111,6 +2111,7 @@ function sliderbar (init) {
  main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
  
+ function touchstart (evt) {mousemove (evt); mousedown (evt)}
  function mousemove (evt, pxc) {
   evt.preventDefault ()
   if (startscroll == false) return
