@@ -2122,7 +2122,7 @@ function sliderbar (init) {
    }
   }
   if (main.textbox_enabled == true) textbox_update_value (pxc)
-  if (main.use_update_function_param == true) {main.update_function (main.update_function_param)} else {main.update_function (main)}
+  if (main.use_update_function_param == true) {main.update_function (main.update_function_param, false)} else {main.update_function (main, false)}
  }
  main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
  main.get_position_percent = function () {
@@ -2158,7 +2158,7 @@ function sliderbar (init) {
   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
   mouseup_or_blur ()
  }
- function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function (main)}
+ function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function (main, true)}
  return main
 }
 
