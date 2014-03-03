@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.8.
+// HelperJS version 3.9.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3255,13 +3255,13 @@ function color_fill (init) {
  // Load in the image.
  if (typeof init.image == "undefined") {
   var image_obj = new Image ()
-  image_obj.onload = do_color_fill
   image_obj.src = init.image_src
+  if (return_result == true) {return do_color_fill ()} else {image_obj.onload = do_color_fill}
  } else {
   var image_obj = init.image
   if (init.image instanceof HTMLImageElement) {
-   image_obj.onload = do_color_fill
    if (typeof init.image_src != "undefined") image_obj.src = init.image_src
+   if (return_result == true) {return do_color_fill ()} else {image_obj.onload = do_color_fill}
   }
   if (init.image instanceof HTMLCanvasElement) {
    if (return_result == true) {return do_color_fill ()} else {do_color_fill ()}
