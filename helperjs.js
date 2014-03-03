@@ -1883,7 +1883,6 @@ function sliderbar (init) {
  var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
  main.do_not_start_function      = init.do_not_start_function
  main.update_function            = init.update_function
- main.final_update_function      = init.final_update_function
  main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
  main.pivot_point                = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
  main.use_update_function_param  = init.use_update_function_param
@@ -2158,7 +2157,7 @@ function sliderbar (init) {
   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
   mouseup_or_blur ()
  }
- function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.final_update_function (main, true)}
+ function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.update_function (main, true)}
  return main
 }
 
