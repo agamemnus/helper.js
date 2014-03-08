@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 3.9.
+// HelperJS version 4.0.
 // Easter Egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1340,7 +1340,8 @@ function getTextData (filename, successfunc, errorfunc, async) {
  return get_data ({'file': filename, 'success': successfunc, 'error': errorfunc, 'plaintext': true, 'async': async})
 }
 
-// Use XMLHttpRequest to get a 32-bit integer 2D array from a set of static zipped files.
+// Use XMLHttpRequest to get a 32-bit integer 2D array from a set of data files in a zip.
+// Use XMLHttpRequest to get image data from a set of image files in a zip.
 // Requires the JSZip library: http://stuartk.com/jszip.
 if (typeof JSZip != "undefined") {
  function zip_imagelist_object () {
@@ -1690,10 +1691,8 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
 
 function get_data (params) {
  // Convert request into GET or POST data.
- var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext
- if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext != true)) send_data_as_plaintext = false
- var is_asynchronous = params.is_asynchronous || params.async
- if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
+ var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
+ var is_asynchronous = params.is_asynchronous || params.async || true
  var charset     = (typeof params.charset != "undefined") ? params.charset : ""
  var params_data = (typeof params.data    != "undefined") ? params.data    : ""
  // Call the request function.
