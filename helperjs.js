@@ -1,6 +1,6 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.0.
-// Easter Egg in plain sight: (thanks to Brigand)
+// HelperJS version 4.1.
+// Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
 // Prototypes and Math. property-functions always camel-case.
@@ -3624,7 +3624,7 @@ function load_web_fonts (font_list, callback) {
  if (typeof callback != "undefined") {
   var check_that_all_fonts_have_loaded_timeout = null
   function check_that_all_fonts_have_loaded () {
-   if (loaded_font_amount < fonts.length) {check_that_all_fonts_have_loaded_timeout = setTimeout (check_that_all_fonts_have_loaded, 30); return}
+   if (loaded_font_amount < font_list.length) {check_that_all_fonts_have_loaded_timeout = setTimeout (check_that_all_fonts_have_loaded, 30); return}
    callback ()
   }
   check_that_all_fonts_have_loaded ()
