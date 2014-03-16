@@ -1692,7 +1692,9 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
 function get_data (params) {
  // Convert request into GET or POST data.
  var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
- var is_asynchronous = params.is_asynchronous || params.async || true
+ var is_asynchronous = true
+ if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
+ if (typeof params.async           != "undefined") is_asynchronous = params.async
  var charset     = (typeof params.charset != "undefined") ? params.charset : ""
  var params_data = (typeof params.data    != "undefined") ? params.data    : ""
  // Call the request function.
@@ -1724,7 +1726,6 @@ function get_data (params) {
   if (typeof params.success != "undefined") params.success(response_text)
  }
 }
-
 
 function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
