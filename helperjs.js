@@ -1925,7 +1925,7 @@ function sliderbar (init) {
    : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
   )
   var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
-  return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height] - border_and_padding_adjustment) / (pxc * zoom_level) - main.control_logical_offset * 2
+  return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_logical_offset * 2
  }
  
  var zoom_level_fixed = undefined
