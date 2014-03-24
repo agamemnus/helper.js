@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.2.
+// HelperJS version 4.3.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -303,6 +303,18 @@ function add_swipe_controls (init) {
  } (init)
 }
 // </Event and interval handler/wrapper functions.>
+
+
+// <Callback controls. TAG: callbacks, TAG: compose.>
+function callback_compose (function_list, result, callback) {
+ var n = 0, next_callback = function () {n += 1; inner ()}
+ function inner () {
+  if (n == function_list.length - 1) next_callback = callback
+  function_list[n] (result, next_callback)
+ }
+ inner ()
+}
+// <Callback controls./>
 
 
 // <Array sorting functions. TAG: array, TAG: sorting.>
@@ -3530,7 +3542,7 @@ function detect_device_type (obj) {
  var ua = navigator.userAgent.toLowerCase()
  obj.is_iphone          = (ua.match(/iphone/i) != null)
  obj.is_ipad            = (ua.match(/ipad/i) != null)
- obj.is_idevice         = (ua.match(/ipad/i) || ua.match(/iphone/i) != null)
+ obj.is_idevice         = obj.is_iphone || obj.is_ipad
  obj.is_android         = (ua.match(/android/i) != null)
  obj.is_chromium        = (ua.match(/chrome/i) != null)
  obj.is_windows_phone   = (ua.match(/Windows Phone/i) != null)
