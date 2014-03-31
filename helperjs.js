@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.3.
+// HelperJS version 4.4.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1629,7 +1629,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
   var header_version = tempdata.charCodeAt(0)
   if (header_version != 0) {alert ('Unable to cope with this response text header version. ('+tempdata.slice(0,30)+') (' + requeststring+', '+header_version+')'); return}
   var column_amount = tempdata.charCodeAt(1)
-  var len = column_amount*9+2
+  var len = column_amount * 9 + 2
   var targetarray = []
   var x = 0
   for (i = 2; i < len; i += 9) {
@@ -1710,7 +1710,7 @@ function get_data (params) {
  var charset     = (typeof params.charset != "undefined") ? params.charset : ""
  var params_data = (typeof params.data    != "undefined") ? params.data    : ""
  // Call the request function.
- var http_request_result = make_request (params.file, params_data, send_data_as_plaintext, charset, is_asynchronous)
+ var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
