@@ -1751,9 +1751,9 @@ function make_request (url, data, send_data_as_plaintext, charset, is_asynchrono
  if (typeof response_type != "undefined") http_request.responseType = response_type
  if (send_data_as_plaintext === true) {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+  if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
  } else {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
-  http_request.overrideMimeType("text/plain; charset=x-user-defined")
  }
  http_request.send (data)
  return {"http_request": http_request}
@@ -3045,7 +3045,7 @@ function playAudio (filename, init) {
  main.loaded = true
  main.filename = filename
  main.stopped = false
- main.audio = new Audio()
+ main.audio = new Audio ()
  if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
   main.audio.src = main.filename
  } else {
