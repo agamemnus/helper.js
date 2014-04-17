@@ -3314,14 +3314,14 @@ function color_fill (init) {
   var image_obj = new Image ()
   image_obj.src = init.image_src
   if (return_result == true) {return do_color_fill ()} else {
-   if (init.fix_ie_bug == true) {load_timeout (image_obj, do_color_fill)} else {image_obj.addEventListener ('load', do_color_fill)}
+   if (init.fix_ie_bug) {load_timeout (image_obj, do_color_fill)} else {image_obj.addEventListener ('load', do_color_fill)}
   }
  } else {
   var image_obj = init.image
   if (init.image instanceof HTMLImageElement) {
    if (typeof init.image_src != "undefined") image_obj.src = init.image_src
    if (return_result == true) {return do_color_fill ()} else {
-    if (init.fix_ie_bug == true) {load_timeout (image_obj, do_color_fill)} else {image_obj.addEventListener ('load', do_color_fill)}
+    if (init.fix_ie_bug) {load_timeout (image_obj, do_color_fill)} else {image_obj.addEventListener ('load', do_color_fill)}
    }
   }
   if (init.image instanceof HTMLCanvasElement) {
@@ -3333,7 +3333,7 @@ function color_fill (init) {
  function load_timeout (element, callback) {
   test_size ()
   function test_size () {
-   if (element.naturalWidth == 0) {var test = setTimeout (test_size, 20); return}
+   if ((typeof element.naturalWidth == "undefined") || element.naturalWidth == 0) {var test = setTimeout (test_size, 20); return}
    element.width  = element.naturalWidth
    element.height = element.naturalHeight
    callback ()
@@ -3343,14 +3343,26 @@ function color_fill (init) {
  // Put the image into a canvas, colorize it with init.color, and run the callback with the result.
  function do_color_fill () {
   var rect_source = document.createElement ('canvas'); var rect_source_ctx = rect_source.getContext('2d')
-  rect_source.width  = image_obj.width
-  rect_source.height = image_obj.height
+  // IE10 fix.
+  if ((init.image instanceof HTMLImageElement) && (init.fix_ie_bug)) {
+   rect_source.width  = image_obj.naturalWidth
+   rect_source.height = image_obj.naturalHeight
+  } else {
+   rect_source.width  = image_obj.width
+   rect_source.height = image_obj.height
+  }
   rect_source_ctx.fillStyle = init.color
   rect_source_ctx.fillRect (0, 0, rect_source.width, rect_source.height)
   if ((typeof init.image == "undefined") || (init.image instanceof HTMLImageElement) || ((typeof init.create_new != "undefined") && (init.create_new == true))) {
    var target = document.createElement ('canvas'); var target_ctx = target.getContext('2d')
-   target.width  = image_obj.width
-   target.height = image_obj.height
+   // IE10 fix.
+   if ((init.image instanceof HTMLImageElement) && (init.fix_ie_bug)) {
+    target.width  = image_obj.naturalWidth
+    target.height = image_obj.naturalHeight
+   } else {
+    target.width  = image_obj.width
+    target.height = image_obj.height
+   }
    target_ctx.globalCompositeOperation = 'source-over'
    target_ctx.drawImage (image_obj, 0, 0)
   }
