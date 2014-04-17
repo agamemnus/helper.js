@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.4.
+// HelperJS version 4.5.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -66,6 +66,15 @@
 // function formUrlVars
 // function playAudio
 
+// <Agamemnus> what I mean is
+// <Agamemnus> you add a prototype
+// <Agamemnus> add to DOM elements
+// <Agamemnus> then you can have a buffer that just checks if the element is in the DOM
+// <Agamemnus> if not the timeout/interval is cleared and we return
+// <Agamemnus> i'll add this to my notes
+// <Agamemnus> too late to code this
+// <Agamemnus> but definitely doable
+
 // Fix errors caused by console (or console.log) not being defined in certain browsers.
 if (typeof console == "undefined") console = {}
 if (typeof console.log == "undefined") console.log = function () {}
@@ -98,6 +107,43 @@ HTMLElement.prototype.isAttached = function () {
   if (obj == document.documentElement) return true
   if (obj == null) return false
  }
+}
+
+// Add a setTimeout and setInterval to HTMLElement. The setTimeout and setInterval remove themselves if the element is removed.
+// Another possible implementation: global service.
+HTMLElement.prototype.setTimeout = function (callback, calltime) {
+ var current_element = this
+ function is_attached (obj) {
+  while (true) {
+   obj = obj.parentNode
+   if (obj == document.documentElement) return true
+   if (obj == null) return false
+  }
+ }
+ function callback_wrapper () {
+  var args = Array.prototype.slice.call (arguments)
+  if (!is_attached(current_element)) return
+  callback.apply (null, args)
+ }
+ var timeout_id = window.setTimeout (callback_wrapper, calltime)
+ return timeout_id
+}
+HTMLElement.prototype.setInterval = function (callback, calltime) {
+ var current_element = this
+ function is_attached (obj) {
+  while (true) {
+   obj = obj.parentNode
+   if (obj == document.documentElement) return true
+   if (obj == null) return false
+  }
+ }
+ function callback_wrapper () {
+  var args = Array.prototype.slice.call (arguments)
+  if (!is_attached(current_element)) {clearInterval (interval_id); return}
+  callback.apply (null, args)
+ }
+ var interval_id = window.setInterval (callback_wrapper, calltime)
+ return interval_id
 }
 
 // Others: adoptChildren, stealChildren, window.childServices. Props to averyvery on the last one!
