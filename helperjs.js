@@ -108,6 +108,8 @@ HTMLElement.prototype.isAttached = function () {
   if (obj == null) return false
  }
 }
+// </DOM object prototypes.>
+
 
 // Add a setTimeout and setInterval to HTMLElement. The setTimeout and setInterval remove themselves if the element is removed.
 // Another possible implementation: global service.
@@ -3333,7 +3335,7 @@ function color_fill (init) {
  function load_timeout (element, callback) {
   test_size ()
   function test_size () {
-   if ((typeof element.naturalWidth == "undefined") || element.naturalWidth == 0) {var test = setTimeout (test_size, 20); return}
+   if ((typeof element.naturalWidth == "undefined") || (element.complete == false) || (element.naturalWidth == 0)) {var test = setTimeout (test_size, 20); return}
    element.width  = element.naturalWidth
    element.height = element.naturalHeight
    callback ()
