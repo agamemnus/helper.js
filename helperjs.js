@@ -3086,10 +3086,6 @@ function playAudio (filename, init) {
  main.loop     = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
  main.volume   = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
  main.start    = init.start  ; if (typeof main.start  == "undefined") main.start  = true
- var http = new XMLHttpRequest()
- http.open ('HEAD', filename, false)
- http.send ()
- if (http.status == 404) {main.loaded = false; return}
  main.loaded = true
  main.filename = filename
  main.stopped = false
@@ -3478,16 +3474,16 @@ function canvas_draw_path (init) {
   if (typeof init.strokeColor != "undefined") context.strokeStyle = init.strokeColor
   if (typeof init.lineCap     != "undefined") context.lineCap     = init.lineCap
   
-  context.beginPath()
+  context.beginPath ()
   context.translate (init.x, init.y)
   for (var n = 0; n < data_array.length; n++) {
    var c = data_array[n].command
    var p = data_array[n].points
    switch (c) {
-    case 'L' : context.lineTo(p[0], p[1]); break
-    case 'M' : context.moveTo(p[0], p[1]); break
-    case 'C' : context.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]); break
-    case 'z' : context.closePath(); break
+    case 'L' : context.lineTo (p[0], p[1]); break
+    case 'M' : context.moveTo (p[0], p[1]); break
+    case 'C' : context.bezierCurveT o(p[0], p[1], p[2], p[3], p[4], p[5]); break
+    case 'z' : context.closePath (); break
    }
   }
   if ((typeof init.strokeWidth == "undefined") || (init.strokeWidth != 0)) context.stroke ()
