@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.6.
+// HelperJS version 4.7.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3515,30 +3515,28 @@ function canvas_draw_path (init) {
   var cc = ['M', 'L', 'C']
   
   // Convert white spaces to commas.
-  cs = cs.replace(new RegExp(' ', 'g'), ',')
+  cs = cs.replace (new RegExp(' ', 'g'), ',')
   
   // Create pipes so that we can split the data.
-  for (var n = 0; n < cc.length; n++) {
-   cs = cs.replace(new RegExp(cc[n], 'g'), '|' + cc[n])
-  }
+  for (var n = 0; n < cc.length; n++) {cs = cs.replace (new RegExp(cc[n], 'g'), '|' + cc[n])}
+  
   // Create the array.
   var arr = cs.split('|')
   var ca = []
   
   // Init the context point.
-  var cpx = 0
-  var cpy = 0
+  var cpx = 0, cpy = 0
   for (n = 1; n < arr.length; n++) {
    var str = arr[n]
    var c = str.charAt(0)
    str = str.slice(1)
    
    // Remove ,- for consistency.
-   str = str.replace(new RegExp(',-', 'g'), '-')
+   str = str.replace (new RegExp(',-', 'g'), '-')
    
    // Add commas so that it's easy to split.
-   str = str.replace(new RegExp('-', 'g'), ',-')
-   str = str.replace(new RegExp('e,-', 'g'), 'e-')
+   str = str.replace (new RegExp('-', 'g'), ',-')
+   str = str.replace (new RegExp('e,-', 'g'), 'e-')
    var p = str.split(',')
    if (p.length > 0 && p[0] === '') p.shift()
    
@@ -3550,38 +3548,34 @@ function canvas_draw_path (init) {
     var cmd = null
     var points = []
     var startX = cpx, startY = cpy
-    // Move var from within the switch to up here (jshint).
-    var prevCmd, ctlPtx, ctlPty  // Ss, Tt
-    var rx, ry, psi, fa, fs, x1, y1 // Aa
     switch (c) {
-     // Note: Keep the lineTos above the moveTos in this switch.
      case 'L' :
-      cpx = p.shift()
-      cpy = p.shift()
-      points.push(cpx, cpy)
+      cpx = p.shift ()
+      cpy = p.shift ()
+      points.push (cpx, cpy)
       break
      case 'M' :
-      cpx = p.shift()
-      cpy = p.shift()
-      cmd = 'M'
-      points.push(cpx, cpy)
-      c = 'L'
       // Subsequent points are treated as absolute lineTo.
+      cpx = p.shift ()
+      cpy = p.shift ()
+      cmd = 'M'
+      points.push (cpx, cpy)
+      c = 'L'
       break
      case 'C' :
-      points.push(p.shift(), p.shift(), p.shift(), p.shift())
-      cpx = p.shift()
-      cpy = p.shift()
-      points.push(cpx, cpy)
+      points.push (p.shift(), p.shift(), p.shift(), p.shift())
+      cpx = p.shift ()
+      cpy = p.shift ()
+      points.push (cpx, cpy)
       break
     }
-    ca.push({
+    ca.push ({
      command : cmd || c,
      points  : points,
      start   : {x: startX, y: startY}
     })
    }
-   if ((c === 'z') || (c === 'Z')) ca.push({command: 'z', points: [], start: undefined})
+   if ((c === 'z') || (c === 'Z')) ca.push ({command: 'z', points: [], start: undefined})
   }
   return ca
  }
