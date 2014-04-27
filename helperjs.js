@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.7.
+// HelperJS version 4.8.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -2142,7 +2142,7 @@ function sliderbar (init) {
  }
  
  // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
- MutationObserver = window.MutationObserver || window.WebkitMutationObserver
+ var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
  if (typeof MutationObserver != "undefined") {
   var observer = new MutationObserver (function (mutation_list) {
    for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
@@ -3106,6 +3106,24 @@ function playAudio (filename, init) {
   if (main.loop == true) {main.audio.loop = true}
  }
  return main
+}
+HTMLElement.prototype.playAudio = function () {
+ var current_element = this
+ function is_attached (obj) {
+  while (true) {
+   obj = obj.parentNode
+   if (obj == document.documentElement) return true
+   if (obj == null) return false
+  }
+ }
+ function parentNode_test () {
+  if (is_attached(current_element)) {setTimeout (parentNode_test, 50); return}
+  audio_object.stop ()
+ }
+ parentNode_test ()
+ var args = Array.prototype.slice.call (arguments)
+ var audio_object = new playAudio.apply (null, args)
+ return audio_object
 }
 // </ Audio functions.>
 
