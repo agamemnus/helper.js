@@ -3482,7 +3482,7 @@ function canvas_draw_path (init) {
    switch (c) {
     case 'L' : context.lineTo (p[0], p[1]); break
     case 'M' : context.moveTo (p[0], p[1]); break
-    case 'C' : context.bezierCurveT o(p[0], p[1], p[2], p[3], p[4], p[5]); break
+    case 'C' : context.bezierCurveTo (p[0], p[1], p[2], p[3], p[4], p[5]); break
     case 'z' : context.closePath (); break
    }
   }
