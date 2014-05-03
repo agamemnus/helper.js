@@ -1764,26 +1764,35 @@ function get_data (params) {
  if (is_asynchronous == false) return process_http_request ()
  
  http_request.onreadystatechange = function () {
-  if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()
+  if (http_request.readyState == 4) process_http_request ()
  }
  
  function process_http_request () {
   var response_text = http_request.responseText
-  if ((send_data_as_plaintext != true) && (response_text != null)) {
-   // Send an error if the text can't be parsed.
-   try {
-    response_text = JSON.parse (response_text)
-   } catch (err) {
-    response_text = {error: true, errormessage: response_text}
-    if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
-   }
-   if ((response_text != null) && (response_text.error == true)) {
-    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
-    return
+  
+  // If the request status isn't 200, send an error.
+  if (http_request.status != 200) {
+   response_text = {error: true, errormessage: response_text}
+  } else {
+   if ((send_data_as_plaintext != true) && (response_text != null)) {
+    // Send an error if the JSON text can't be parsed.
+    try {
+     response_text = JSON.parse (response_text)
+    } catch (err) {
+     response_text = {error: true, errormessage: response_text}
+     if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
+    }
    }
   }
+  
+  // Send an error.
+  if ((response_text != null) && (response_text.error == true)) {
+   if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
+   return
+  }
+  
   if (is_asynchronous == false) return response_text
-  if (typeof params.success != "undefined") params.success(response_text)
+  if (typeof params.success != "undefined") params.success (response_text)
  }
 }
 
