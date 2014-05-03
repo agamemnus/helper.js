@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.8.
+// HelperJS version 4.9.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1794,7 +1794,7 @@ function make_request (url, data, send_data_as_plaintext, charset, is_asynchrono
  var http_request = new XMLHttpRequest()
  if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
  if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
- if (request_method == "GET") {url = url + "?" + data; data = null}
+ if (request_method == "GET") {url = url + ((typeof data != "undefined") ? "?" + data : ""); data = null}
  http_request.open (request_method, url, is_asynchronous)
  if (typeof response_type != "undefined") http_request.responseType = response_type
  if (send_data_as_plaintext === true) {
