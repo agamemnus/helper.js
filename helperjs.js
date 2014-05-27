@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 4.9.
+// HelperJS version 5.0.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -251,10 +251,19 @@ function intervalListClear (obj) {
  }
 }
 
+// Deferred function processing.
+function time_defer (init, timeout_in_ms) {
+ var condition_function = init.condition
+ var result_function    = init.result
+ function_test ()
+ function function_test () {
+  if (!condition_function()) {setTimeout (function_test, timeout_in_ms); return}
+  result_function ()
+ }
+}
+
 function getRightClick (evt) {
- if (evt.which) return (evt.which == 3)
- if (evt.button) return (evt.button == 2)
- return false
+ return (evt.which) ? (evt.which == 3) : ((evt.button) ? (evt.button == 2) : false)
 }
 
 function getWheelData (evt) {
@@ -308,14 +317,16 @@ function add_pinch_controls (init) {
  }
 }
 
+// N.B.: For PCs, use .preventDefault on dragstart. For mobile, use .preventDefault on touchmove.
 function add_swipe_controls (init) {
  void function (init) {
+  if (typeof init.is_mobile == "undefined") init.is_mobile = true
   var target_obj = init.target, initial_x, initial_y, current_x, current_y, swipe_in_effect = false
-  target_obj.addEventListener ('touchstart' , swipe_start_event)
-  target_obj.addEventListener ('touchmove'  , swipe_event)
-  target_obj.addEventListener ('touchend'   , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
-  target_obj.addEventListener ('touchleave' , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
-  target_obj.addEventListener ('touchcancel', function (evt) {if (swipe_in_effect == false) return; swipe_end (evt)})
+  target_obj.addEventListener (init.is_mobile ? 'touchstart'  : 'mousedown', swipe_start_event)
+  target_obj.addEventListener (init.is_mobile ? 'touchmove'   : 'mousemove', swipe_event)
+  target_obj.addEventListener (init.is_mobile ? 'touchend'    : 'mouseup'  , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
+  target_obj.addEventListener (init.is_mobile ? 'touchleave'  : 'mouseout' , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
+  target_obj.addEventListener (init.is_mobile ? 'touchcancel' : 'blur'     , function (evt) {if (swipe_in_effect == false) return; swipe_end (evt)})
   function swipe_end (evt) {
    if (swipe_in_effect == false) return
    swipe_in_effect = false
@@ -323,16 +334,20 @@ function add_swipe_controls (init) {
   }
   function swipe_start_event (evt) {
    if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) == false)) return
-   if (evt.touches.length != 1) return
-   var xy = getXY(evt.touches[0], target_obj); initial_x = xy[0]; initial_y = xy[1]
+   if ((init.is_mobile) && (evt.touches.length != 1)) return
+   var xy = getXY((init.is_mobile) ? evt.touches[0] : evt, target_obj); initial_x = xy[0]; initial_y = xy[1]
    current_x = initial_x; current_y = initial_y
    if (swipe_in_effect == true) return
    swipe_in_effect = true
    if (typeof init.start_effect != "undefined") init.start_effect (evt)
   }
   function swipe_event (evt) {
-   if ((evt.touches.length != 1) || ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false))) {swipe_end (evt); return}
-   var xy = getXY(evt.touches[0], target_obj); current_x = xy[0]; current_y = xy[1]
+   if (
+       ((init.is_mobile) && (evt.touches.length != 1)) ||
+       ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false))
+      ) {swipe_end (evt); return}
+   var xy = getXY((init.is_mobile) ? evt.touches[0] : evt, target_obj); current_x = xy[0]; current_y = xy[1]
+   if (typeof init.swipe_move != "undefined") init.swipe_move ({evt: evt, init: init, initial_x: initial_x, initial_y: initial_y, current_x: current_x, current_y: current_y, swipe_in_effect: swipe_in_effect})
   }
   function swipe_end_event (evt) {
    if ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false)) {swipe_end (evt); return}
@@ -575,7 +590,10 @@ function countBits (n) {
  n = (n & 0x33333333) + ((n >> 2) & 0x33333333)     // Temp.
  return ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24 // Count.
 }
+// </Generic logic functions.>
 
+
+// <Copy and object test functions. TAG: copy, TAG: test.>
 function objects_are_equal (a, b) {
  function generalType (o) {var t = typeof(o); if (t != 'object') return t; if (o instanceof String) return 'string'; if (o instanceof Number) return 'number'; return t}
  function uniqueArray (a) {if (!(a instanceof Array)) return; a.sort (); for (var i = 1; i < a.length; i++) {if (a[i - 1] == a[i]) a.splice(i, 1)}}
@@ -639,11 +657,11 @@ function deep_extend (destination, source) {
 
 // replace_property.
 // Replace a property.. with something else.
-//replace_property ({
-// search_object    : {1: {11: {Control: function () {return 111}}}, 2: {21: {211: {Control: 2111}}}},
-// search_property  : 'Control',
-// replace_function : function (value) {return value}
-//})
+// replace_property ({
+//  search_object    : {1: {11: {Control: function () {return 111}}}, 2: {21: {211: {Control: 2111}}}},
+//  search_property  : 'Control',
+//  replace_function : function (value) {return value}
+// })
 function replace_property (init) {
  var obj              = init.search_object
  var search_property  = init.search_property
@@ -776,17 +794,7 @@ function extend (source, target) {
  mapobject (function (k, v) {try {target[k] = v} catch (err) {console.log(err)}}, source)
  return target
 }
-
-function time_defer (init, timeout_in_ms) {
- var condition_function = init.condition
- var result_function    = init.result
- function_test ()
- function function_test () {
-  if (!condition_function()) {setTimeout (function_test, timeout_in_ms); return}
-  result_function ()
- }
-}
-// </Generic logic functions.>
+// <Copy and object test functions.>
 
 
 // <Math manipulation functions. TAG: math, TAG: math manipulation.>
