@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.0.
+// HelperJS version 5.1.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -255,11 +255,10 @@ function intervalListClear (obj) {
 function time_defer (init, timeout_in_ms) {
  var condition_function = init.condition
  var result_function    = init.result
- function_test ()
- function function_test () {
+ void function function_test () {
   if (!condition_function()) {setTimeout (function_test, timeout_in_ms); return}
   result_function ()
- }
+ } ()
 }
 
 function getRightClick (evt) {
@@ -3638,12 +3637,12 @@ function on_background_image_url_load (current_div, callback) {
 // <Feature/property detection functions. TAG: detection functions, TAG: detect device type, TAG: detect scrollbar size.>
 function detect_device_type (obj) {
  var ua = navigator.userAgent.toLowerCase()
- obj.is_iphone          = (ua.match(/iphone/i) != null)
- obj.is_ipad            = (ua.match(/ipad/i) != null)
+ obj.is_iphone          = /iphone/i.test(ua)
+ obj.is_ipad            = /ipad/i.test(ua)
  obj.is_idevice         = obj.is_iphone || obj.is_ipad
- obj.is_android         = (ua.match(/android/i) != null)
- obj.is_chromium        = (ua.match(/chrome/i) != null)
- obj.is_windows_phone   = (ua.match(/Windows Phone/i) != null)
+ obj.is_android         = /android/i.test(ua)
+ obj.is_chromium        = /chrome/i.test(ua)
+ obj.is_windows_phone   = /windows phone/i.test(ua)
  obj.is_phone_or_tablet = (obj.is_idevice || obj.is_android || obj.is_windows_phone)
 }
 
