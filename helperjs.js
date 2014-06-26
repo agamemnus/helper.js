@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.1.
+// HelperJS version 5.2.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1762,10 +1762,9 @@ function get_data (params) {
  var is_asynchronous = true
  if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
  if (typeof params.async           != "undefined") is_asynchronous = params.async
- var charset     = (typeof params.charset != "undefined") ? params.charset : ""
- var params_data = (typeof params.data    != "undefined") ? params.data    : ""
+ 
  // Call the request function.
- var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
+ var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, params.charset, is_asynchronous, undefined, undefined, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1802,15 +1801,17 @@ function get_data (params) {
 }
 
 function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
+ var http_request = new XMLHttpRequest ()
+ if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page."); return}
+ 
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
- var http_request = new XMLHttpRequest()
- if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
- if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
- if (request_method == "GET") {url = url + ((typeof data != "undefined") ? "?" + data : ""); data = null}
+ if (typeof charset        == "undefined") {charset = ''} else {charset = '; charset=' + charset}
+ if (typeof request_method == "undefined") request_method = ((data === null) ? "GET" : "POST")
+ if (typeof response_type  != "undefined") http_request.responseType = response_type
+ 
+ if (request_method == "GET") {url = url + (((typeof data == "undefined") || (data === null) || (data === "")) ? "?" + data : ""); data = null}
  http_request.open (request_method, url, is_asynchronous)
- if (typeof response_type != "undefined") http_request.responseType = response_type
  if (send_data_as_plaintext === true) {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
   if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
