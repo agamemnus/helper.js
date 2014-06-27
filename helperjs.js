@@ -1531,7 +1531,7 @@ if (typeof JSZip != "undefined") {
   
   var base_url = window.location.protocol + "//" + window.location.host + '/'
   
-  var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', undefined, 'GET')
+  var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', 'GET')
   var http_request        = make_request_result["http_request"]
   
   if (async == false) return process_http_request ()
@@ -1570,7 +1570,7 @@ function getDBData_2Dintarray (container_list, bytesize, filename, filename_to_i
  var use_zip = (typeof filename_to_index_list != "string")
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  
- var make_request_result = make_request(filename, "", undefined, undefined, async, 'arraybuffer', undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request(filename, "", undefined, undefined, async, 'arraybuffer', (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
 
  if (async == false) return process_http_request ()
@@ -1651,7 +1651,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) + orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
  console.log (requeststring)
  // Set up the temp string and call the request function.
- var make_request_result = make_request ("/dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request ("/dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) {return process_http_request ()}
@@ -1764,7 +1764,7 @@ function get_data (params) {
  if (typeof params.async           != "undefined") is_asynchronous = params.async
  
  // Call the request function.
- var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, params.charset, is_asynchronous, undefined, undefined, params.request_method)
+ var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, params.charset, is_asynchronous, undefined, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1800,7 +1800,7 @@ function get_data (params) {
  }
 }
 
-function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
+function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, request_method) {
  var http_request = new XMLHttpRequest ()
  if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page."); return}
  
