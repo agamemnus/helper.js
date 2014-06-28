@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.2.
+// HelperJS version 5.3.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3066,9 +3066,33 @@ function modify_href_if_relative (prefix_src, current_src) {
 
 // <Audio functions. TAG: audio, TAG: play.>
 function playAudio (filename, init) {
- if ((typeof this == "undefined") || (this == window)) return new playAudio (filename, init)
  if (typeof init == "undefined") init = {}
+ 
+ // Check if the file is already loaded.
+ if (typeof init.container != "undefined") {
+  if ((typeof init.container[filename] != "undefined") && (!init.force_refresh)) {
+   var main = init.container[filename]
+   main.loop        = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
+   main.volume      = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
+   main.start       = init.start  ; if (typeof main.start  == "undefined") main.start  = true  
+   main.stopped     = false
+   main.audio.volume = main.volume
+   if (main.start == true) {
+    main.audio.play ()
+    if (main.loop == true) main.audio.addEventListener ('ended', main.play_track)
+   } else {
+    if (main.loop == true) {main.audio.loop = true}
+   } 
+   return main
+  }
+ }
+ 
+ if ((typeof this == "undefined") || (this == window)) return new playAudio (filename, init)
  var main = this
+ 
+ // Add this object to the container, if it exists.
+ if (typeof init.container != "undefined") init.container[filename] = main
+ 
  main.play_track  = function () {main.audio.play ()}
  main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.audio.removeEventListener ('ended', main.play_track)}
  main.pause       = function () {main.stopped = true; main.audio.pause (); main.audio.removeEventListener ('ended', main.play_track)}
@@ -3085,7 +3109,7 @@ function playAudio (filename, init) {
    main.audio.addEventListener ('ended', main.play_track)
   }
  }
- main.set_loop   = function (loop_value) {
+ main.set_loop    = function (loop_value) {
   if (loop_value == true) {
    main.loop       = true
    main.audio.loop = true
@@ -3096,15 +3120,15 @@ function playAudio (filename, init) {
    main.audio.removeEventListener ('ended', main.play_track)
   }
  }
- main.restart    = function () {main.play_track ()}
- main.set_volume = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
- main.loop     = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
- main.volume   = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
- main.start    = init.start  ; if (typeof main.start  == "undefined") main.start  = true
- main.loaded = true
- main.filename = filename
- main.stopped = false
- main.audio = new Audio ()
+ main.restart     = function () {main.play_track ()}
+ main.set_volume  = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
+ main.loop        = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
+ main.volume      = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
+ main.start       = init.start  ; if (typeof main.start  == "undefined") main.start  = true
+ main.loaded      = true
+ main.filename    = filename
+ main.stopped     = false
+ main.audio       = new Audio ()
  if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
   main.audio.src = main.filename
  } else {
