@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.3.
+// HelperJS version 5.4.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3207,6 +3207,22 @@ function image_preload (cursrc, init) {
  }
 }
 
+function setTextShadowColor (element, text_shadow_color) {
+ // The element must be appended to the DOM for this function to work.
+ var text_shadow_string = window.getComputedStyle(element).textShadow
+ 
+ // Split the text shadow into an array with "{color}, {px}, {px}" items.
+ var text_shadow_array = text_shadow_string.split('rgb')
+ text_shadow_array.shift()
+ text_shadow_array.forEach (function(item, i, arr) {
+  // Remove the rest of the rgb() section and clear out the extraneous comma at the end.
+  var modified_item = item.slice(0, item.length - 2).split(") ")[1]
+  // Insert the new color in each item.
+  arr[i] = text_shadow_color + " " + modified_item
+ })
+ element.style.textShadow = text_shadow_array
+}
+
 // Colorize (eg: grayscale if the values are 1/1/1)
 function canvas_colorize (ctx, rpercent, gpercent, bpercent, octx) {
  var i = 0, curwidth = ctx.canvas.width, curheight = ctx.canvas.height
@@ -3464,7 +3480,13 @@ function canvas_clone (canvas) {
 }
 
 // Trim the top/bottom/left/right bounds of a canvas image.
-function canvas_trim_empty_space (source_canvas) {
+function canvas_trim_empty_space (init) {
+ if (init instanceof HTMLElement) {
+  var source_canvas = init
+ } else {
+  var source_canvas    = init.source
+  var coordinates_only = ((typeof init.coordinates_only == "undefined") ? false : coordinates_only)
+ }
  var canvas_initial_width = source_canvas.width, canvas_initial_height = source_canvas.height
  var ctx = source_canvas.getContext ('2d')
  var canvas_data = ctx.getImageData (0, 0, canvas_initial_width, canvas_initial_height)
@@ -3505,13 +3527,17 @@ function canvas_trim_empty_space (source_canvas) {
   }
   if (all_empty == false) {x1 = x; break}
  }
- var new_width = x1-x0+1, new_height = y1-y0+1
- var target_canvas = document.createElement ('canvas')
- var target_ctx = target_canvas.getContext ('2d')
- target_canvas.width  = new_width
- target_canvas.height = new_height
- target_ctx.drawImage (source_canvas, x0, y0, new_width, new_height, 0, 0, new_width, new_height)
- return {canvas: target_canvas, x0: x0, x1: x1, y0: y0, y1: y1}
+ var new_width = x1 - x0 + 1, new_height = y1 - y0 + 1
+ var result = {x0: x0, x1: x1, y0: y0, y1: y1}
+ if (typeof init.coordinates_only == true) {
+  var target_canvas = document.createElement ('canvas')
+  var target_ctx = target_canvas.getContext ('2d')
+  target_canvas.width  = new_width
+  target_canvas.height = new_height
+  target_ctx.drawImage (source_canvas, x0, y0, new_width, new_height, 0, 0, new_width, new_height)
+  result.canvas = target_canvas
+ }
+ return result
 }
 
 // Create a simple SVG path from a string and draw it onto a canvas. Derived from kineticJS under MIT license.
