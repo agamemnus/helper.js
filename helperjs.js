@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.4.
+// HelperJS version 5.5.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -41,6 +41,7 @@
 // function getClientHeightFull
 // function getCaretPosition
 // function setCaretPosition
+// setTextShadowColor
 //
 // Potentially case non-compliant functions and variables:
 // shortenText
@@ -1762,9 +1763,11 @@ function get_data (params) {
  var is_asynchronous = true
  if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
  if (typeof params.async           != "undefined") is_asynchronous = params.async
- 
+ var charset               = (typeof params.charset               != "undefined") ? params.charset : ""
+ var params_data           = (typeof params.data                  != "undefined") ? params.data    : ""
+ var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
  // Call the request function.
- var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, params.charset, is_asynchronous, undefined, params.request_method)
+ var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1773,9 +1776,8 @@ function get_data (params) {
  
  function process_http_request () {
   var response_text = http_request.responseText
-  
   // If the request status isn't 200, send an error.
-  if (http_request.status != 200) {
+  if ((http_request.status != 200) && (params.ignore_request_status == false)) {
    response_text = {error: true, errormessage: response_text}
   } else {
    if ((send_data_as_plaintext != true) && (response_text != null)) {
