@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.5.
+// HelperJS version 5.7.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -616,14 +616,10 @@ function objects_are_equal (a, b) {
  return true
 }
 
-function shallowcopy (source) {
+unction shallowcopy (source) {
  if ((typeof source !== 'object') || (source == null)) return source
  var copy = ((source instanceof Array) ? [] : {})
- for (var i in source) {
-  var property = source[i]
-  if ((typeof property != 'object') || (!(property instanceof Array))) {copy[i] = property; continue}
-  copy[i] = property.slice ()
- }
+ for (var i in source) {copy[i] = source[i]}
  return copy
 }
 
@@ -639,6 +635,19 @@ function deepcopy (source) {
    if (typeof property[j] != 'object') {copy[i].push(property[j]); continue}
    copy[i].push(deepcopy(property[j]))
   }
+ }
+ return copy
+}
+
+function strip_dom_keys (source) {
+ var copy = {}
+ var props = Object.keys(source)
+ var dummy = document.createElement ('div')
+ var dom_keys = Object.keys(dummy)
+ for (var pi = 0, curlen = props.length; pi < curlen; pi++) {
+  var p = props[pi]
+  if (dom_keys.indexOf(p) != -1) continue
+  copy[p] = source[p]
  }
  return copy
 }
@@ -1810,10 +1819,12 @@ function make_request (url, data, send_data_as_plaintext, charset, is_asynchrono
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
  if (typeof charset        == "undefined") {charset = ''} else {charset = '; charset=' + charset}
  if (typeof request_method == "undefined") request_method = ((data === null) ? "GET" : "POST")
- if (typeof response_type  != "undefined") http_request.responseType = response_type
  
  if (request_method == "GET") {url = url + (((typeof data == "undefined") || (data === null) || (data === "")) ? "?" + data : ""); data = null}
  http_request.open (request_method, url, is_asynchronous)
+ 
+ if (typeof response_type  != "undefined") http_request.responseType = response_type
+ 
  if (send_data_as_plaintext === true) {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
   if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
@@ -3134,10 +3145,22 @@ function playAudio (filename, init) {
  if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
   main.audio.src = main.filename
  } else {
-  var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
-  main.audio.appendChild (source)
-  var source = document.createElement("source"); source.type = "audio/mp3"; source.src = main.filename.slice(0, -4) + ".mp3"
-  main.audio.appendChild (source)
+  var extension = main.filename.slice(-4)
+  if ((extension != ".ogg") && (extension != ".mp3") && (extension != ".wav")) {
+   var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
+   main.audio.appendChild (source)
+   var source = document.createElement("source"); source.type = "audio/mpeg"; source.src = main.filename.slice(0, -4) + ".mp3"
+   main.audio.appendChild (source)
+  } else {
+   var source = document.createElement("source")
+   switch (extension) {
+    case ".ogg" : source.type = "audio/ogg"; break
+    case ".mp3" : source.type = "audio/mpeg"; break
+    case ".wav" : source.type = "audio/wav"; break
+   }
+   source.src = main.filename
+   main.audio.appendChild (source)
+  }
  }
  main.audio.volume = main.volume
  if (main.start == true) {
@@ -3163,7 +3186,7 @@ HTMLElement.prototype.playAudio = function () {
  }
  parentNode_test ()
  var args = Array.prototype.slice.call (arguments)
- var audio_object = new playAudio.apply (null, args)
+ var audio_object = playAudio.apply (null, args)
  return audio_object
 }
 // </ Audio functions.>
@@ -3572,20 +3595,22 @@ function canvas_draw_path (init) {
    }
   }
   if ((typeof init.strokeWidth == "undefined") || (init.strokeWidth != 0)) context.stroke ()
-  if (typeof init.fillPatternImage != "undefined") {
-   var pattern = context.createPattern(init.fillPatternImage, 'no-repeat')
-   if (typeof init.fillPatternOffset != "undefined") {
-    context.save ()
-    context.translate (-init.fillPatternOffset[0], 0)
-    context.translate (0, -init.fillPatternOffset[1])
+  if ((typeof init.fillPatternImage != "undefined") || (typeof init.fillColor != "undefined")) {
+   if (typeof init.fillPatternImage != "undefined") {
+    var pattern = context.createPattern(init.fillPatternImage, 'no-repeat')
+    if (typeof init.fillPatternOffset != "undefined") {
+     context.save ()
+     context.translate (-init.fillPatternOffset[0], 0)
+     context.translate (0, -init.fillPatternOffset[1])
+    }
+    context.fillStyle = pattern
+   } else {
+    // fillColor is subordinate to fillPatternImage.
+    context.fillStyle = init.fillColor
    }
-   context.fillStyle = pattern
-  } else {
-   // fillColor is subordinate to fillPatternImage.
-   if (typeof init.fillColor != "undefined") context.fillStyle = init.fillColor
+   context.fill ()
   }
-  context.fill ()
-  if (typeof init.fillPatternOffset != "undefined") context.restore()
+  if (typeof init.fillPatternOffset != "undefined") context.restore ()
  }
  
  function get_data_array_from_string (data_string) {
