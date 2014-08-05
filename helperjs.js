@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.7.
+// HelperJS version 5.8.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3106,11 +3106,11 @@ function playAudio (filename, init) {
  // Add this object to the container, if it exists.
  if (typeof init.container != "undefined") init.container[filename] = main
  
- main.play_track  = function () {main.audio.play ()}
- main.stop        = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.audio.removeEventListener ('ended', main.play_track)}
- main.pause       = function () {main.stopped = true; main.audio.pause (); main.audio.removeEventListener ('ended', main.play_track)}
- main.play        = function () {main.resume ()}
- main.resume      = function () {
+ main.play_track = function () {main.audio.play ()}
+ main.stop       = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.audio.removeEventListener ('ended', main.play_track)}
+ main.pause      = function () {main.stopped = true; main.audio.pause (); main.audio.removeEventListener ('ended', main.play_track)}
+ main.play       = function () {main.resume ()}
+ main.resume     = function () {
   if (main.stopped == true) {
    main.stopped = false
    main.play_track ()
@@ -3133,15 +3133,15 @@ function playAudio (filename, init) {
    main.audio.removeEventListener ('ended', main.play_track)
   }
  }
- main.restart     = function () {main.play_track ()}
- main.set_volume  = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
- main.loop        = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
- main.volume      = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
- main.start       = init.start  ; if (typeof main.start  == "undefined") main.start  = true
- main.loaded      = true
- main.filename    = filename
- main.stopped     = false
- main.audio       = new Audio ()
+ main.restart    = function () {main.play_track ()}
+ main.set_volume = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
+ main.loop       = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
+ main.volume     = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
+ main.start      = init.start  ; if (typeof main.start  == "undefined") main.start  = true
+ main.loaded     = true
+ main.filename   = filename
+ main.stopped    = false
+ main.audio      = new Audio ()
  if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
   main.audio.src = main.filename
  } else {
@@ -3721,7 +3721,7 @@ function detect_device_type (obj) {
  obj.is_android         = /android/i.test(ua)
  obj.is_chromium        = /chrome/i.test(ua)
  obj.is_windows_phone   = /windows phone/i.test(ua)
- obj.is_phone_or_tablet = (obj.is_idevice || obj.is_android || obj.is_windows_phone)
+ obj.is_phone_or_tablet = ('ontouchstart' in window) || (obj.is_idevice || obj.is_android || obj.is_windows_phone)
 }
 
 function detect_scrollbar_thickness () {
@@ -3787,7 +3787,6 @@ function readcookie (name) {
 // Check that a list of fonts have loaded, and if so, run the specified callback functions.
 function load_web_fonts (font_list, callback) {
  var loaded_font_amount = 0
- var check_font_timeout = null
  for (var i = 0; i < font_list.length; i++) {
   var node = document.createElement('span')
   // Set characters that vary significantly among different fonts.
@@ -3805,7 +3804,7 @@ function load_web_fonts (font_list, callback) {
   node.style.letterSpacing = '0'
   document.body.appendChild (node)
   // Remember width with no applied web font.
-  node.original_width =  node.offsetWidth
+  node.original_width = node.getBoundingClientRect().width
   node.style.fontFamily = font_list[i]
   void function (node) {check_font (node)} (node)
  }
@@ -3819,7 +3818,7 @@ function load_web_fonts (font_list, callback) {
  }
  function check_font (node) {
   // Compare current width with original width.
-  if (node.offsetWidth == node.original_width) {check_font_timeout = setTimeout (function () {check_font(node)}, 30); return}
+  if (node.offsetWidth == node.original_width) {var check_font_timeout = setTimeout (function () {check_font(node)}, 30); return}
   loaded_font_amount += 1
   node.parentNode.removeChild (node)
   node = null
