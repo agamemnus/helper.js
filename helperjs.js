@@ -616,7 +616,7 @@ function objects_are_equal (a, b) {
  return true
 }
 
-unction shallowcopy (source) {
+function shallowcopy (source) {
  if ((typeof source !== 'object') || (source == null)) return source
  var copy = ((source instanceof Array) ? [] : {})
  for (var i in source) {copy[i] = source[i]}
