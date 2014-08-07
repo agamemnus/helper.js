@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.8.
+// HelperJS version 5.9.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3708,6 +3708,58 @@ function on_background_image_url_load (current_div, callback) {
  var temp_image = new Image ()
  temp_image.onload = function () {callback (temp_image)}
  temp_image.src = background_image_raw
+}
+
+function handle_css_hover_effects (init) {
+ var init = init || {}
+ var handle_touch_events = init.handle_touch_events || true
+ var handle_mouse_events = init.handle_mouse_events || true
+ var hover_class         = init.hover_class         || "hover"
+ function default_handler (curobj, op) {
+  var hovered_elements = Array.prototype.slice.call(document.body.querySelectorAll("*:hover"))
+  while (true) {
+   if (curobj == document.documentElement) break
+   if (hovered_elements.indexOf(curobj) != -1) curobj.classList[op](hover_class)
+   curobj = curobj.parentNode
+  }
+ }
+ 
+ if (handle_mouse_events) {
+  document.body.addEventListener ('mouseover' , function (evt) {var curobj = evt.target; default_handler (curobj, "add")})
+  document.body.addEventListener ('mouseout'  , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
+  document.body.addEventListener ('click'     , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
+ }
+ 
+ if (handle_touch_events) {
+  document.body.addEventListener ('touchstart', function (evt) {var curobj = evt.target; default_handler (curobj, "add")})
+  document.body.addEventListener ('touchend'  , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
+  document.body.addEventListener ('touchmove',  function (evt) {
+   var curobj = evt.target
+   var hovered_elements = Array.prototype.slice.call(document.body.querySelectorAll("*:hover"))
+   var lastobj = null
+   evt = evt.changedTouches[0]
+   var elements_at_point = get_elements_at_point (evt.pageX, evt.pageY)
+   // Get the last element that isn't at the current point but is still hovered over, and remove only its hover attribute.
+   while (true) {
+    if (curobj == document.documentElement) break
+    if ((hovered_elements.indexOf(curobj) != -1) && (elements_at_point.indexOf(curobj) == -1)) lastobj = curobj
+    curobj = curobj.parentNode
+   }
+   if (lastobj != null) lastobj.classList.remove(hover_class)
+   
+   function get_elements_at_point (x, y) {
+    var el_list = [], pe_list = []
+    while (true) {
+     var curobj = document.elementFromPoint(x, y)
+     if (curobj == document.documentElement) break
+     el_list.push (curobj); pe_list.push (curobj.style.pointerEvents)
+     curobj.style.pointerEvents = "none"
+    }
+    el_list.forEach (function (current_element, i) {current_element.style.pointerEvents = pe_list[i]})
+    return el_list
+   }
+  })
+ }
 }
 // </Graphics/image/canvas functions.>
 
