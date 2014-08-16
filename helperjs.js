@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 5.9.
+// HelperJS version 6.0.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -89,7 +89,7 @@ if (/(msie|trident)/i.test(navigator.userAgent)) {
  var innerhtml_set = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").set
  Object.defineProperty(HTMLElement.prototype, "innerHTML", {
   get: function () {return innerhtml_get.call (this)},
-  set: function(new_html) {
+  set: function (new_html) {
    var childNodes = this.childNodes
    for (var curlen = childNodes.length, i = curlen; i > 0; i--) {
     this.removeChild (childNodes[0])
@@ -869,6 +869,7 @@ Math.weightedSample = function (obj) {
  var total = 0; for (var i in obj) {total += obj[i]}; total *= Math.random ()
  for (var i in obj) {total -= obj[i]; if (total < 0) return i}
 }
+
 function pow (a, b) {
  return Math.pow (a,b)
 }
@@ -886,11 +887,11 @@ function get_rotated_size (width, height, degrees) {
 // <Date manipulation functions. TAG: date.>
 var monthName      = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 var shortMonthName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-Date.prototype.getUTCTime = function() {return this.getTime() - -this.getTimezoneOffset()*60000}
+Date.prototype.getUTCTime = function() {return this.getTime() + this.getTimezoneOffset() * 60000}
 Date.prototype.getMonthName = function() {return monthName[this.getMonth()]}
 Date.prototype.getShortMonthName = function() {return shortMonthName[this.getMonth()]}
 Date.prototype.getHHMMLocaleTimeString = function() {return shortMonthName[this.getMonth()]}
-Date.prototype.daysInAMonth = function() {var d = new Date(this.getFullYear(), this.getMonth()+1, 0); return d.getDate()}
+Date.prototype.daysInAMonth = function() {var d = new Date(this.getFullYear(), this.getMonth() + 1, 0); return d.getDate()}
 Date.prototype.setTimeObject = function (n) {this.setTime(n); return this}
 
 // Get a date object from a string in the format of the Mysql DATETIME string, or vice-versa.
@@ -1965,8 +1966,9 @@ function sliderbar (init) {
  var pivot_slice_style           = init.pivot_slice_style
  var pivot_slice_class           = init.pivot_slice_class
  var control_style               = init.control_style
+ var control_image_src           = init.control_image
  var control_class               = init.control_class
- var point_initial               = init.point_initial
+ var point_initial               = (typeof init.point_initial != "undefined") ? init.point_initial : 0
  var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
  var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
  main.do_not_start_function      = init.do_not_start_function
@@ -1976,7 +1978,7 @@ function sliderbar (init) {
  main.use_update_function_param  = init.use_update_function_param
  main.point_upper_limit          = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
  main.textbox_enabled            = init.textbox_enabled || false
- main.control_logical_offset     = (init.control_logical_offset   == "number") ? init.control_logical_offset : 0
+ main.control_unit_offset        = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
  main.css_unit_type              = init.css_unit_type || "px"
  main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
  
@@ -1991,7 +1993,7 @@ function sliderbar (init) {
   if (main.css_unit_type == "px") return 1
   if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
   var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
-  parent.appendChild (mydiv); w = mydiv.getBoundingClientRect().width; parent.removeChild (mydiv)
+  parent.appendChild (mydiv); var w = mydiv.getBoundingClientRect().width; parent.removeChild (mydiv)
   if (!main.recalculate_size) px_to_css_unit_type_fixed = w
   return w
  }
@@ -2013,7 +2015,7 @@ function sliderbar (init) {
    : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
   )
   var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
-  return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_logical_offset * 2
+  return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_unit_offset * 2
  }
  
  var zoom_level_fixed = undefined
@@ -2078,11 +2080,16 @@ function sliderbar (init) {
  }
  
  // Create the foreground object and set its class and style.
+ main.foreground_container = document.createElement ('div'); main.foreground_container.style.position = "relative"
+ main.appendChild (main.foreground_container)
+
  main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; addStyle (main.foreground, foreground_style || '')
- main.appendChild (main.foreground)
+ main.foreground_container.appendChild (main.foreground)
  
  // Create the control object and set its class and style.
- main.control = document.createElement('div'); main.control.className = control_class || ''; addStyle (main.control, control_style || '')
+ var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
+ main.control = document.createElement(control_element_type); main.control.className = control_class || ''; addStyle (main.control, control_style || '')
+ if (typeof control_image_src != "undefined") main.control.src = control_image_src
  main.control.style.pointerEvents = "none"
  main.appendChild (main.control)
  
@@ -2093,8 +2100,8 @@ function sliderbar (init) {
  main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
  main.position              = main.position_physical_max * (point_initial      / main.point_upper_limit)
  // Set the control left/top position and the foreground width/height.
- main.control.style[left_top] = (main.position + main.control_logical_offset) + main.css_unit_type
- main.foreground.style[width_height] = (((main.position + main.control_logical_offset) >= 0) ? (main.position + main.control_logical_offset) : 0) + main.css_unit_type
+ main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
+ main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
  if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
   main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
   main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
@@ -2194,9 +2201,8 @@ function sliderbar (init) {
    if (main.position < 0) main.position = 0
   }
   
-  main.control.style[left_top]        = (main.position + main.control_logical_offset) + main.css_unit_type
-  main.foreground.style[width_height] = (((main.position + main.control_logical_offset) >= 0) ? (main.position + main.control_logical_offset) : 0) + main.css_unit_type
-  
+  main.control.style[left_top]        = (main.position + main.control_unit_offset) + main.css_unit_type
+  main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
   if (typeof pivot_slice_style != 'undefined') {
    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
    main.pivot_end   = main.position
@@ -2224,11 +2230,11 @@ function sliderbar (init) {
   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
   var xy = evt[pageXY] / (zoom_level * pxc)
-  main.set_position (xy - offsetxy - startxy, pxc)
+  main.set_position (xy - offsetxy - startxy - main.control_unit_offset, pxc)
  }
  function mousedown (evt) {
   evt.preventDefault ()
-  if (getRightClick(evt) || main.do_not_start_function (main) || startscroll == true) return
+  if (getRightClick(evt) || (main.do_not_start_function && main.do_not_start_function (main)) || startscroll == true) return
   var pxc        = px_to_css_unit_type ()
   var zoom_level = calculate_zoom_level ()
   main.update_position (pxc, zoom_level)
@@ -3183,6 +3189,7 @@ HTMLElement.prototype.playAudio = function () {
  function parentNode_test () {
   if (is_attached(current_element)) {setTimeout (parentNode_test, 50); return}
   audio_object.stop ()
+  if (audio_object.release) audio_object.release ()
  }
  parentNode_test ()
  var args = Array.prototype.slice.call (arguments)
@@ -3246,6 +3253,54 @@ function setTextShadowColor (element, text_shadow_color) {
   arr[i] = text_shadow_color + " " + modified_item
  })
  element.style.textShadow = text_shadow_array
+}
+
+function add_webkit_text_stroke (init) {
+ var source_element = init.element
+ var text           = source_element.innerHTML
+ var size_list      = init.size
+ var color_list     = init.color
+ var stroke_units = stroke_units || "px"
+ if (typeof size_list  == "string") size_list  = [size_list]
+ if (typeof color_list == "string") color_list = [color_list]
+ var lineheight_1_string = window.getComputedStyle(source_element).lineHeight
+ if (lineheight_1_string == "normal") {
+  var lineheight_adjustment = 0
+ } else {
+  var lineheight_1 = parseInt(lineheight_1_string)
+  if (Number.isNaN(lineheight_1)) lineheight_1 = 0
+  var test_element = document.createElement ('div')
+  test_element.style.whiteSpace = "nowrap"
+  test_element.style.fontSize   = "100px"
+  test_element.innerHTML = source_element.innerHTML
+  document.body.appendChild (test_element)
+  test_element.style.fontFamily = window.getComputedStyle(source_element).fontFamily
+  var lineheight_saved = source_element.style.lineHeight
+  source_element.style.lineHeight = test_element.getBoundingClientRect().height / 100
+  document.body.removeChild (test_element)
+  var lineheight_adjustment = ((parseFloat(window.getComputedStyle(source_element).lineHeight)) - lineheight_1) / 2
+  source_element.style.lineHeight = lineheight_saved
+ }
+ source_element.innerHTML = ""
+ for (var n = 0, curlen = text.length; n < curlen; n++) {
+  var sub = document.createElement ('span')
+  sub.style.position = "relative"
+  source_element.appendChild (sub)
+  sub.innerHTML = "<span style=\"position:relative; z-index:" + size_list.length + "\"/>" + text[n] + "</span>"
+  size_list.forEach (function (current_stroke_size, i) {
+   var current_stroke_size_unit = current_stroke_size.substr(current_stroke_size.match(/([A-Z])/i).index, current_stroke_size.length)
+   var stroke_element = document.createElement ('div')
+   stroke_element.style.position = "absolute"
+   stroke_element.style.left     = 0
+   stroke_element.style.top      = lineheight_adjustment + "px"
+   stroke_element.style.zIndex   = size_list.length - i - 1
+   stroke_element.style.color    = color_list[i]
+   stroke_element.style.WebkitTextStrokeColor = color_list[i]
+   stroke_element.style.WebkitTextStrokeWidth = parseFloat(current_stroke_size) * 2 + current_stroke_size_unit
+   stroke_element.innerHTML = text[n]
+   sub.appendChild (stroke_element)
+  })
+ }
 }
 
 // Colorize (eg: grayscale if the values are 1/1/1)
@@ -3715,24 +3770,33 @@ function handle_css_hover_effects (init) {
  var handle_touch_events = init.handle_touch_events || true
  var handle_mouse_events = init.handle_mouse_events || true
  var hover_class         = init.hover_class         || "hover"
- function default_handler (curobj, op) {
-  var hovered_elements = Array.prototype.slice.call(document.body.querySelectorAll("*:hover"))
+ var delay_preferences   = init.delay_preferences   || {touch: {add: 500, remove: 500}}
+ function default_handler (curobj, input_type, op) {
+  var hovered_element_selector = "*" + ((op == "add") ? ":hover" : ("." + hover_class))
+  var hovered_elements = Array.prototype.slice.call(document.body.querySelectorAll(hovered_element_selector))
+  var modified_list = []
   while (true) {
-   if (curobj == document.documentElement) break
-   if (hovered_elements.indexOf(curobj) != -1) curobj.classList[op](hover_class)
+   if ((curobj == null) || (curobj == document.documentElement)) break
+   if (hovered_elements.indexOf(curobj) != -1) modified_list.push (curobj)
    curobj = curobj.parentNode
+  }
+  function do_hover_change () {modified_list.forEach (function (curobj) {curobj.classList[op](hover_class)})}
+  if ((!delay_preferences[input_type]) || (!delay_preferences[input_type][op])) {
+   do_hover_change ()
+  } else {
+   setTimeout (do_hover_change, delay_preferences[input_type][op])
   }
  }
  
  if (handle_mouse_events) {
-  document.body.addEventListener ('mouseover' , function (evt) {var curobj = evt.target; default_handler (curobj, "add")})
-  document.body.addEventListener ('mouseout'  , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
-  document.body.addEventListener ('click'     , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
+  document.body.addEventListener ('mouseover' , function (evt) {var curobj = evt.target; default_handler (curobj, "mouse", "add")})
+  document.body.addEventListener ('mouseout'  , function (evt) {var curobj = evt.target; default_handler (curobj, "mouse", "remove")})
+  document.body.addEventListener ('click'     , function (evt) {var curobj = evt.target; default_handler (curobj, "mouse", "remove")})
  }
  
  if (handle_touch_events) {
-  document.body.addEventListener ('touchstart', function (evt) {var curobj = evt.target; default_handler (curobj, "add")})
-  document.body.addEventListener ('touchend'  , function (evt) {var curobj = evt.target; default_handler (curobj, "remove")})
+  document.body.addEventListener ('touchstart', function (evt) {var curobj = evt.target; default_handler (curobj, "touch", "add")})
+  document.body.addEventListener ('touchend'  , function (evt) {var curobj = evt.target; default_handler (curobj, "touch", "remove")})
   document.body.addEventListener ('touchmove',  function (evt) {
    var curobj = evt.target
    var hovered_elements = Array.prototype.slice.call(document.body.querySelectorAll("*:hover"))
@@ -3741,17 +3805,22 @@ function handle_css_hover_effects (init) {
    var elements_at_point = get_elements_at_point (evt.pageX, evt.pageY)
    // Get the last element that isn't at the current point but is still hovered over, and remove only its hover attribute.
    while (true) {
-    if (curobj == document.documentElement) break
+    if ((curobj == null) || (curobj == document.documentElement)) break
     if ((hovered_elements.indexOf(curobj) != -1) && (elements_at_point.indexOf(curobj) == -1)) lastobj = curobj
     curobj = curobj.parentNode
    }
-   if (lastobj != null) lastobj.classList.remove(hover_class)
+   if (lastobj == null) return
+   if ((!delay_preferences.touch) || (!delay_preferences.touch.remove)) {
+    lastobj.classList.remove(hover_class)
+   } else {
+    setTimeout (function () {lastobj.classList.remove(hover_class)}, delay_preferences.touch.remove)
+   }
    
    function get_elements_at_point (x, y) {
     var el_list = [], pe_list = []
     while (true) {
      var curobj = document.elementFromPoint(x, y)
-     if (curobj == document.documentElement) break
+     if ((curobj == null) || (curobj == document.documentElement)) break
      el_list.push (curobj); pe_list.push (curobj.style.pointerEvents)
      curobj.style.pointerEvents = "none"
     }
@@ -3759,6 +3828,30 @@ function handle_css_hover_effects (init) {
     return el_list
    }
   })
+ }
+}
+
+function averageRGB (color1, color2, strength1) {
+ function dec2hex (v) {var hex = v.toString(16); if (hex.length == 1) hex = "0" + hex; return hex}
+ function hex2dec (v) {return parseInt(v, 16)}
+ var colorR = hex2dec(color1.slice(1, 3)) * strength1 + hex2dec(color2.slice(1, 3)) * (1 - strength1)
+ if (colorR > 256) colorR = 256
+ var colorG = hex2dec(color1.slice(3, 5)) * strength1 + hex2dec(color2.slice(3, 5)) * (1 - strength1)
+ if (colorG > 256) colorG = 256
+ var colorB = hex2dec(color1.slice(5, 7)) * strength1 + hex2dec(color2.slice(5, 7)) * (1 - strength1)
+ if (colorB > 256) colorB = 256
+ return ("#" + dec2hex(parseInt(colorR)) + dec2hex(parseInt(colorG)) + dec2hex(parseInt(colorB)) )
+}
+
+function cleanup_canvases (parent) {
+ check_children (parent)
+ function check_children (parent) {
+  var children = parent.childNodes
+  for (var i = 0, curlen = children.length; i < curlen; i++) {
+   var curchild = children[i]
+   if (curchild instanceof HTMLCanvasElement) {curchild.width = 0; curchild.height = 0; continue}
+   check_children (curchild)
+  }
  }
 }
 // </Graphics/image/canvas functions.>
