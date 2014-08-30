@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.0.
+// HelperJS version 6.1.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3624,6 +3624,7 @@ function canvas_trim_empty_space (init) {
 function canvas_draw_path (init) {
  var x           = init.x || 0
  var y           = init.y || 0
+ var scale       = init.scale || 1
  var data_string = init.data
  var canvas      = init.canvas
  
@@ -3633,12 +3634,13 @@ function canvas_draw_path (init) {
  function draw_func (data_array, canvas) {
   var context = canvas.getContext('2d')
   
-  if (typeof init.strokeWidth != "undefined") context.lineWidth   = init.strokeWidth
-  if (typeof init.strokeColor != "undefined") context.strokeStyle = init.strokeColor
+  if (typeof init.lineWidth   != "undefined") context.lineWidth   = init.lineWidth
+  if (typeof init.strokeStyle != "undefined") context.strokeStyle = init.strokeStyle
+  if (typeof init.lineJoin    != "undefined") context.lineJoin    = init.lineJoin
   if (typeof init.lineCap     != "undefined") context.lineCap     = init.lineCap
   
   context.beginPath ()
-  context.translate (init.x, init.y)
+  context.translate (init.x * scale, init.y * scale)
   for (var n = 0; n < data_array.length; n++) {
    var c = data_array[n].command
    var p = data_array[n].points
@@ -3649,19 +3651,19 @@ function canvas_draw_path (init) {
     case 'z' : context.closePath (); break
    }
   }
-  if ((typeof init.strokeWidth == "undefined") || (init.strokeWidth != 0)) context.stroke ()
-  if ((typeof init.fillPatternImage != "undefined") || (typeof init.fillColor != "undefined")) {
+  if ((typeof init.lineWidth == "undefined") || (init.lineWidth != 0)) context.stroke ()
+  if ((typeof init.fillPatternImage != "undefined") || (typeof init.fillStyle != "undefined")) {
    if (typeof init.fillPatternImage != "undefined") {
     var pattern = context.createPattern(init.fillPatternImage, 'no-repeat')
     if (typeof init.fillPatternOffset != "undefined") {
      context.save ()
-     context.translate (-init.fillPatternOffset[0], 0)
-     context.translate (0, -init.fillPatternOffset[1])
+     context.translate (-init.fillPatternOffset[0] * scale, 0)
+     context.translate (0, -init.fillPatternOffset[1] * scale)
     }
     context.fillStyle = pattern
    } else {
-    // fillColor is subordinate to fillPatternImage.
-    context.fillStyle = init.fillColor
+    // fillStyle is subordinate to fillPatternImage.
+    context.fillStyle = init.fillStyle
    }
    context.fill ()
   }
@@ -3701,8 +3703,8 @@ function canvas_draw_path (init) {
    var p = str.split(',')
    if (p.length > 0 && p[0] === '') p.shift()
    
-   // Convert strings to floats.
-   for (var i = 0; i < p.length; i++) {p[i] = parseFloat(p[i])}
+   // Convert numbers in strings to floats.
+   for (var i = 0; i < p.length; i++) {p[i] = parseFloat(p[i]) * scale}
    
    while (p.length > 0) {
     if (isNaN(p[0])) break // Case for a trailing comma before next command.
