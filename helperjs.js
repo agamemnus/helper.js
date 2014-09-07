@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.1.
+// HelperJS version 6.3.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -2495,12 +2495,12 @@ function removeAllDescendantsAndSelf (cell) {
 }
 
 function removeAllDescendants (cell) {
- if (cell.hasChildNodes()) {
-  var curlen = cell.childNodes.length
-  while (cell.childNodes.length > 0) {
-   removeAllDescendants (cell.firstChild)
-   cell.removeChild(cell.firstChild)
-  }
+ var childNodes = cell.childNodes
+ if (!childNodes) return
+ var childNodes = Array.prototype.slice.call(childNodes)
+ for (var i = 0, curlen = childNodes.length; i < curlen; i++) {
+  removeAllDescendants (childNodes[i])
+  cell.removeChild(childNodes[i])
  }
 }
 
@@ -3091,17 +3091,17 @@ function playAudio (filename, init) {
  if (typeof init.container != "undefined") {
   if ((typeof init.container[filename] != "undefined") && (!init.force_refresh)) {
    var main = init.container[filename]
-   main.loop        = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
-   main.volume      = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
-   main.start       = init.start  ; if (typeof main.start  == "undefined") main.start  = true  
+   main.loop        = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
+   main.volume      = init.volume; if (typeof main.volume == "undefined") main.volume = 1
+   main.start       = init.start ; if (typeof main.start  == "undefined") main.start  = true  
    main.stopped     = false
    main.audio.volume = main.volume
    if (main.start == true) {
     main.audio.play ()
-    if (main.loop == true) main.audio.addEventListener ('ended', main.play_track)
+    if (main.loop == true) main.addEventListener ('ended', main.play_track)
    } else {
     if (main.loop == true) {main.audio.loop = true}
-   } 
+   }
    return main
   }
  }
@@ -3112,9 +3112,12 @@ function playAudio (filename, init) {
  // Add this object to the container, if it exists.
  if (typeof init.container != "undefined") init.container[filename] = main
  
+ Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
+ main.addEventListener    = function () {return main.audio.addEventListener    (arguments[0], arguments[1], false || arguments[2])}
+ main.removeEventListener = function () {return main.audio.removeEventListener (arguments[0], arguments[1], false || arguments[2])}
  main.play_track = function () {main.audio.play ()}
- main.stop       = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.audio.removeEventListener ('ended', main.play_track)}
- main.pause      = function () {main.stopped = true; main.audio.pause (); main.audio.removeEventListener ('ended', main.play_track)}
+ main.stop       = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.removeEventListener ('ended', main.play_track)}
+ main.pause      = function () {main.stopped = true; main.audio.pause (); main.removeEventListener ('ended', main.play_track)}
  main.play       = function () {main.resume ()}
  main.resume     = function () {
   if (main.stopped == true) {
@@ -3132,18 +3135,18 @@ function playAudio (filename, init) {
   if (loop_value == true) {
    main.loop       = true
    main.audio.loop = true
-   main.audio.addEventListener ('ended', main.play_track)
+   main.addEventListener ('ended', main.play_track)
   } else {
    main.loop       = false
    main.audio.loop = false
-   main.audio.removeEventListener ('ended', main.play_track)
+   main.removeEventListener ('ended', main.play_track)
   }
  }
  main.restart    = function () {main.play_track ()}
  main.set_volume = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
- main.loop       = init.loop   ; if (typeof main.loop   == "undefined") main.loop   = false
- main.volume     = init.volume ; if (typeof main.volume == "undefined") main.volume = 1
- main.start      = init.start  ; if (typeof main.start  == "undefined") main.start  = true
+ main.loop       = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
+ main.volume     = init.volume; if (typeof main.volume == "undefined") main.volume = 1
+ main.start      = init.start ; if (typeof main.start  == "undefined") main.start  = true
  main.loaded     = true
  main.filename   = filename
  main.stopped    = false
@@ -3160,9 +3163,9 @@ function playAudio (filename, init) {
   } else {
    var source = document.createElement("source")
    switch (extension) {
-    case ".ogg" : source.type = "audio/ogg"; break
+    case ".ogg" : source.type = "audio/ogg";  break
     case ".mp3" : source.type = "audio/mpeg"; break
-    case ".wav" : source.type = "audio/wav"; break
+    case ".wav" : source.type = "audio/wav";  break
    }
    source.src = main.filename
    main.audio.appendChild (source)
@@ -3170,8 +3173,8 @@ function playAudio (filename, init) {
  }
  main.audio.volume = main.volume
  if (main.start == true) {
-  main.audio.play ()
-  if (main.loop == true) main.audio.addEventListener ('ended', main.play_track)
+ main.audio.play ()
+  if (main.loop == true) main.addEventListener ('ended', main.play_track)
  } else {
   if (main.loop == true) {main.audio.loop = true}
  }
@@ -3189,10 +3192,10 @@ HTMLElement.prototype.playAudio = function () {
  function parentNode_test () {
   if (is_attached(current_element)) {setTimeout (parentNode_test, 50); return}
   audio_object.stop ()
-  if (audio_object.release) audio_object.release ()
+  if (typeof audio_object.release != "undefined") audio_object.release ()
  }
  parentNode_test ()
- var args = Array.prototype.slice.call (arguments)
+ var args = Array.prototype.slice.call(arguments)
  var audio_object = playAudio.apply (null, args)
  return audio_object
 }
@@ -3742,6 +3745,26 @@ function canvas_draw_path (init) {
   }
   return ca
  }
+}
+
+// Scale a path2d / svg path string.
+function path2d_scale (path, scale) {
+ var numstring   = ""
+ var otherstring = ""
+ var bigstring   = ""
+ for (var i = 0, curlen = path.length; i < curlen; i++) {
+  var s = path[i]
+  if ((s == "-") || (s == "+") || (s == ".") || (s == "0") || (s == "1") || (s == "2") || (s == "3") || (s == "4") || (s == "5") || (s == "6") || (s == "7") || (s == "8") || (s == "9")) {
+   if (otherstring.length > 0) {bigstring += otherstring; otherstring = ""}
+   numstring += s
+  } else {
+   if (numstring.length > 0) {bigstring += parseFloat(numstring) * scale; numstring = ""}
+   otherstring += s  
+  }
+ }
+ if (otherstring.length > 0) bigstring += otherstring
+ if (numstring.length > 0) bigstring += parseFloat(numstring) * scale
+ return bigstring
 }
 
 function on_background_image_url_load (current_div, callback) {
