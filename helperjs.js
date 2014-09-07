@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.3.
+// HelperJS version 6.4.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3091,11 +3091,10 @@ function playAudio (filename, init) {
  if (typeof init.container != "undefined") {
   if ((typeof init.container[filename] != "undefined") && (!init.force_refresh)) {
    var main = init.container[filename]
-   main.loop        = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
-   main.volume      = init.volume; if (typeof main.volume == "undefined") main.volume = 1
-   main.start       = init.start ; if (typeof main.start  == "undefined") main.start  = true  
+   main.loop        = init.loop   || false
+   main.volume      = init.volume || 1
+   main.start       = init.start  || true
    main.stopped     = false
-   main.audio.volume = main.volume
    if (main.start == true) {
     main.audio.play ()
     if (main.loop == true) main.addEventListener ('ended', main.play_track)
@@ -3113,6 +3112,8 @@ function playAudio (filename, init) {
  if (typeof init.container != "undefined") init.container[filename] = main
  
  Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
+ Object.defineProperty (main, "volume"  , {get: function () {return main.audio.volume}, set: function (new_volume) {main.audio.volume = new_volume}})
+ Object.defineProperty (main, "paused"  , {get: function () {return main.audio.paused}})
  main.addEventListener    = function () {return main.audio.addEventListener    (arguments[0], arguments[1], false || arguments[2])}
  main.removeEventListener = function () {return main.audio.removeEventListener (arguments[0], arguments[1], false || arguments[2])}
  main.play_track = function () {main.audio.play ()}
@@ -3143,9 +3144,8 @@ function playAudio (filename, init) {
   }
  }
  main.restart    = function () {main.play_track ()}
- main.set_volume = function (fraction) {main.volume = fraction; main.audio.volume = fraction}
+ main.set_volume = function (new_volume) {main.volume = new_volume}
  main.loop       = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
- main.volume     = init.volume; if (typeof main.volume == "undefined") main.volume = 1
  main.start      = init.start ; if (typeof main.start  == "undefined") main.start  = true
  main.loaded     = true
  main.filename   = filename
@@ -3171,7 +3171,7 @@ function playAudio (filename, init) {
    main.audio.appendChild (source)
   }
  }
- main.audio.volume = main.volume
+ main.volume = init.volume || 1
  if (main.start == true) {
  main.audio.play ()
   if (main.loop == true) main.addEventListener ('ended', main.play_track)
