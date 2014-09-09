@@ -3093,7 +3093,7 @@ function playAudio (filename, init) {
    var main = init.container[filename]
    main.loop        = init.loop   || false
    main.volume      = init.volume || 1
-   main.start       = init.start  || true
+   main.start       = (typeof init.start != "undefined") ? init.start : true
    main.stopped     = false
    if (main.start == true) {
     main.audio.play ()
@@ -3173,7 +3173,7 @@ function playAudio (filename, init) {
  }
  main.volume = init.volume || 1
  if (main.start == true) {
- main.audio.play ()
+  main.audio.play ()
   if (main.loop == true) main.addEventListener ('ended', main.play_track)
  } else {
   if (main.loop == true) {main.audio.loop = true}
