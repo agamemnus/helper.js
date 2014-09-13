@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.4.
+// HelperJS version 6.6.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3086,98 +3086,63 @@ function modify_href_if_relative (prefix_src, current_src) {
 // <Audio functions. TAG: audio, TAG: play.>
 function playAudio (filename, init) {
  if (typeof init == "undefined") init = {}
+ if (init.play_howl) return playHowl (filename, init)
+}
+function playHowl (src, init) {
+ if (typeof init == "undefined") init = {}
  
  // Check if the file is already loaded.
  if (typeof init.container != "undefined") {
-  if ((typeof init.container[filename] != "undefined") && (!init.force_refresh)) {
-   var main = init.container[filename]
-   main.loop        = init.loop   || false
-   main.volume      = init.volume || 1
-   main.start       = (typeof init.start != "undefined") ? init.start : true
-   main.stopped     = false
-   if (main.start == true) {
-    main.audio.play ()
-    if (main.loop == true) main.addEventListener ('ended', main.play_track)
-   } else {
-    if (main.loop == true) {main.audio.loop = true}
-   }
+  if ((typeof init.container[src] != "undefined") && (!init.force_refresh)) {
+   var main = init.container[src]
+   main.volume = init.volume || 1
+   if ((typeof init.start == "undefined") || init.start == true) main.play ()
    return main
   }
  }
  
- if ((typeof this == "undefined") || (this == window)) return new playAudio (filename, init)
+ if ((typeof this == "undefined") || (this == window)) return new playHowl (src, init)
  var main = this
- 
  // Add this object to the container, if it exists.
- if (typeof init.container != "undefined") init.container[filename] = main
+ if (typeof init.container != "undefined") init.container[src] = main
  
  Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
- Object.defineProperty (main, "volume"  , {get: function () {return main.audio.volume}, set: function (new_volume) {main.audio.volume = new_volume}})
- Object.defineProperty (main, "paused"  , {get: function () {return main.audio.paused}})
- main.addEventListener    = function () {return main.audio.addEventListener    (arguments[0], arguments[1], false || arguments[2])}
- main.removeEventListener = function () {return main.audio.removeEventListener (arguments[0], arguments[1], false || arguments[2])}
- main.play_track = function () {main.audio.play ()}
- main.stop       = function () {main.stopped = true; main.audio.pause (); main.audio.currentTime = 0; main.removeEventListener ('ended', main.play_track)}
- main.pause      = function () {main.stopped = true; main.audio.pause (); main.removeEventListener ('ended', main.play_track)}
- main.play       = function () {main.resume ()}
- main.resume     = function () {
-  if (main.stopped == true) {
-   main.stopped = false
-   main.play_track ()
-  } else {
-   main.audio.play ()
-  }
-  if (main.loop == true) {
-   main.audio.loop = true
-   main.audio.addEventListener ('ended', main.play_track)
-  }
+ 
+ Object.defineProperty (main, "currentTime", {
+  get : function () {return main.audio.pos ()},
+  set : function (new_time) {
+   if (main.loaded) {main.audio.pos (new_time); return}
+   main.addEventListener ('load', set_new)
+   function set_new () {main.removeEventListener ('load', set_new)}
+ }})
+ 
+ Object.defineProperty (main, "volume", {get: function () {return main.audio.volume ()}, set: function (new_volume) {main.audio.volume (new_volume)}})
+ 
+ main.pause  = function () {main.audio.pause (); main.paused = true}
+ main.play   = function () {main.audio.play  (); main.paused = false}
+ main.stop   = function () {main.audio.pause (); main.paused = true; main.currentTime = 0}
+ main.loaded = false
+ main.src    = src
+ main.paused = true
+ 
+ var listeners = []
+ main.addEventListener    = function () {listeners.push ([arguments[0], arguments[1], false || arguments[2]])}
+ main.removeEventListener = function () {
+  var index = listeners.indexOf([arguments[0], arguments[1], false || arguments[2]])
+  if (index != -1) listeners.splice (index, 1)
  }
- main.set_loop    = function (loop_value) {
-  if (loop_value == true) {
-   main.loop       = true
-   main.audio.loop = true
-   main.addEventListener ('ended', main.play_track)
-  } else {
-   main.loop       = false
-   main.audio.loop = false
-   main.removeEventListener ('ended', main.play_track)
-  }
- }
- main.restart    = function () {main.play_track ()}
- main.set_volume = function (new_volume) {main.volume = new_volume}
- main.loop       = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
- main.start      = init.start ; if (typeof main.start  == "undefined") main.start  = true
- main.loaded     = true
- main.filename   = filename
- main.stopped    = false
- main.audio      = new Audio ()
- if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
-  main.audio.src = main.filename
- } else {
-  var extension = main.filename.slice(-4)
-  if ((extension != ".ogg") && (extension != ".mp3") && (extension != ".wav")) {
-   var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
-   main.audio.appendChild (source)
-   var source = document.createElement("source"); source.type = "audio/mpeg"; source.src = main.filename.slice(0, -4) + ".mp3"
-   main.audio.appendChild (source)
-  } else {
-   var source = document.createElement("source")
-   switch (extension) {
-    case ".ogg" : source.type = "audio/ogg";  break
-    case ".mp3" : source.type = "audio/mpeg"; break
-    case ".wav" : source.type = "audio/wav";  break
-   }
-   source.src = main.filename
-   main.audio.appendChild (source)
-  }
- }
+ 
+ main.audio = new Howl ({
+  urls        : [main.src],
+  buffer      : true,
+  autoplay    : ((typeof init.start == "undefined") || init.start == true),
+  onend       : function () {listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()}); main.paused = true},
+  onload      : function () {listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()}); main.loaded = true},
+  onloaderror : function () {listeners.forEach (function (listener) {if (listener[0] != "loaderror") return; listener[1] ()}); main.paused = true},
+  onpause     : function () {listeners.forEach (function (listener) {if (listener[0] != "pause")     return; listener[1] ()}); main.paused = true},
+  onplay      : function () {listeners.forEach (function (listener) {if (listener[0] != "play")      return; listener[1] ()}); main.paused = false}
+ })
  main.volume = init.volume || 1
- if (main.start == true) {
-  main.audio.play ()
-  if (main.loop == true) main.addEventListener ('ended', main.play_track)
- } else {
-  if (main.loop == true) {main.audio.loop = true}
- }
  return main
 }
 HTMLElement.prototype.playAudio = function () {
