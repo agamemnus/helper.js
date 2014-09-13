@@ -3087,6 +3087,98 @@ function modify_href_if_relative (prefix_src, current_src) {
 function playAudio (filename, init) {
  if (typeof init == "undefined") init = {}
  if (init.play_howl) return playHowl (filename, init)
+ 
+ // Check if the file is already loaded.
+ if (typeof init.container != "undefined") {
+  if ((typeof init.container[filename] != "undefined") && (!init.force_refresh)) {
+   var main = init.container[filename]
+   main.loop        = init.loop   || false
+   main.volume      = init.volume || 1
+   main.start       = (typeof init.start != "undefined") ? init.start : true
+   main.stopped     = false
+   if (main.start == true) {
+    main.audio.play ()
+    if (main.loop == true) main.addEventListener ('ended', main.play)
+   } else {
+    if (main.loop == true) {main.audio.loop = true}
+   }
+   return main
+  }
+ }
+ 
+ if ((typeof this == "undefined") || (this == window)) return new playAudio (filename, init)
+ var main = this
+ 
+ // Add this object to the container, if it exists.
+ if (typeof init.container != "undefined") init.container[filename] = main
+ 
+ Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
+ Object.defineProperty (main, "currentTime", {
+  get : function () {return main.audio.currentTime},
+  set : function (new_time) {
+   if (main.audio.readyState != 0) {main.audio.currentTime = new_time; return}
+   main.audio.addEventListener ('loadedmetadata', set_new)
+   function set_new () {main.audio.removeEventListener ('loadedmetadata', set_new); main.audio.currentTime = new_time}
+ }})
+ Object.defineProperty (main, "volume"  , {get: function () {return main.audio.volume}, set: function (new_volume) {main.audio.volume = new_volume}})
+ Object.defineProperty (main, "paused"  , {get: function () {return main.audio.paused}})
+ main.addEventListener    = function () {return main.audio.addEventListener    (arguments[0], arguments[1], false || arguments[2])}
+ main.removeEventListener = function () {return main.audio.removeEventListener (arguments[0], arguments[1], false || arguments[2])}
+ main.play = main.play_track = function () {main.audio.play ()}
+ main.stop       = function () {main.stopped = true; main.audio.pause (); if (main.audio.readyState != 0) main.audio.currentTime = 0; main.removeEventListener ('ended', main.play_track)}
+ main.pause      = function () {main.stopped = true; main.audio.pause (); main.removeEventListener ('ended', main.play)}
+ main.play       = function () {main.resume ()}
+ main.resume     = function () {
+  if (main.stopped == true) {main.stopped = false; main.play ()} else {main.audio.play ()}
+  if (main.loop    == true) {main.audio.loop = true; main.audio.addEventListener ('ended', main.play)}
+ }
+ main.set_loop    = function (loop_value) {
+  if (loop_value == true) {
+   main.loop       = true
+   main.audio.loop = true
+   main.addEventListener ('ended', main.play)
+  } else {
+   main.loop       = false
+   main.audio.loop = false
+   main.removeEventListener ('ended', main.play)
+  }
+ }
+ main.restart    = function () {main.play ()}
+ main.set_volume = function (new_volume) {main.volume = new_volume}
+ main.loop       = init.loop  ; if (typeof main.loop   == "undefined") main.loop   = false
+ main.start      = init.start ; if (typeof main.start  == "undefined") main.start  = true
+ main.loaded     = true
+ main.filename   = filename
+ main.stopped    = false
+ main.audio      = new Audio ()
+ if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
+  main.audio.src = main.filename
+ } else {
+  var extension = main.filename.slice(-4)
+  if ((extension != ".ogg") && (extension != ".mp3") && (extension != ".wav")) {
+   var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
+   main.audio.appendChild (source)
+   var source = document.createElement("source"); source.type = "audio/mpeg"; source.src = main.filename.slice(0, -4) + ".mp3"
+   main.audio.appendChild (source)
+  } else {
+   var source = document.createElement("source")
+   switch (extension) {
+    case ".ogg" : source.type = "audio/ogg";  break
+    case ".mp3" : source.type = "audio/mpeg"; break
+    case ".wav" : source.type = "audio/wav";  break
+   }
+   source.src = main.filename
+   main.audio.appendChild (source)
+  }
+ }
+ main.volume = init.volume || 1
+ if (main.start == true) {
+  main.audio.play ()
+  if (main.loop == true) main.addEventListener ('ended', main.play)
+ } else {
+  if (main.loop == true) {main.audio.loop = true}
+ }
+ return main
 }
 function playHowl (src, init) {
  if (typeof init == "undefined") init = {}
@@ -3103,6 +3195,7 @@ function playHowl (src, init) {
  
  if ((typeof this == "undefined") || (this == window)) return new playHowl (src, init)
  var main = this
+ 
  // Add this object to the container, if it exists.
  if (typeof init.container != "undefined") init.container[src] = main
  
@@ -3119,7 +3212,7 @@ function playHowl (src, init) {
  Object.defineProperty (main, "volume", {get: function () {return main.audio.volume ()}, set: function (new_volume) {main.audio.volume (new_volume)}})
  
  main.pause  = function () {main.audio.pause (); main.paused = true}
- main.play   = function () {main.audio.play  (); main.paused = false}
+ main.play   = function () {main.audio.pause (); main.audio.play (); main.paused = false}
  main.stop   = function () {main.audio.pause (); main.paused = true; main.currentTime = 0}
  main.loaded = false
  main.src    = src
@@ -3134,7 +3227,6 @@ function playHowl (src, init) {
  
  main.audio = new Howl ({
   urls        : [main.src],
-  buffer      : true,
   autoplay    : ((typeof init.start == "undefined") || init.start == true),
   onend       : function () {listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()}); main.paused = true},
   onload      : function () {listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()}); main.loaded = true},
