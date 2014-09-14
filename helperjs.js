@@ -3227,7 +3227,6 @@ function playHowl (src, init) {
  main.audio = new Howl ({
   src         : [main.src],
   buffersize  : init.preload_buffer_size,
-  preload     : true,
   autoplay    : ((typeof init.start == "undefined") || init.start == true),
   onend       : function () {listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()}); main.paused = true},
   onload      : function () {listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()}); main.loaded = true},
