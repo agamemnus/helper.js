@@ -3086,7 +3086,7 @@ function modify_href_if_relative (prefix_src, current_src) {
 // <Audio functions. TAG: audio, TAG: play.>
 function playAudio (filename, init) {
  if (typeof init == "undefined") init = {}
- if (init.play_howl) return playHowl (filename, init)
+ if (init.play_howl) return new playHowl (filename, init)
  
  // Check if the file is already loaded.
  if (typeof init.container != "undefined") {
@@ -3202,11 +3202,11 @@ function playHowl (src, init) {
  Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
  
  Object.defineProperty (main, "currentTime", {
-  get : function () {return main.audio.pos ()},
+  get : function () {return main.audio.seek ()},
   set : function (new_time) {
-   if (main.loaded) {main.audio.pos (new_time); return}
+   if (main.loaded) {main.audio.seek (new_time); return}
    main.addEventListener ('load', set_new)
-   function set_new () {main.removeEventListener ('load', set_new)}
+   function set_new () {main.audio.seek (new_time); main.removeEventListener ('load', set_new)}
  }})
  
  Object.defineProperty (main, "volume", {get: function () {return main.audio.volume ()}, set: function (new_volume) {main.audio.volume (new_volume)}})
@@ -3217,7 +3217,6 @@ function playHowl (src, init) {
  main.loaded = false
  main.src    = src
  main.paused = true
- 
  var listeners = []
  main.addEventListener    = function () {listeners.push ([arguments[0], arguments[1], false || arguments[2]])}
  main.removeEventListener = function () {
@@ -3226,7 +3225,9 @@ function playHowl (src, init) {
  }
  
  main.audio = new Howl ({
-  urls        : [main.src],
+  src         : [main.src],
+  buffersize  : init.preload_buffer_size,
+  preload     : true,
   autoplay    : ((typeof init.start == "undefined") || init.start == true),
   onend       : function () {listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()}); main.paused = true},
   onload      : function () {listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()}); main.loaded = true},
