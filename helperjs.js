@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.6.
+// HelperJS version 6.7.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -3237,6 +3237,70 @@ function playHowl (src, init) {
  })
  main.volume = init.volume || 1
  return main
+}function playHowl (src, init) {
+ if (typeof init == "undefined") init = {}
+ 
+ // Check if the file is already loaded.
+ if (typeof init.container != "undefined") {
+  if ((typeof init.container[src] != "undefined") && (!init.force_refresh)) {
+   var main = init.container[src]
+   main.volume = init.volume || 1
+   if ((typeof init.start == "undefined") || init.start == true) main.play ()
+   return main
+  }
+ }
+ 
+ if ((typeof this == "undefined") || (this == window)) return new playHowl (src, init)
+ var main = this
+ 
+ // Add this object to the container, if it exists.
+ if (typeof init.container != "undefined") init.container[src] = main
+ 
+ Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
+ 
+ Object.defineProperty (main, "currentTime", {
+  get : function () {return main.audio.position},
+  set : function (new_time) {
+   if (main.loaded) {main.audio.position = new_time; return}
+   main.addEventListener ('load', set_new)
+   function set_new () {main.audio.position = new_time; main.removeEventListener ('load', set_new)}
+ }})
+ 
+ Object.defineProperty (main, "volume", {get: function () {return main.audio.volume}, set: function (new_volume) {main.audio.volume = new_volume}})
+ 
+ main.pause  = function () {main.audio.pause (); main.paused = true}
+ main.play   = function () {main.audio.play  (); main.paused = false}
+ main.stop   = function () {main.audio.pause (); main.paused = true; main.currentTime = 0}
+ main.loaded = false
+ main.src    = src
+ main.paused = true
+ var listeners = []
+ main.addEventListener    = function () {listeners.push ([arguments[0], arguments[1], arguments[2] || false])}
+ main.removeEventListener = function () {
+  var input_arguments = arguments
+  var index = listeners.findIndex (function (listener) {
+   if (listener[0] !== input_arguments[0]) return false
+   if (listener[1] !== input_arguments[1]) return false
+   if (listener[2] !== (input_arguments[2] || false)) return false
+   return true
+  })
+  if (index != -1) listeners.splice (index, 1)
+ }
+ 
+ main.audio = new Howl ({
+  src         : main.src,
+  buffersize  : init.preload_buffer_size,
+  bufferfile  : init.preload_buffer_file,
+  autoplay    : ((typeof init.start == "undefined") || init.start == true),
+  onend       : function () {main.paused = true;  listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()})},
+  onload      : function () {main.loaded = true;  listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()})},
+  onloaderror : function () {main.paused = true;  listeners.forEach (function (listener) {if (listener[0] != "loaderror") return; listener[1] ()})},
+  onpause     : function () {main.paused = true;  listeners.forEach (function (listener) {if (listener[0] != "pause")     return; listener[1] ()})},
+  onplay      : function () {main.paused = false; listeners.forEach (function (listener) {if (listener[0] != "play")      return; listener[1] ()})}
+ })
+ 
+ main.volume = init.volume || 1
+ return main
 }
 HTMLElement.prototype.playAudio = function () {
  var current_element = this
@@ -4016,7 +4080,7 @@ function readcookie (name) {
 function load_web_fonts (font_list, callback) {
  var loaded_font_amount = 0
  for (var i = 0; i < font_list.length; i++) {
-  var node = document.createElement('span')
+  var node = document.createElement ('span')
   // Set characters that vary significantly among different fonts.
   node.innerHTML = 'giItT1WQy@!-/#'
   // Visible - so we can measure it - but not on the screen.
@@ -4034,7 +4098,7 @@ function load_web_fonts (font_list, callback) {
   // Remember width with no applied web font.
   node.original_width = node.getBoundingClientRect().width
   node.style.fontFamily = font_list[i]
-  void function (node) {check_font (node)} (node)
+  check_font (node)
  }
  if (typeof callback != "undefined") {
   var check_that_all_fonts_have_loaded_timeout = null
