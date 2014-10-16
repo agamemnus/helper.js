@@ -99,6 +99,11 @@ if (/(msie|trident)/i.test(navigator.userAgent)) {
  })
 }
 
+// Fix for IE HTMLImageElement.start being unwritable.
+if (/(msie|trident)/i.test(navigator.userAgent)) {
+ Object.defineProperty (HTMLImageElement.prototype, "start", {writable : true})
+}
+
 // Is the element attached to the DOM?
 // (Don't hate me cause I'm a prototype!)
 HTMLElement.prototype.isAttached = function () {
@@ -3151,25 +3156,18 @@ function playAudio (filename, init) {
  main.filename   = filename
  main.stopped    = false
  main.audio      = new Audio ()
- if ((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) {
+ if (((typeof init.no_source_tags != "undefined") && (init.no_source_tags == true)) || ((extension != ".ogg") && (extension != ".mp3") && (extension != ".wav"))) {
   main.audio.src = main.filename
  } else {
   var extension = main.filename.slice(-4)
-  if ((extension != ".ogg") && (extension != ".mp3") && (extension != ".wav")) {
-   var source = document.createElement("source"); source.type = "audio/ogg"; source.src = main.filename.slice(0, -4) + ".ogg"
-   main.audio.appendChild (source)
-   var source = document.createElement("source"); source.type = "audio/mpeg"; source.src = main.filename.slice(0, -4) + ".mp3"
-   main.audio.appendChild (source)
-  } else {
-   var source = document.createElement("source")
-   switch (extension) {
-    case ".ogg" : source.type = "audio/ogg";  break
-    case ".mp3" : source.type = "audio/mpeg"; break
-    case ".wav" : source.type = "audio/wav";  break
-   }
-   source.src = main.filename
-   main.audio.appendChild (source)
+  var source = document.createElement("source")
+  switch (extension) {
+   case ".ogg" : source.type = "audio/ogg";  break
+   case ".mp3" : source.type = "audio/mpeg"; break
+   case ".wav" : source.type = "audio/wav";  break
   }
+  source.src = main.filename
+  main.audio.appendChild (source)
  }
  main.volume = init.volume || 1
  if (main.start == true) {
@@ -3181,63 +3179,6 @@ function playAudio (filename, init) {
  return main
 }
 function playHowl (src, init) {
- if (typeof init == "undefined") init = {}
- 
- // Check if the file is already loaded.
- if (typeof init.container != "undefined") {
-  if ((typeof init.container[src] != "undefined") && (!init.force_refresh)) {
-   var main = init.container[src]
-   main.volume = init.volume || 1
-   if ((typeof init.start == "undefined") || init.start == true) main.play ()
-   return main
-  }
- }
- 
- if ((typeof this == "undefined") || (this == window)) return new playHowl (src, init)
- var main = this
- 
- // Add this object to the container, if it exists.
- if (typeof init.container != "undefined") init.container[src] = main
- 
- Object.defineProperty (main, "duration", {get: function () {return main.audio.duration}})
- 
- Object.defineProperty (main, "currentTime", {
-  get : function () {return main.audio.seek ()},
-  set : function (new_time) {
-   if (main.loaded) {main.audio.seek (new_time); return}
-   main.addEventListener ('load', set_new)
-   function set_new () {main.audio.seek (new_time); main.removeEventListener ('load', set_new)}
- }})
- 
- Object.defineProperty (main, "volume", {get: function () {return main.audio.volume ()}, set: function (new_volume) {main.audio.volume (new_volume)}})
- 
- main.pause  = function () {main.audio.pause (); main.paused = true}
- main.play   = function () {main.audio.pause (); main.audio.play (); main.paused = false}
- main.stop   = function () {main.audio.pause (); main.paused = true; main.currentTime = 0}
- main.loaded = false
- main.src    = src
- main.paused = true
- var listeners = []
- main.addEventListener    = function () {listeners.push ([arguments[0], arguments[1], false || arguments[2]])}
- main.removeEventListener = function () {
-  var index = listeners.indexOf([arguments[0], arguments[1], false || arguments[2]])
-  if (index != -1) listeners.splice (index, 1)
- }
- 
- main.audio = new Howl ({
-  src         : [main.src],
-  buffersize  : init.preload_buffer_size,
-  bufferfile  : init.preload_buffer_file,
-  autoplay    : ((typeof init.start == "undefined") || init.start == true),
-  onend       : function () {listeners.forEach (function (listener) {if (listener[0] != "ended")     return; listener[1] ()}); main.paused = true},
-  onload      : function () {listeners.forEach (function (listener) {if (listener[0] != "load")      return; listener[1] ()}); main.loaded = true},
-  onloaderror : function () {listeners.forEach (function (listener) {if (listener[0] != "loaderror") return; listener[1] ()}); main.paused = true},
-  onpause     : function () {listeners.forEach (function (listener) {if (listener[0] != "pause")     return; listener[1] ()}); main.paused = true},
-  onplay      : function () {listeners.forEach (function (listener) {if (listener[0] != "play")      return; listener[1] ()}); main.paused = false}
- })
- main.volume = init.volume || 1
- return main
-}function playHowl (src, init) {
  if (typeof init == "undefined") init = {}
  
  // Check if the file is already loaded.
