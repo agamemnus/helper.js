@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.7.
+// HelperJS version 6.9.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -103,6 +103,12 @@ if (/(msie|trident)/i.test(navigator.userAgent)) {
 if (/(msie|trident)/i.test(navigator.userAgent)) {
  Object.defineProperty (HTMLImageElement.prototype, "start", {writable : true})
 }
+
+["forEach"].forEach (function (op) {
+ NodeList.prototype[op] = HTMLCollection.prototype[op] = function (callback, thisArg) {
+  return Array.prototype.slice.call(this)[op] (callback, thisArg)
+ }
+})
 
 // Is the element attached to the DOM?
 // (Don't hate me cause I'm a prototype!)
@@ -1362,13 +1368,13 @@ function queueDBDataProcess (run_array) {
    }
   }
   switch (function_name) {
-   case 'get_data'                    : get_data.apply             (null, args); break
-   case 'setDBData'                   : setDBData.apply            (null, args); break
-   case 'getTextData'                 : getTextData.apply          (null, args); break
-   case 'getDBData_2Dintarray'        : getDBData_2Dintarray.apply (null, args); break
-   case 'getDBData_json'              : getDBData_json.apply       (null, args); break
-   case 'getDBData_binary'            : getDBData_binary.apply     (null, args); break
-   case 'getDBData'                   : getDBData.apply            (null, args); break
+   case 'get_data'             : get_data.apply             (null, args); break
+   case 'setDBData'            : setDBData.apply            (null, args); break
+   case 'getTextData'          : getTextData.apply          (null, args); break
+   case 'getDBData_2Dintarray' : getDBData_2Dintarray.apply (null, args); break
+   case 'getDBData_json'       : getDBData_json.apply       (null, args); break
+   case 'getDBData_binary'     : getDBData_binary.apply     (null, args); break
+   case 'getDBData'            : getDBData.apply            (null, args); break
   }
  }
 }
@@ -1778,11 +1784,11 @@ function get_data (params) {
  var is_asynchronous = true
  if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
  if (typeof params.async           != "undefined") is_asynchronous = params.async
- var charset               = (typeof params.charset               != "undefined") ? params.charset : ""
- var params_data           = (typeof params.data                  != "undefined") ? params.data    : ""
+ var charset               = (typeof params.charset               != "undefined") ? params.charset               : ""
+ var data                  = (typeof params.data                  != "undefined") ? params.data                  : ""
  var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
  // Call the request function.
- var http_request_result = make_request (params.file, params.data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
+ var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1792,10 +1798,10 @@ function get_data (params) {
  function process_http_request () {
   var response_text = http_request.responseText
   // If the request status isn't 200, send an error.
-  if ((http_request.status != 200) && (params.ignore_request_status == false)) {
+  if ((http_request.status != 200) && (ignore_request_status == false)) {
    response_text = {error: true, errormessage: response_text}
   } else {
-   if ((send_data_as_plaintext != true) && (response_text != null)) {
+   if ((send_data_as_plaintext != true) && (response_text != "")) {
     // Send an error if the JSON text can't be parsed.
     try {
      response_text = JSON.parse (response_text)
@@ -1807,7 +1813,7 @@ function get_data (params) {
   }
   
   // Send an error.
-  if ((response_text != null) && (response_text.error == true)) {
+  if ((response_text != "") && (response_text.error == true)) {
    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
    return
   }
@@ -3675,7 +3681,7 @@ function canvas_trim_empty_space (init) {
  }
  var new_width = x1 - x0 + 1, new_height = y1 - y0 + 1
  var result = {x0: x0, x1: x1, y0: y0, y1: y1}
- if (typeof init.coordinates_only == true) {
+ if (!init.coordinates_only) {
   var target_canvas = document.createElement ('canvas')
   var target_ctx = target_canvas.getContext ('2d')
   target_canvas.width  = new_width
@@ -4059,25 +4065,30 @@ function load_web_fonts (font_list, callback) {
 }
 
 // Thanks to ImBcmDth for this!
+// Thanks to ImBcmDth for this!
 function fit_text_to_parent (element, init, transform_scale) {
  if (typeof init == "undefined") init = {}
  var unit_type       = (typeof init.unit_type       != "undefined") ? init.unit_type       : "px"
  var transform_scale = (typeof init.transform_scale != "undefined") ? init.transform_scale : 1
+ var iteration_max   = (typeof init.iteration_max   != "undefined") ? init.iteration_max   : 200
  var parent_rectangle = element.parentNode.getBoundingClientRect()
  var height = parent_rectangle.height / transform_scale
  var width  = parent_rectangle.width  / transform_scale
- // Might have to change the decimal precision above to work with "large" units like inches and cm.
  
+ // Might have to change the decimal precision above to work with "large" units like inches and cm.
+ var iterations = 0
  function find_best_size (min_size, max_size, best_size) {
   var middle_size = +((max_size + min_size) / 2).toFixed(2)
   element.style.fontSize = middle_size + unit_type
   var rect = element.getBoundingClientRect()
   var inner_height = element.scrollHeight + (parseInt(rect.height / transform_scale) - rect.height / transform_scale)
   var inner_width  = element.scrollWidth  + (parseInt(rect.width  / transform_scale)  - rect.width / transform_scale)
-  if (min_size === middle_size || max_size === middle_size) return best_size
   
-  if (inner_height > height || inner_width > width)   return find_best_size (min_size, middle_size, best_size)
-  if (inner_height <= height && inner_width <= width) return find_best_size (middle_size, max_size, middle_size)
+  if (min_size === middle_size || max_size === middle_size) return best_size
+  if (iterations < iteration_max) {
+   if (inner_height > height || inner_width > width)   {iterations += 1; return find_best_size (min_size, middle_size, best_size)}
+   if (inner_height <= height && inner_width <= width) {iterations += 1; return find_best_size (middle_size, max_size, middle_size)}
+  }
   return best_size
  }
  var best = find_best_size (
