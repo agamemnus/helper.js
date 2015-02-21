@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 6.9.
+// HelperJS version 7.1.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -168,14 +168,14 @@ HTMLElement.prototype.appendChildrenOf = function (source) {
 
 HTMLElement.prototype.setPositionOnLeft = function () {
  var marginLeft_stored = parseFloat(window.getComputedStyle(this)['marginLeft'])
- var width_stored      = getClientWidthFull (this)
+ var width_stored      = this.offsetWidth
  this.style.marginLeft = -width_stored + 'px'
  this.style.left       = (width_stored - marginLeft_stored) + 'px'
 }
 
 HTMLElement.prototype.setPositionOnRight = function () {
  var marginRight_stored = parseFloat(window.getComputedStyle(this)['marginRight'])
- var width_stored       = getClientWidthFull (this)
+ var width_stored       = this.offsetWidth
  this.style.marginRight = -width_stored + 'px'
  this.style.right       = (width_stored + marginRight_stored) + 'px'
  return this
@@ -1778,49 +1778,31 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  }
 }
 
-function get_data (params) {
- // Convert request into GET or POST data.
- var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
- var is_asynchronous = true
- if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
- if (typeof params.async           != "undefined") is_asynchronous = params.async
- var charset               = (typeof params.charset               != "undefined") ? params.charset               : ""
- var data                  = (typeof params.data                  != "undefined") ? params.data                  : ""
- var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
- // Call the request function.
- var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, undefined, undefined, params.request_method)
- var http_request        = http_request_result["http_request"]
- 
- if (is_asynchronous == false) return process_http_request ()
- 
- http_request.onreadystatechange = function () {if (http_request.readyState == 4) process_http_request ()}
- 
- function process_http_request () {
-  var response_text = http_request.responseText
-  // If the request status isn't 200, send an error.
-  if ((http_request.status != 200) && (ignore_request_status == false)) {
-   response_text = {error: true, errormessage: response_text}
-  } else {
-   if ((send_data_as_plaintext != true) && (response_text != "")) {
-    // Send an error if the JSON text can't be parsed.
-    try {
-     response_text = JSON.parse (response_text)
-    } catch (err) {
-     response_text = {error: true, errormessage: response_text}
-     if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
-    }
-   }
+function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
+ if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
+ if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
+ if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
+ var http_request = new XMLHttpRequest()
+ if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
+ if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
+ if (request_method == "GET") {
+  // Add a "?" if the "?" doesn't already exist in the url. If "data" doesn't start with a "&", add it.
+  if (typeof data != "undefined") {
+   var altchar = (data[0] != "&") ? "&" : ""
+   url += ((url.indexOf ("?") == -1) ? "?" : altchar) + data
   }
-  
-  // Send an error.
-  if ((response_text != "") && (response_text.error == true)) {
-   if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
-   return
-  }
-  
-  if (is_asynchronous == false) return response_text
-  if (typeof params.success != "undefined") params.success (response_text)
+  data = null
  }
+ http_request.open (request_method, url, is_asynchronous)
+ if (typeof response_type != "undefined") http_request.responseType = response_type
+ if (send_data_as_plaintext === true) {
+  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+  if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
+ } else {
+  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+ }
+ http_request.send (data)
+ return {"http_request": http_request}
 }
 
 function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, request_method) {
@@ -1868,6 +1850,83 @@ function set_innerHTML_from_url (file, obj, success_func) {
   success                : function (result) {obj.innerHTML = result; success_func()},
   send_data_as_plaintext : true
  })
+}
+
+function get_data (params) {
+ // Convert request into GET or POST data.
+ var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
+ var is_asynchronous = true
+ if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
+ if (typeof params.async           != "undefined") is_asynchronous = params.async
+ var charset               = (typeof params.charset               != "undefined") ? params.charset               : ""
+ var data                  = (typeof params.data                  != "undefined") ? params.data                  : ""
+ var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
+ var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
+ 
+ // Call the request function.
+ var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, undefined, header_list, params.request_method)
+ var http_request        = http_request_result["http_request"]
+ 
+ if (is_asynchronous == false) return process_http_request ()
+ 
+ http_request.onreadystatechange = function () {if (http_request.readyState == 4) process_http_request ()}
+ 
+ function process_http_request () {
+  var response_text = http_request.responseText
+  // If the request status isn't 200, send an error.
+  if ((http_request.status != 200) && (ignore_request_status == false)) {
+   response_text = {error: true, errormessage: response_text}
+  } else {
+   if ((send_data_as_plaintext != true) && (response_text != "")) {
+    // Send an error if the JSON text can't be parsed.
+    try {
+     response_text = JSON.parse (response_text)
+    } catch (err) {
+     response_text = {error: true, errormessage: response_text}
+     if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
+    }
+   }
+  }
+  
+  // Send an error.
+  if ((response_text != "") && (response_text.error == true)) {
+   if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
+   return
+  }
+  
+  if (is_asynchronous == false) return response_text
+  if (typeof params.success != "undefined") params.success (response_text)
+ }
+}
+
+function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
+ if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
+ if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
+ if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
+ var http_request = new XMLHttpRequest()
+ if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
+ if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
+ if (request_method == "GET") {
+  // Add a "?" if the "?" doesn't already exist in the url. If "data" doesn't start with a "&", add it.
+  if (typeof data == "string") {
+   var altchar = (data[0] != "&") ? "&" : ""
+   url += ((url.indexOf ("?") == -1) ? "?" : altchar) + data
+  }
+  data = null
+ }
+ http_request.open (request_method, url, is_asynchronous)
+ if (typeof response_type != "undefined") http_request.responseType = response_type
+ if (send_data_as_plaintext === true) {
+  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+  if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
+ } else {
+  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+ }
+ if (extra_header_set) {
+  extra_header_set.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
+ }
+ http_request.send (data)
+ return {"http_request": http_request}
 }
 // </Ajax / download functions>
 
@@ -2361,7 +2420,7 @@ function setScrollTop (amount, obj) {
 }
 
 function clearfocus () {
- var hocuspocus = document.createElement('input');
+ var hocuspocus = document.createElement('input')
  document.body.appendChild(hocuspocus); hocuspocus.focus()
  document.body.removeChild(hocuspocus); hocuspocus = null
 }
@@ -2518,31 +2577,23 @@ function removeAllDescendants (cell) {
 // Calculate the client width plus the left and right border widths and return the result.
 function getClientWidthFull (obj, init) {
  var style = window.getComputedStyle(obj)
- var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
- if (box_sizing != "border-box") {
-  var padding_and_margin = 0
- } else {
-  var padding_and_margin = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
- }
  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
-  padding_and_margin += parseFloat(style.marginLeft) + parseFloat(style.marginRight)
+  var margin = parseFloat(style.marginLeft) + parseFloat(style.marginRight)
+ } else {
+  var margin = 0
  }
- return obj.clientWidth + padding_and_margin + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth)
+ return obj.clientWidth + margin + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth)
 }
 
 // Calculate the client height plus the top and bottom border widths and return the result.
 function getClientHeightFull (obj, init) {
  var style = window.getComputedStyle(obj)
- var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
- if (box_sizing != "border-box") {
-  var padding_and_margin = 0
- } else {
-  var padding_and_margin = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
- }
  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
-  padding_and_margin += parseFloat(style.marginTop) + parseFloat(style.marginBottom)
+  var margin = parseFloat(style.marginTop) + parseFloat(style.marginBottom)
+ } else {
+  var margin = 0
  }
- return obj.clientHeight + padding_and_margin + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+ return obj.clientHeight + margin + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
 }
 
 // Merge two objects together. If the primary object has the same key as the secondary object, use the primary object's value.
@@ -2892,7 +2943,7 @@ function set_to_biggest_width (dom_object_array) {
  var biggest_width = 0
  var curlen = dom_object_array.length
  for (var i = 0; i < curlen; i++) {
-  var current_width = getClientWidthFull (dom_object_array[i])
+  var current_width = dom_object_array[i].offsetWidth
   if (biggest_width < current_width) biggest_width = current_width
  }
  for (var i = 0; i < curlen; i++) {
