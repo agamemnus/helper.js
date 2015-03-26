@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 7.1.
+// HelperJS version 7.2.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -1553,14 +1553,14 @@ if (typeof JSZip != "undefined") {
   
   var base_url = window.location.protocol + "//" + window.location.host + '/'
   
-  var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', 'GET')
+  var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', undefined, 'GET')
   var http_request        = make_request_result["http_request"]
   
   if (async == false) return process_http_request ()
   http_request.onreadystatechange = function () {if ((http_request.readyState == 4) && (http_request.status == 200)) process_http_request ()}
   
   function process_http_request () {
-   var URL = window.URL | window.webkitURL
+   var URL = window.URL
    var webworker_func = function (evt) {
     var response = evt.data
     if (typeof response == "string") {self.base_url = response; return}
@@ -1592,7 +1592,7 @@ function getDBData_2Dintarray (container_list, bytesize, filename, filename_to_i
  var use_zip = (typeof filename_to_index_list != "string")
  if (typeof successfunc != "undefined") {if (successfunc == null) successfunc = undefined}
  
- var make_request_result = make_request(filename, "", undefined, undefined, async, 'arraybuffer', (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request(filename, "", undefined, undefined, async, 'arraybuffer', undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
 
  if (async == false) return process_http_request ()
@@ -1673,7 +1673,7 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  var requeststring = '&request_type=read&input_tablename=' + input_tablename + '&columnlist=' + encodeURIComponent(columnlist) + orderby + input_where_and_values + send_data_as_binary_string + ((typeof extra_params != "undefined") ? extra_params : '')
  console.log (requeststring)
  // Set up the temp string and call the request function.
- var make_request_result = make_request ("/dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
+ var make_request_result = make_request ("/dbrequest.php", requeststring, !send_data_as_binary, undefined, async, undefined, undefined, (typeof request_method == "undefined") ? 'POST' : request_method)
  var http_request        = make_request_result["http_request"]
  
  if (async == false) {return process_http_request ()}
@@ -1778,57 +1778,6 @@ function getDBData (input_tablename, columnlist, successfunc, input_where, input
  }
 }
 
-function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
- if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
- if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
- var http_request = new XMLHttpRequest()
- if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
- if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
- if (request_method == "GET") {
-  // Add a "?" if the "?" doesn't already exist in the url. If "data" doesn't start with a "&", add it.
-  if (typeof data != "undefined") {
-   var altchar = (data[0] != "&") ? "&" : ""
-   url += ((url.indexOf ("?") == -1) ? "?" : altchar) + data
-  }
-  data = null
- }
- http_request.open (request_method, url, is_asynchronous)
- if (typeof response_type != "undefined") http_request.responseType = response_type
- if (send_data_as_plaintext === true) {
-  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
-  if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
- } else {
-  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
- }
- http_request.send (data)
- return {"http_request": http_request}
-}
-
-function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, request_method) {
- var http_request = new XMLHttpRequest ()
- if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page."); return}
- 
- if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
- if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
- if (typeof charset        == "undefined") {charset = ''} else {charset = '; charset=' + charset}
- if (typeof request_method == "undefined") request_method = ((data === null) ? "GET" : "POST")
- 
- if (request_method == "GET") {url = url + (((typeof data == "undefined") || (data === null) || (data === "")) ? "?" + data : ""); data = null}
- http_request.open (request_method, url, is_asynchronous)
- 
- if (typeof response_type  != "undefined") http_request.responseType = response_type
- 
- if (send_data_as_plaintext === true) {
-  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
-  if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
- } else {
-  http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
- }
- http_request.send (data)
- return {"http_request": http_request}
-}
-
 function get_script_if_not_loaded (init) {
  var loaded_object_counter = init.global
  if (typeof loaded_object_counter[init.name] != "undefined") {
@@ -1861,10 +1810,11 @@ function get_data (params) {
  var charset               = (typeof params.charset               != "undefined") ? params.charset               : ""
  var data                  = (typeof params.data                  != "undefined") ? params.data                  : ""
  var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
+ var response_type         = (typeof params.response_type         != "undefined") ? params.response_type         : undefined
  var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
  
  // Call the request function.
- var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, undefined, header_list, params.request_method)
+ var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method)
  var http_request        = http_request_result["http_request"]
  
  if (is_asynchronous == false) return process_http_request ()
@@ -1899,7 +1849,7 @@ function get_data (params) {
  }
 }
 
-function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, extra_header_set, request_method) {
+function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
  if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
  if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
  if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
@@ -1922,8 +1872,8 @@ function make_request (url, data, send_data_as_plaintext, charset, is_asynchrono
  } else {
   http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
  }
- if (extra_header_set) {
-  extra_header_set.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
+ if (header_list) {
+  header_list.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
  }
  http_request.send (data)
  return {"http_request": http_request}
@@ -2138,6 +2088,11 @@ function sliderbar (init) {
    if (evt.currentTarget == textbox_number) return
    textbox_number.blur ()
   }
+  function textbox_focus (evt) {
+   if (main.textbox_enabled == true) return
+   if (evt.currentTarget == textbox_number) return
+   textbox_number.focus ()
+  }
  }
  
  // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
@@ -2211,7 +2166,7 @@ function sliderbar (init) {
  }
  if (main.textbox_enabled == true) {
   document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
-  textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend', textbox_toggle)
+  textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
   textbox_number.removeEventListener ('input'   , textbox_change)
   textbox_number.removeEventListener ('keypress', textbox_keypress)
  }
@@ -2239,7 +2194,7 @@ function sliderbar (init) {
   }
   if (main.textbox_enabled == true) {
    document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
-   textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend', textbox_toggle)
+   textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
    textbox_number.removeEventListener ('input'   , textbox_change)
    textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
@@ -4115,7 +4070,6 @@ function load_web_fonts (font_list, callback) {
  }
 }
 
-// Thanks to ImBcmDth for this!
 // Thanks to ImBcmDth for this!
 function fit_text_to_parent (element, init, transform_scale) {
  if (typeof init == "undefined") init = {}
