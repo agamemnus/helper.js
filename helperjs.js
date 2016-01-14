@@ -1839,7 +1839,7 @@ function get_data (params) {
   }
   
   // Send an error.
-  if ((response_text != "") && (response_text.error == true)) {
+  if ((response_text !== null) && (response_text != "") && (response_text.error == true)) {
    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
    return
   }
