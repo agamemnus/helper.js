@@ -2999,7 +2999,7 @@ function sort_by_order (obj, order_list) {
    var custom_function = order_list[i][2]
    if (typeof custom_function != "undefined") {
     var result = custom_function (a[attribute_name], b[attribute_name])
-    if (result != 0) return 0
+    if (result != 0) return result
     continue
    }
    if (a[attribute_name] != b[attribute_name]) {
