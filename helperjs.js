@@ -1,5 +1,5 @@
 // http://jsfiddle.net/brigand/U8Y6C/ ?
-// HelperJS version 7.2.
+// HelperJS version 7.3.
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 
@@ -104,6 +104,7 @@ if (/(msie|trident)/i.test(navigator.userAgent)) {
  Object.defineProperty (HTMLImageElement.prototype, "start", {writable : true})
 }
 
+// Add forEach to "HTMLCollection" items.
 ["forEach"].forEach (function (op) {
  NodeList.prototype[op] = HTMLCollection.prototype[op] = function (callback, thisArg) {
   return Array.prototype.slice.call(this)[op] (callback, thisArg)
@@ -1191,7 +1192,7 @@ function findabspos_x (obj, lastobj) {
  do {
   borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest
-  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is lastobj (or null if lastobj is null), return the result.
+  if (obj.offsetParent == lastobj) return curleft // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft
   obj = obj.offsetParent
  } while (true)
@@ -1203,7 +1204,7 @@ function findabspos_y (obj, lastobj) {
  do {
   borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest
-  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
+  if (obj.offsetParent == lastobj) return curtop // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curtop += obj.offsetTop
   obj = obj.offsetParent
  } while (true)
@@ -1242,7 +1243,7 @@ function findabspos_zoom_x (obj, lastobj) {
   }
   borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
   if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
-  if (obj.offsetParent == lastobj) return [curleft] // If offsetParent is lastobj (or null if lastobj is null), return the result.
+  if (obj.offsetParent == lastobj) return curleft // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curleft += obj.offsetLeft * zoom_level_x
   obj = obj.offsetParent
  } while (true)
@@ -1259,7 +1260,7 @@ function findabspos_zoom_y (obj, lastobj) {
   }
   borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
   if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
-  if (obj.offsetParent == lastobj) return [curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
+  if (obj.offsetParent == lastobj) return curtop // If offsetParent is lastobj (or null if lastobj is null), return the result.
   curtop += obj.offsetTop * zoom_level_y
   obj = obj.offsetParent
  } while (true)
@@ -1839,7 +1840,7 @@ function get_data (params) {
   }
   
   // Send an error.
-  if ((response_text !== null) && (response_text != "") && (response_text.error == true)) {
+  if ((response_text != "") && (response_text.error == true)) {
    if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
    return
   }
@@ -1894,6 +1895,7 @@ function message_emitter_create () {
  }
  main.message_silent = false
  main.send_message = function (message) {
+ console.log (message)
   var triggered_events = {}
   for (var evt_name in main.event_list) {var evt = main.event_list[evt_name]; if (evt(message)) triggered_events[evt_name] = main.event_listener_list[evt_name]}
   for (var evt_name in triggered_events) {
@@ -2138,13 +2140,9 @@ function sliderbar (init) {
   main.appendChild (main.pivot_slice)
   main.pivot_start  = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
   main.pivot_end    = main.position
-  if (main.pivot_end > main.pivot_start) {
-   main.pivot_slice.style[width_height] = (main.pivot_end - main.pivot_start) + main.css_unit_type
-   main.pivot_slice.style[left_top]  = main.pivot_start + main.css_unit_type
-  } else {
-   main.pivot_slice.style[width_height] = (main.pivot_start - main.pivot_end) + main.css_unit_type
-   main.pivot_slice.style[left_top]  = main.pivot_end + main.css_unit_type
-  }
+  
+  main.pivot_slice.style[width_height] = Math.abs(main.pivot_end - main.pivot_start) + main.css_unit_type
+  main.pivot_slice.style[left_top]     = ((main.pivot_end > main.pivot_start) ? main.pivot_start : main.pivot_end) + main.css_unit_type
  }
  
  if (main.textbox_enabled == true) textbox_update_value (pxc)
@@ -2529,7 +2527,7 @@ function removeAllDescendants (cell) {
  }
 }
 
-// Calculate the client width plus the left and right border widths and return the result.
+// Calculate the client width, plus the left and right border widths, and return the result.
 function getClientWidthFull (obj, init) {
  var style = window.getComputedStyle(obj)
  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
@@ -2540,7 +2538,7 @@ function getClientWidthFull (obj, init) {
  return obj.clientWidth + margin + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth)
 }
 
-// Calculate the client height plus the top and bottom border widths and return the result.
+// Calculate the client height, plus the top and bottom border widths, and return the result.
 function getClientHeightFull (obj, init) {
  var style = window.getComputedStyle(obj)
  if ((typeof init != "undefined") && (typeof init.margin != "undefined") && (init.margin == true)) {
@@ -2996,8 +2994,14 @@ function sort_by_order (obj, order_list) {
  obj.sort (function (a, b) {
   var curlen = order_list.length
   for (var i = 0; i < curlen; i++) {
-   var attribute_name = order_list[i][0]
-   var sort_down      = order_list[i][1]
+   var attribute_name  = order_list[i][0]
+   var sort_down       = order_list[i][1]
+   var custom_function = order_list[i][2]
+   if (typeof custom_function != "undefined") {
+    var result = custom_function (a[attribute_name], b[attribute_name])
+    if (result != 0) return 0
+    continue
+   }
    if (a[attribute_name] != b[attribute_name]) {
     if (sort_down == true) {
      if (a[attribute_name] > b[attribute_name]) {return 1} else {return -1}
@@ -3300,14 +3304,16 @@ function image_preload (cursrc, init) {
  } else {
   var init = cursrc
  }
+ var dir_prefix = ((typeof init == "undefined") || (typeof init.dir == "undefined")) ? "" : init.dir
  
  var image_list = init.image_list
  var curlen = image_list.length
  var load_counter = curlen
  for (var i = 0; i < curlen; i++) {
   var image_temp = new Image ()
-  image_temp.onload = function () {load_counter -= 1}
-  image_temp.src = image_list[i]
+  image_temp.onload  = function () {load_counter -= 1}
+  image_temp.onerror = function () {load_counter -= 1}
+  image_temp.src = dir_prefix + image_list[i]
  }
  var test_load_complete_interval = setTimeout (test_load_complete, 30)
  function test_load_complete () {
