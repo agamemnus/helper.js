@@ -2975,6 +2975,7 @@ if (h.library_settings.graphics) {
   }
   merge_and_colorize ({image_name_list:layer_name_list, color_list:current_data.layer_color_list, callback: init.callback})
  }
+ var merge_and_colorize =
  h.merge_and_colorize   = function (init) {
   var image_name_list = init.image_name_list
   var color_list = init.color_list
