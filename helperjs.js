@@ -1,4 +1,4 @@
-void function (global) {
+void function () {
 // browserify -s someGlobal entry.js -o bundle.js
 // browserify -s helperjs helperjs.js -o helperjsbundle.js
 // HelperJS II version 0.1. ☃
@@ -31,10 +31,10 @@ void function (global) {
 // .capitalizeFirstLetter, .stripslashes
 
 var h = {}
-//if (typeof module == "undefined") var module = {}
-//module.exports = h
-global.helperjs = h
+if (typeof module == "undefined") var module = {}
+module.exports = h
 if (typeof window == "undefined") window = global
+global.helperjs = h
 
 // Settings.
 h.library_settings = {
@@ -3727,4 +3727,4 @@ void function () {
  if (h.library_settings.use_prototypes) convert_to_prototypes (h, window)
  convert_subproto_to_regular_functions (h)
 } ()
-} (window)
+} ()
