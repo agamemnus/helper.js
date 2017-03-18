@@ -1536,6 +1536,7 @@ if (h.library_settings.download) {
   ajax.is_library_container = true
   return ajax
  } ()
+ h.get_data = h.ajax.get_data
 }
 // </Ajax / download functions>
 
