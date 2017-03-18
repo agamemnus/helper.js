@@ -33,8 +33,8 @@ void function () {
 var h = {}
 if (typeof module == "undefined") var module = {}
 module.exports = h
-if (typeof window == "undefined") window = global
-global.helperjs = h
+if (typeof window != "undefined") global = window
+if (global) global.helperjs = h
 
 // Settings.
 h.library_settings = {
