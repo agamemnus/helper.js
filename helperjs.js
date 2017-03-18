@@ -2085,12 +2085,12 @@ if (h.library_settings.dom_manipulation) {
   document.body.appendChild(hocuspocus); hocuspocus.focus()
   document.body.removeChild(hocuspocus); hocuspocus = null
  }
- h.setstyle                          = function (element, text) {
+ h.set_style                         = function (element, text) {
   // Multiple element support.
   if ((typeof element == "object") && (element instanceof Array)) {element.forEach (function (current_element) {setStyle (current_element, text)}); return}
   element.setAttribute("style", checkForMissingProperties (element, text))
  }
- h.addstyle                          = function (element, text) {
+ h.add_style                         = function (element, text) {
   // Multiple element support.
   if ((typeof element == "object") && (element instanceof Array)) {element.forEach (function (current_element) {addStyle (current_element, text)}); return}
   if (element.getAttribute("style") == null) {element.setAttribute("style", checkForMissingProperties(element, text)); return}
