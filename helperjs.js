@@ -32,8 +32,9 @@
 // .capitalizeFirstLetter, .stripslashes
 
 var h = {}
-if (typeof module == "undefined") var module = {}
-module.exports = h 
+//if (typeof module == "undefined") var module = {}
+//module.exports = h
+global.helperjs = h
 if (typeof window == "undefined") window = global
 
 // Settings.
