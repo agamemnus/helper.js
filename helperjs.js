@@ -3673,9 +3673,11 @@ void function () {
    for (var func_name in target) {
     if ((func_name == "is_library_container") || (func_name == "isLibraryContainer")) continue
     var func = target[func_name]
-    window[target_name].prototype[func_name] = function () {
-     return func.apply (null, [this].concat(Array.prototype.slice.call(arguments)))
-    }
+    void function (func) {
+     window[target_name].prototype[func_name] = function () {
+      return func.apply (null, [this].concat(Array.prototype.slice.call(arguments)))
+     }
+    } (func)
    }
   }
  }
