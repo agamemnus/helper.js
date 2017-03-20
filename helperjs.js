@@ -524,6 +524,7 @@ if (h.library_settings.object_manipulation) {
   for (var i in source) {copy[i] = source[i]}
   return copy
  }
+ var deepcopy =
  h.deepcopy          = function (source) {
   if ((typeof source !== 'object') || (source == null)) return source
   var copy = ((source instanceof Array) ? [] : {})
@@ -2304,12 +2305,11 @@ if (h.library_settings.dom_manipulation) {
    if (typeof init.input_wrapper_style != "undefined") add_style (input_wrapper, init.input_wrapper_style)
    input_wrapper.appendChild (input)
   }
+  var input_to_append = (nest_input == true) ? input_wrapper : input
   if (init.input_first == true) {
-   if (nest_input == true) {main.appendChild (input_wrapper)} else {main.appendChild (input)}
-   main.appendChild (label)
+   main.appendChild (input_to_append); main.appendChild (label)
   } else {
-   main.appendChild (label)
-   if (nest_input == true) {main.appendChild (input_wrapper)} else {main.appendChild (input)}
+   main.appendChild (label); main.appendChild (input_to_append)
   }
   if (typeof post != "undefined") {
    var templabel = document.createElement ('div')
