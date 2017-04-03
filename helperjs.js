@@ -184,7 +184,7 @@ if (h.library_settings.alt_names) {
 // </Alt names for addEventListener / removeEventListener.>
 
 // <Interval handler/wrapper functions. TAG: setInterval, TAG: setTimeout.>
-if (h.library_settings.timer_prototypes) {
+if (h.library_settings.timer) {
  void function () {
   // Add a setTimeout and setInterval to HTMLElement. The setTimeout and setInterval remove themselves if the element is removed.
   var set_timeout_upgraded  = h.set_timeout_upgraded  = function () {
