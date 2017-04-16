@@ -1695,7 +1695,7 @@ if (h.library_settings.gui_widgets) {
   var zoom_level_fixed = undefined
   function calculate_zoom_level () {
    if ((!main.recalculate_size) && (typeof zoom_level_fixed != "undefined")) return zoom_level_fixed
-   var zoom_level = getInheritedTransform (main, {transform_type: "scale", xy: orientation_xy})
+   var zoom_level = get_inherited_transform (main, {transform_type: "scale", xy: orientation_xy})
    if (!main.recalculate_size) zoom_level_fixed = zoom_level
    return zoom_level
   }
