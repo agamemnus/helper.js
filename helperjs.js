@@ -1631,38 +1631,38 @@ if (h.library_settings.gui_widgets) {
     if ((main.textbox_enabled == true) && (typeof textbox != "undefined")) parent.appendChild (textbox)
    }
   })
-  var parent = main.parent        = init.parent
-  var background_style            = init.background_style
-  var foreground_style            = init.foreground_style
-  var background_class            = init.background_class
-  var foreground_class            = init.foreground_class
+  var parent = main.parent = init.parent
+  var background_style     = init.background_style
+  var foreground_style     = init.foreground_style
+  var background_class     = init.background_class
+  var foreground_class     = init.foreground_class
   var background_beyond_max_style = init.background_beyond_max_style
-  var pivot_slice_style           = init.pivot_slice_style
-  var pivot_slice_class           = init.pivot_slice_class
-  var control_style = init.control_style
-  var control_image_src           = init.control_image
-  var control_class = init.control_class
-  var point_initial = (typeof init.point_initial != "undefined") ? init.point_initial : 0
-  var orientation   = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
-  var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-  main.do_not_start_function      = init.do_not_start_function
-  main.update_function            = init.update_function
-  main.point_maximum= (typeof init.point_maximum     == "number") ? init.point_maximum : 100
-  main.pivot_point  = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
-  main.use_update_function_param  = init.use_update_function_param
-  main.point_upper_limit          = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
-  main.textbox_enabled            = init.textbox_enabled || false
-  main.control_unit_offset        = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
-  main.css_unit_type= init.css_unit_type || "px"
-  main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
+  var pivot_slice_style    = init.pivot_slice_style
+  var pivot_slice_class    = init.pivot_slice_class
+  var control_style        = init.control_style
+  var control_image_src    = init.control_image
+  var control_class        = init.control_class
+  var point_initial        = (typeof init.point_initial != "undefined") ? init.point_initial : 0
+  var orientation          = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
+  var use_touch_events     = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
+  main.start_condition     = (typeof init.start_condition == "undefined") ? function () {} init.start_condition
+  main.events = {update : (events in init) ? init.events.update : undefined}
+  main.point_maximum       = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
+  main.pivot_point         = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
+  main.point_upper_limit   = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
+  main.textbox_enabled     = init.textbox_enabled || false
+  main.control_unit_offset = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
+  main.css_unit_type       = init.css_unit_type || "px"
+  main.recalculate_size    = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
   
-  var width_height         = (orientation == "horizontal") ? "width"           : "height"
-  var left_top             = (orientation == "horizontal") ? "left"            : "top"
-  var pageXY = (orientation == "horizontal") ? "pageX"           : "pageY"
-  var orientation_xy       = (orientation == "horizontal") ? "x" : "y"
-  var get_position_func_xy = (orientation == "horizontal") ? findabspos_zoom_x : findabspos_zoom_y
+  var width_height    = (orientation == "horizontal") ? "width"           : "height"
+  var left_top        = (orientation == "horizontal") ? "left"            : "top"
+  var pageXY          = (orientation == "horizontal") ? "pageX"           : "pageY"
+  var orientation_xy  = (orientation == "horizontal") ? "x"               : "y"
+  var findabspos_zoom = (orientation == "horizontal") ? findabspos_zoom_x : findabspos_zoom_y
   
   var px_to_css_unit_type_fixed = undefined
+  
   function px_to_css_unit_type () {
    if (main.css_unit_type == "px") return 1
    if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
@@ -1824,7 +1824,7 @@ if (h.library_settings.gui_widgets) {
   main.update_position = function (pxc, zoom_level) {
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
-   startxy = get_position_func_xy (main) / (pxc * zoom_level)
+   startxy = findabspos_zoom (main) / (pxc * zoom_level)
   }
   
   main.destroy = function () {
@@ -1881,21 +1881,13 @@ if (h.library_settings.gui_widgets) {
    if (typeof pivot_slice_style != 'undefined') {
     main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
     main.pivot_end   = main.position
-    if (main.pivot_end > main.pivot_start) {
-     main.pivot_slice.style[width_height] = (main.pivot_end - main.pivot_start) + main.css_unit_type
-     main.pivot_slice.style[left_top]  = main.pivot_start + main.css_unit_type
-    } else {
-     main.pivot_slice.style[width_height] = (main.pivot_start - main.pivot_end) + main.css_unit_type
-     main.pivot_slice.style[left_top]  = main.pivot_end + main.css_unit_type
-    }
+    main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
    }
    if (main.textbox_enabled == true) textbox_update_value (pxc)
-   if (main.use_update_function_param == true) {main.update_function (main.update_function_param, false)} else {main.update_function (main, false)}
+   if (events.set_position) events.set_position (main)
   }
   main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
-  main.get_position_percent = function () {
-   return (main.position / main.position_physical_max * main.point_upper_limit)
-  }
+  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)
   
   function touchstart (evt) {mousemove (evt); mousedown (evt)}
   function mousemove (evt, pxc, zoom_level) {
@@ -1909,7 +1901,7 @@ if (h.library_settings.gui_widgets) {
   }
   function mousedown (evt) {
    evt.preventDefault ()
-   if (get_right_click(evt) || (main.do_not_start_function && main.do_not_start_function (main)) || startscroll == true) return
+   if (get_right_click(evt) || !main.start_condition (main) || startscroll == true) return
    var pxc        = px_to_css_unit_type ()
    var zoom_level = calculate_zoom_level ()
    main.update_position (pxc, zoom_level)
