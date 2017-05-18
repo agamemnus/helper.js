@@ -1887,7 +1887,7 @@ if (h.library_settings.gui_widgets) {
    if (events.set_position) events.set_position (main)
   }
   main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
-  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)
+  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
   
   function touchstart (evt) {mousemove (evt); mousedown (evt)}
   function mousemove (evt, pxc, zoom_level) {
