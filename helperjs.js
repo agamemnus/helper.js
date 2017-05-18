@@ -1646,7 +1646,7 @@ if (h.library_settings.gui_widgets) {
   var orientation          = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
   var use_touch_events     = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
   main.start_condition     = (typeof init.start_condition   != "undefined") ? init.start_condition : function () {} 
-  main.events              = {update : (events in init) ? init.events.update : undefined}
+  main.events              = {update : ('events' in init) ? init.events.update : undefined}
   main.point_maximum       = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
   main.pivot_point         = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
   main.point_upper_limit   = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
