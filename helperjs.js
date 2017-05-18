@@ -1642,11 +1642,11 @@ if (h.library_settings.gui_widgets) {
   var control_style        = init.control_style
   var control_image_src    = init.control_image
   var control_class        = init.control_class
-  var point_initial        = (typeof init.point_initial != "undefined") ? init.point_initial : 0
+  var point_initial        = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
   var orientation          = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
   var use_touch_events     = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-  main.start_condition     = (typeof init.start_condition == "undefined") ? function () {} init.start_condition
-  main.events = {update : (events in init) ? init.events.update : undefined}
+  main.start_condition     = (typeof init.start_condition == "undefined") ? function () {init.start_condition ()}
+  main.events              = {update : (events in init) ? init.events.update : undefined}
   main.point_maximum       = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
   main.pivot_point         = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
   main.point_upper_limit   = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
@@ -1777,7 +1777,7 @@ if (h.library_settings.gui_widgets) {
   var zoom_level = calculate_zoom_level ()
   main.position_physical_max = calculate_physical_max (pxc, zoom_level)
   main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
-  main.position= main.position_physical_max * (point_initial      / main.point_upper_limit)
+  main.position= main.position_physical_max * (point_initial / main.point_upper_limit)
   // Set the control left/top position and the foreground width/height.
   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
   main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
