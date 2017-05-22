@@ -995,7 +995,7 @@ if (h.library_settings.string_manipulation) {
   return obj.toLowerCase().replace(/^[a-z]|\s[a-z]/g, conv)
   function conv () {return arguments[0].toUpperCase()}
  }
- h.proto.String.capitalize_first_letter = function (obj) {return obj.charAt(0).toUpperCase() + obj.slice(1)}
+ var capitalize_first_letter = h.proto.String.capitalize_first_letter = function (obj) {return obj.charAt(0).toUpperCase() + obj.slice(1)}
  h.proto.String.stripslashes            = function (obj) {
   return (obj + '').replace(/\\(.?)/g, function (s, n1) {
    switch (n1) {
@@ -1645,8 +1645,8 @@ if (h.library_settings.gui_widgets) {
   var point_initial        = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
   var orientation          = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
   var use_touch_events     = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-  main.start_condition     = (typeof init.start_condition   != "undefined") ? init.start_condition : function () {} 
-  main.events              = {update : ('events' in init) ? init.events.update : undefined}
+  main.start_condition     = (typeof init.start_condition != "undefined") ? init.start_condition : function () {} 
+  main.events              = {update: ("events" in init) ? init.events.update : undefined}
   main.point_maximum       = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
   main.pivot_point         = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
   main.point_upper_limit   = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
@@ -1777,7 +1777,7 @@ if (h.library_settings.gui_widgets) {
   var zoom_level = calculate_zoom_level ()
   main.position_physical_max = calculate_physical_max (pxc, zoom_level)
   main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
-  main.position= main.position_physical_max * (point_initial / main.point_upper_limit)
+  main.position  = main.position_physical_max * (point_initial / main.point_upper_limit)
   // Set the control left/top position and the foreground width/height.
   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
   main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
@@ -1884,7 +1884,7 @@ if (h.library_settings.gui_widgets) {
     main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
    }
    if (main.textbox_enabled == true) textbox_update_value (pxc)
-   if (events.set_position) events.set_position (main)
+   if (main.events.set_position) main.events.set_position (main)
   }
   main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
   main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
@@ -1918,7 +1918,7 @@ if (h.library_settings.gui_widgets) {
    if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
    mouseup_or_blur ()
   }
-  function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.update_function (main, true)}
+  function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.events.update (main, true)}
   return main
  }
  h.red_blue_arrow         = function (init) {
@@ -2424,7 +2424,7 @@ if (h.library_settings.dom_manipulation) {
    switch (typeof current_option_data) {
     case "string" : 
      current_option.value     = current_option_data
-     current_option.innerHTML = current_option_data.capitalizeFirstLetter()
+     current_option.innerHTML = capitalize_first_letter(current_option_data)
     break
     case "number" : 
      current_option.value     = current_option_data
@@ -2532,7 +2532,7 @@ if (h.library_settings.dom_manipulation) {
     var header_text        = header_list[i].text.toLowerCase ()
     temp_th.sort_attribute = header_list[i].attribute.toLowerCase ()
    }
-   temp_th.innerHTML = header_text.capitalizeFirstLetter()
+   temp_th.innerHTML = capitalize_first_letter(header_text)
    if (typeof sort_order != "undefined") addEvent (temp_th, 'click', resort)
    temp_tr.appendChild (temp_th)
   }
