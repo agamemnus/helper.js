@@ -1620,6 +1620,40 @@ if (h.library_settings.gui_widgets) {
   addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
   return close_button
  }
+ h.button                 = function (init) {
+  var button_div = document.createElement ('div')
+  var parent     = init.parent
+  var className  = init.className
+  var style      = init.style
+  var text       = init.text
+  
+  button_div.destroy = function () {
+   for (var property in init) {
+    if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.removeEventListener (property, init[property])
+   }
+   button_div.parentNode.removeChild (button_div)
+   button_div = null
+  }
+  
+  for (var property in init) {
+   if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.addEventListener (property, init[property])
+  }
+  
+  if (typeof text      != "undefined") button_div.innerHTML = text
+  if (typeof className != "undefined") button_div.className = className
+  if (typeof style     != "undefined") setStyle (button_div, style)
+  Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
+  parent.appendChild (button_div)
+  
+  return button_div
+ }
+ h.gui_close_button       = function (init) {
+  var close_button = document.createElement('div')
+  init.parent.appendChild (close_button)
+  close_button.className = "gui-window-close_button"
+  addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
+  return close_button
+ }
  h.sliderbar              = function (init) {
   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
   Object.defineProperty (main, 'parent', {
@@ -1759,7 +1793,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Create the foreground object and set its class and style.
-  main.foreground_container = document.createElement ('div'); main.foreground_container.style.position = "relative"
+  main.foreground_container = document.createElement ('div'); main.foreground_container.style.position = "relative"; main.foreground_container.style[width_height] = "100%"
   main.appendChild (main.foreground_container)
 
   main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style (main.foreground, foreground_style || '')
@@ -1769,7 +1803,6 @@ if (h.library_settings.gui_widgets) {
   var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
   main.control = document.createElement(control_element_type); main.control.className = control_class || ''; add_style (main.control, control_style || '')
   if (typeof control_image_src != "undefined") main.control.src = control_image_src
-  main.control.style.pointerEvents = "none"
   main.appendChild (main.control)
   
   // Calculate the physical control position max, calculate the logical control position max, and set the initial physical control position.
