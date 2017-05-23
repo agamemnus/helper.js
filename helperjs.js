@@ -1766,7 +1766,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Create the foreground object and set its class and style.
-  main.foreground_container = document.createElement ('div'); add_style (main.foreground_container.style, "position: relative; "+width_height+": 100%; line-height: 0")
+  main.foreground_container = document.createElement ('div'); add_style (main.foreground_container, "position: relative; "+width_height+": 100%; line-height: 0")
   main.appendChild (main.foreground_container)
 
   main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style (main.foreground, foreground_style || '')
