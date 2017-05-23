@@ -1633,11 +1633,11 @@ if (h.library_settings.gui_widgets) {
   })
   var parent = main.parent = init.parent
   var background_style            = init.background_style
+  var foreground_container_style  = init.foreground_container_style
   var foreground_style            = init.foreground_style
-  var foreground_container_style  = init.foreground_inverse_style
   var foreground_inverse_style    = init.foreground_inverse_style
   var background_class            = init.background_class
-  var foreground_container_class  = init.foreground_inverse_class
+  var foreground_container_class  = init.foreground_container_class
   var foreground_class            = init.foreground_class
   var foreground_inverse_class    = init.foreground_inverse_class
   var background_beyond_max_style = init.background_beyond_max_style
