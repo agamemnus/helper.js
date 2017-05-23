@@ -1654,7 +1654,7 @@ if (h.library_settings.gui_widgets) {
   addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
   return close_button
  }
- h.sliderbar              = function (init) {
+  h.sliderbar              = function (init) {
   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
   Object.defineProperty (main, 'parent', {
    get: function () {return parent},
@@ -1666,28 +1666,30 @@ if (h.library_settings.gui_widgets) {
    }
   })
   var parent = main.parent = init.parent
-  var background_style     = init.background_style
-  var foreground_style     = init.foreground_style
-  var background_class     = init.background_class
-  var foreground_class     = init.foreground_class
+  var background_style            = init.background_style
+  var foreground_style            = init.foreground_style
+  var foreground_inverse_style    = init.foreground_inverse_style
+  var background_class            = init.background_class
+  var foreground_class            = init.foreground_class
+  var foreground_inverse_class    = init.foreground_inverse_class
   var background_beyond_max_style = init.background_beyond_max_style
-  var pivot_slice_style    = init.pivot_slice_style
-  var pivot_slice_class    = init.pivot_slice_class
-  var control_style        = init.control_style
-  var control_image_src    = init.control_image
-  var control_class        = init.control_class
-  var point_initial        = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
-  var orientation          = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
-  var use_touch_events     = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-  main.start_condition     = (typeof init.start_condition != "undefined") ? init.start_condition : function () {} 
-  main.events              = {update: ("events" in init) ? init.events.update : undefined}
-  main.point_maximum       = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
-  main.pivot_point         = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
-  main.point_upper_limit   = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
-  main.textbox_enabled     = init.textbox_enabled || false
-  main.control_unit_offset = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
-  main.css_unit_type       = init.css_unit_type || "px"
-  main.recalculate_size    = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
+  var pivot_slice_style           = init.pivot_slice_style
+  var pivot_slice_class           = init.pivot_slice_class
+  var control_style               = init.control_style
+  var control_image_src           = init.control_image
+  var control_class               = init.control_class
+  var point_initial               = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
+  var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
+  var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
+  main.start_condition            = (typeof init.start_condition != "undefined") ? init.start_condition : function () {} 
+  main.events                     = {update: ("events" in init) ? init.events.update : undefined}
+  main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
+  main.pivot_point                = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
+  main.point_upper_limit          = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
+  main.textbox_enabled            = init.textbox_enabled || false
+  main.control_unit_offset        = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
+  main.css_unit_type              = init.css_unit_type || "px"
+  main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
   
   var width_height    = (orientation == "horizontal") ? "width"           : "height"
   var left_top        = (orientation == "horizontal") ? "left"            : "top"
@@ -1783,6 +1785,11 @@ if (h.library_settings.gui_widgets) {
    }
   }
   
+  function update_foreground_width_height () {
+   main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+   main.foreground_inverse.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? ("calc(100% - " + main.position + main.css_unit_type + ")") : "100%")
+  }
+  
   // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
   main.className = init.background_class || ''; if (typeof background_style != "undefined") add_style (main, background_style)
   
@@ -1799,6 +1806,9 @@ if (h.library_settings.gui_widgets) {
   main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style (main.foreground, foreground_style || '')
   main.foreground_container.appendChild (main.foreground)
   
+  main.foreground_inverse = document.createElement('div'); main.foreground_inverse.className = foreground_inverse_class || ''; add_style (main.foreground_inverse, foreground_inverse_style || '')
+  main.foreground_container.appendChild (main.foreground_inverse)
+  
   // Create the control object and set its class and style.
   var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
   main.control = document.createElement(control_element_type); main.control.className = control_class || ''; add_style (main.control, control_style || '')
@@ -1813,7 +1823,7 @@ if (h.library_settings.gui_widgets) {
   main.position  = main.position_physical_max * (point_initial / main.point_upper_limit)
   // Set the control left/top position and the foreground width/height.
   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
-  main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+  update_foreground_width_height ()
   if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
    main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
    main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
@@ -1910,11 +1920,11 @@ if (h.library_settings.gui_widgets) {
    }
    
    main.control.style[left_top]        = (main.position + main.control_unit_offset) + main.css_unit_type
-   main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+   update_foreground_width_height ()
    if (typeof pivot_slice_style != 'undefined') {
     main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
     main.pivot_end   = main.position
-    main.foreground.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+    update_foreground_width_height ()
    }
    if (main.textbox_enabled == true) textbox_update_value (pxc)
    if (main.events.set_position) main.events.set_position (main)
@@ -1952,6 +1962,28 @@ if (h.library_settings.gui_widgets) {
    mouseup_or_blur ()
   }
   function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.events.update (main, true)}
+  return main
+ }
+ h.red_blue_arrow         = function (init) {
+  var parent      = init['parent']
+  var style       = init['style']
+  var main        = document.createElement('div'); parent.appendChild (main)
+  main.thickness  = parseFloat(init['thickness'])
+  main.bar_length = parseFloat(init['bar length'])
+  main.tip_length = parseFloat(init['tip length'])
+  main.left   = document.createElement('img') ; main.appendChild (main.left)
+  main.middle = document.createElement('img') ; main.appendChild (main.middle)
+  main.right  = document.createElement('img') ; main.appendChild( main.right)
+  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
+  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
+  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
+  main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
+  main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
+  main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
+  setStyle (main, style)
+  main.style.display = "inline-block"
+  main.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
+  main.style.height = main.thickness + 'px'
   return main
  }
  h.red_blue_arrow         = function (init) {
