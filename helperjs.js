@@ -1620,41 +1620,7 @@ if (h.library_settings.gui_widgets) {
   addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
   return close_button
  }
- h.button                 = function (init) {
-  var button_div = document.createElement ('div')
-  var parent     = init.parent
-  var className  = init.className
-  var style      = init.style
-  var text       = init.text
-  
-  button_div.destroy = function () {
-   for (var property in init) {
-    if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.removeEventListener (property, init[property])
-   }
-   button_div.parentNode.removeChild (button_div)
-   button_div = null
-  }
-  
-  for (var property in init) {
-   if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.addEventListener (property, init[property])
-  }
-  
-  if (typeof text      != "undefined") button_div.innerHTML = text
-  if (typeof className != "undefined") button_div.className = className
-  if (typeof style     != "undefined") setStyle (button_div, style)
-  Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
-  parent.appendChild (button_div)
-  
-  return button_div
- }
- h.gui_close_button       = function (init) {
-  var close_button = document.createElement('div')
-  init.parent.appendChild (close_button)
-  close_button.className = "gui-window-close_button"
-  addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
-  return close_button
- }
-  h.sliderbar              = function (init) {
+ h.sliderbar              = function (init) {
   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
   Object.defineProperty (main, 'parent', {
    get: function () {return parent},
@@ -1800,7 +1766,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Create the foreground object and set its class and style.
-  main.foreground_container = document.createElement ('div'); main.foreground_container.style.position = "relative"; main.foreground_container.style[width_height] = "100%"
+  main.foreground_container = document.createElement ('div'); add_style (main.foreground_container.style, "position: relative; "+width_height+": 100%; line-height: 0")
   main.appendChild (main.foreground_container)
 
   main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style (main.foreground, foreground_style || '')
@@ -1962,28 +1928,6 @@ if (h.library_settings.gui_widgets) {
    mouseup_or_blur ()
   }
   function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.events.update (main, true)}
-  return main
- }
- h.red_blue_arrow         = function (init) {
-  var parent      = init['parent']
-  var style       = init['style']
-  var main        = document.createElement('div'); parent.appendChild (main)
-  main.thickness  = parseFloat(init['thickness'])
-  main.bar_length = parseFloat(init['bar length'])
-  main.tip_length = parseFloat(init['tip length'])
-  main.left   = document.createElement('img') ; main.appendChild (main.left)
-  main.middle = document.createElement('img') ; main.appendChild (main.middle)
-  main.right  = document.createElement('img') ; main.appendChild( main.right)
-  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
-  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
-  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
-  main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
-  main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
-  main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
-  setStyle (main, style)
-  main.style.display = "inline-block"
-  main.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
-  main.style.height = main.thickness + 'px'
   return main
  }
  h.red_blue_arrow         = function (init) {
