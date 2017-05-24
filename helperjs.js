@@ -428,17 +428,17 @@ if (h.library_settings.object_manipulation) {
   })
   return newobj
  }
- h.proto.Array.remove_empty_strings = function (obj) {return obj.filter (function (element) {return element != ""})}// for (var i = 0, curlen = obj.length; i < curlen; i++) {if (obj[i] != "") continue; obj.splice (i, 1); curlen -= 1; i -= 1; }; return obj
- h.proto.Array.multiply             = function (obj, mult_value)           {return obj.map (function (element) {returnelement * mult_value})}  // for (var i = 0, curlen = obj.length; i < curlen; i++) {obj[i] *= mult_value}; return obj
+ h.proto.Array.remove_empty_strings = function (obj) {return obj.filter (function (element) {return element != ""})} // for (var i = 0, curlen = obj.length; i < curlen; i++) {if (obj[i] != "") continue; obj.splice (i, 1); curlen -= 1; i -= 1; }; return obj
+ h.proto.Array.multiply             = function (obj, mult_value)           {return obj.map (function (element) {return element * mult_value})}  // for (var i = 0, curlen = obj.length; i < curlen; i++) {obj[i] *= mult_value}; return obj
  h.proto.Array.round                = function (obj) {function round (obj) {return obj.map (function (element) {return Math.round(element)})}}  // for (var i = 0, curlen = obj.length; i < curlen; i++) {obj[i] = Math.round(obj[i])}; return obj
  h.proto.Array.add                  = function (obj, add_value)            {return obj.map (function (element) {return element +  add_value})}  // for (var i = 0, curlen = obj.length; i < curlen; i++) {obj[i] += add_value}; return obj
  h.proto.Array.shuffle              = function (obj) {
-  var newobj = obj.map (function (element) {return element})
-  newobj.forEach (function (element, i) {
-   var j = Math.floor(obj.length - Math.random() * (obj.length - i))
-   newobj[i] = newobj[j]; newobj[j] = element
-  })
-  return newobj
+  var i = obj.length, t, r
+  while (0 !== i) {                          // While there remain elements to shuffle...
+   r = Math.floor(Math.random() * i); i -= 1 // Pick a remaining element...
+   t = obj[i]; obj[i] = obj[r]; obj[r] = t   // And swap it with the current element.
+  }
+  return obj
  }
  h.search_array_of_objects          = function (init) {
   // Search attributes/key values (init.attribute) in a set of objects (init.array) containing certain text (init.text).
