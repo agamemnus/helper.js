@@ -1903,7 +1903,7 @@ if (h.library_settings.gui_widgets) {
   
   function touchstart (evt) {mousemove (evt); mousedown (evt)}
   function mousemove (evt, pxc, zoom_level) {
-   evt.preventDefault ()
+   if (evt.currentTarget == main) evt.preventDefault ()
    if (startscroll == false) return
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
