@@ -1879,7 +1879,8 @@ if (h.library_settings.gui_widgets) {
    observer.observe (parent, {attributes: false, childList: true, subtree: false})
   }
   
-  main.set_position = function (new_position) {
+  main.set_position = function (new_position, trigger_update_event, pxc) {
+   if (typeof trigger_update_event == "undefined") trigger_update_event = true
    main.position = new_position
    main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
    if (main.position > main.position_logical_max) {
@@ -1896,7 +1897,7 @@ if (h.library_settings.gui_widgets) {
     update_foreground_width_height ()
    }
    if (main.textbox_enabled == true) textbox_update_value (pxc)
-   if (main.events.update) main.events.update (main)
+   if (trigger_update_event && main.events.update) main.events.update (main)
   }
   main.set_position_percent = function (new_point_value) {main.update (main.position_physical_max * new_point_value / main.point_upper_limit)}
   main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
@@ -1909,7 +1910,7 @@ if (h.library_settings.gui_widgets) {
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
    if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
    var xy = evt[pageXY] / (zoom_level * pxc)
-   main.set_position (xy - offsetxy - startxy - main.control_unit_offset, pxc)
+   main.set_position (xy - offsetxy - startxy - main.control_unit_offset, true, pxc)
   }
   function mousedown (evt) {
    evt.preventDefault ()
