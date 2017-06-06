@@ -1620,7 +1620,7 @@ if (h.library_settings.gui_widgets) {
   addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
   return close_button
  }
-  h.sliderbar              = function (init) {
+ h.sliderbar              = function (init) {
   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
   Object.defineProperty (main, 'parent', {
    get: function () {return parent},
@@ -1649,7 +1649,7 @@ if (h.library_settings.gui_widgets) {
   var point_initial               = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
   var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
   var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-  main.start_condition            = (typeof init.start_condition != "undefined") ? init.start_condition : function () {} 
+  main.start_condition            = (typeof init.start_condition != "undefined") ? init.start_condition : undefined
   main.events                     = {update: ("events" in init) ? init.events.update : undefined}
   main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
   main.pivot_point                = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
@@ -1896,9 +1896,9 @@ if (h.library_settings.gui_widgets) {
     update_foreground_width_height ()
    }
    if (main.textbox_enabled == true) textbox_update_value (pxc)
-   if (main.events.set_position) main.events.set_position (main)
+   if (main.events.update) main.events.update (main)
   }
-  main.set_position_percent = function (new_point_value) {main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit)}
+  main.set_position_percent = function (new_point_value) {main.update (main.position_physical_max * new_point_value / main.point_upper_limit)}
   main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
   
   function touchstart (evt) {mousemove (evt); mousedown (evt)}
@@ -1913,7 +1913,7 @@ if (h.library_settings.gui_widgets) {
   }
   function mousedown (evt) {
    evt.preventDefault ()
-   if (get_right_click(evt) || !main.start_condition (main) || startscroll == true) return
+   if (get_right_click(evt) || (start_condition && !main.start_condition(main)) || startscroll == true) return
    var pxc        = px_to_css_unit_type ()
    var zoom_level = calculate_zoom_level ()
    main.update_position (pxc, zoom_level)
@@ -1931,6 +1931,28 @@ if (h.library_settings.gui_widgets) {
    mouseup_or_blur ()
   }
   function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.events.update (main, true)}
+  return main
+ }
+ h.red_blue_arrow         = function (init) {
+  var parent      = init['parent']
+  var style       = init['style']
+  var main        = document.createElement('div'); parent.appendChild (main)
+  main.thickness  = parseFloat(init['thickness'])
+  main.bar_length = parseFloat(init['bar length'])
+  main.tip_length = parseFloat(init['tip length'])
+  main.left   = document.createElement('img') ; main.appendChild (main.left)
+  main.middle = document.createElement('img') ; main.appendChild (main.middle)
+  main.right  = document.createElement('img') ; main.appendChild( main.right)
+  if (typeof main.thickness  == 'undefined') main.thickness  = "63px"
+  if (typeof main.bar_length == 'undefined') main.bar_length = "428px"
+  if (typeof main.tip_length == 'undefined') main.tip_length = "32px"
+  main.left.src   = "images/gui/interface-blue-red arrow left.png"   ; setStyle (main.left  , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:0')
+  main.middle.src = "images/gui/interface-blue-red arrow middle.png" ; setStyle (main.middle, "position:absolute; height:" + main.thickness + "px; width:" + main.bar_length + 'px; top:0; left:' + main.tip_length + 'px')
+  main.right.src  = "images/gui/interface-blue-red arrow right.png"  ; setStyle (main.right , "position:absolute; height:" + main.thickness + "px; width:" + main.tip_length + 'px; top:0; left:' + (main.tip_length + main.bar_length) + 'px')
+  setStyle (main, style)
+  main.style.display = "inline-block"
+  main.style.width  = (main.tip_length * 2 + main.bar_length) + 'px'
+  main.style.height = main.thickness + 'px'
   return main
  }
  h.loadingbar_object      = function (init) {
