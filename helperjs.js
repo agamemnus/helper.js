@@ -3471,7 +3471,7 @@ if (h.library_settings.graphics) {
    })
   }
  }
- h.average_rgb                        = function (color1, color2, strength1) {
+ h.average_r_g_b                      = function (color1, color2, strength1) {
   function dec2hex (v) {var hex = v.toString(16); if (hex.length == 1) hex = "0" + hex; return hex}
   function hex2dec (v) {return parseInt(v, 16)}
   var colorR = hex2dec(color1.slice(1, 3)) * strength1 + hex2dec(color2.slice(1, 3)) * (1 - strength1)
