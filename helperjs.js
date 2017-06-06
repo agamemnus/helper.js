@@ -1913,7 +1913,7 @@ if (h.library_settings.gui_widgets) {
   }
   function mousedown (evt) {
    evt.preventDefault ()
-   if (get_right_click(evt) || (main.start_condition && !main.start_condition(main)) || startscroll == true) return
+   if (get_right_click(evt) || !(main.start_condition && main.start_condition(main)) || startscroll == true) return
    var pxc        = px_to_css_unit_type ()
    var zoom_level = calculate_zoom_level ()
    main.update_position (pxc, zoom_level)
