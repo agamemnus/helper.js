@@ -1592,7 +1592,6 @@ if (h.library_settings.gui_widgets) {
   var className  = init.className
   var style      = init.style
   var text       = init.text
-  
   button_div.destroy = function () {
    for (var property in init) {
     if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.removeEventListener (property, init[property])
@@ -1600,17 +1599,14 @@ if (h.library_settings.gui_widgets) {
    button_div.parentNode.removeChild (button_div)
    button_div = null
   }
-  
   for (var property in init) {
    if (['parent', 'className', 'style', 'text'].indexOf (property) == -1) button_div.addEventListener (property, init[property])
   }
-  
   if (typeof text      != "undefined") button_div.innerHTML = text
   if (typeof className != "undefined") button_div.className = className
   if (typeof style     != "undefined") setStyle (button_div, style)
   Object.defineProperty (button_div, 'text', {get: function () {return button_div.innerHTML}, set: function (text) {button_div.innerHTML = text}})
   parent.appendChild (button_div)
-  
   return button_div
  }
  h.gui_close_button       = function (init) {
@@ -1626,9 +1622,7 @@ if (h.library_settings.gui_widgets) {
    get: function () {return parent},
    set: function (new_parent) {
     if ((typeof new_parent != "object") || (!(new_parent instanceof HTMLElement))) return
-    parent = new_parent
-    parent.appendChild (main)
-    if ((main.textbox_enabled == true) && (typeof textbox != "undefined")) parent.appendChild (textbox)
+    parent = new_parent; new_parent.appendChild (main); if (main.textbox) new_parent.appendChild(main.textbox)
    }
   })
   var parent = main.parent = init.parent
@@ -1649,6 +1643,7 @@ if (h.library_settings.gui_widgets) {
   var point_initial               = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
   var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
   var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
+  var use_mouse_events            = ((typeof init.use_mouse_events == "undefined") || (init.use_mouse_events == true      )) ? true       : false
   main.start_condition            = (typeof init.start_condition != "undefined") ? init.start_condition : undefined
   main.events                     = {update: ("events" in init) ? init.events.update : undefined}
   main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
@@ -1704,11 +1699,11 @@ if (h.library_settings.gui_widgets) {
    return zoom_level
   }
   
-  // Add a linked textbox object if it is enabled.
+  // Add a linked textbox object if it is set.
   if (main.textbox_enabled != true) {
-   var textbox = undefined
+   var textbox = main.textbox = undefined
   } else {
-   var textbox = document.createElement('div')
+   var textbox = main.textbox = document.createElement('div')
    textbox.className = init.textbox_class || ''; add_style (textbox, init.textbox_style || '')
    parent.appendChild (textbox)
    if (typeof init.textbox_prefix != "undefined") {
@@ -1771,12 +1766,15 @@ if (h.library_settings.gui_widgets) {
   main.foreground_container = document.createElement ('div'); add_style (main.foreground_container, "position: relative; "+width_height+": 100%; line-height: 0")
   main.foreground_container.className = foreground_container_class || ''; add_style (main.foreground_container, foreground_container_style || '')
   main.appendChild (main.foreground_container)
-
-  main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style (main.foreground, foreground_style || '')
-  main.foreground_container.appendChild (main.foreground)
+  main.foreground_container.style.pointerEvents = "none"
   
-  main.foreground_inverse = document.createElement('div'); main.foreground_inverse.className = foreground_inverse_class || ''; add_style (main.foreground_inverse, foreground_inverse_style || '')
+  main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style(main.foreground, foreground_style || '')
+  main.foreground_container.appendChild (main.foreground)
+  main.foreground.style.pointerEvents = "none"
+  
+  main.foreground_inverse = document.createElement('div'); main.foreground_inverse.className = foreground_inverse_class || ''; add_style(main.foreground_inverse, foreground_inverse_style || '')
   main.foreground_container.appendChild (main.foreground_inverse)
+  main.foreground_inverse.style.pointerEvents = "none"
   
   // Create the control object and set its class and style.
   var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
@@ -1802,36 +1800,72 @@ if (h.library_settings.gui_widgets) {
   if (typeof pivot_slice_style != 'undefined') {
    main.pivot_slice = document.createElement('div'); main.pivot_slice.className = pivot_slice_class || ''; add_style (main.pivot_slice, pivot_slice_style || '')
    main.appendChild (main.pivot_slice)
-   main.pivot_start  = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
-   main.pivot_end    = main.position
-   
+   main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
+   main.pivot_end   = main.position
    main.pivot_slice.style[width_height] = Math.abs(main.pivot_end - main.pivot_start) + main.css_unit_type
    main.pivot_slice.style[left_top]     = ((main.pivot_end > main.pivot_start) ? main.pivot_start : main.pivot_end) + main.css_unit_type
   }
   
-  if (main.textbox_enabled == true) textbox_update_value (pxc)
+  if (main.textbox) textbox_update_value (pxc)
   
-  var startscroll = false, startxy = 0, offsetxy = 0            
-  if (!use_touch_events) {
+  var startscroll = false, startxy = 0, offsetxy = 0     
+  if (use_mouse_events) {  
    main.addEventListener     ('mousedown', mousedown)
    main.addEventListener     ('mouseover', mousemove)
-   document.addEventListener ('mousemove', mousemove)
+   main.addEventListener     ('mousemove', mousemove)
    document.addEventListener ('mouseup'  , mouseup_or_blur)
    window.addEventListener   ('blur'     , mouseup_or_blur)
    window.addEventListener   ('mouseout' , mouseout)
-  } else {
+  }
+  if (use_touch_events) {
    main.addEventListener     ('touchstart' , touchstart)
-   document.addEventListener ('touchmove'  , mousemove)
+   main.addEventListener     ('touchmove'  , mousemove)
    document.addEventListener ('touchend'   , mouseup_or_blur)
    window.addEventListener   ('touchcancel', mouseup_or_blur)
    window.addEventListener   ('touchleave' , mouseup_or_blur)
   }
-  if (main.textbox_enabled == true) {
+  if (main.textbox) {
    document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
    textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
    textbox_number.removeEventListener ('input'   , textbox_change)
    textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
+  
+  function mousedown (evt) {
+   evt.preventDefault ()
+   if (evt.target != evt.currentTarget) return
+   if (get_right_click(evt) || (main.start_condition && !main.start_condition(main)) || startscroll == true) return
+   var pxc        = px_to_css_unit_type ()
+   var zoom_level = calculate_zoom_level ()
+   main.update_position (pxc, zoom_level)
+   offsetxy = (main.control.getBoundingClientRect()[width_height] / 2) / (zoom_level * pxc)
+   startscroll = true
+   mousemove (evt, pxc, zoom_level)
+  }
+  
+  function touchstart (evt) {mousemove(evt); mousedown (evt)}
+  
+  function mousemove (evt, pxc, zoom_level) {
+   if (evt.currentTarget == main) evt.preventDefault()
+   if (evt.target != evt.currentTarget) return
+   if (startscroll == false) return
+   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
+   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
+   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
+   var xy = evt[pageXY] / (zoom_level * pxc)
+   main.set_position (xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
+  }
+  
+  function mouseout (evt) {
+   evt.preventDefault ()
+   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
+   var mouseX = evt.pageX; var mouseY = evt.pageY
+   var windowScrollX = (typeof window.scrollX != "undefined") ? window.scrollX : document.body.scrollLeft
+   var windowScrollY = (typeof window.scrollY != "undefined") ? window.scrollY : document.body.scrollTop
+   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
+   mouseup_or_blur (evt)
+  }
+  function mouseup_or_blur (evt) {if (startscroll == false) return; startscroll = false; main.events.update (main, evt)}
   
   main.update_position = function (pxc, zoom_level) {
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
@@ -1839,22 +1873,47 @@ if (h.library_settings.gui_widgets) {
    startxy = findabspos_zoom (main) / (pxc * zoom_level)
   }
   
+  main.set_position = function (new_position, trigger_update_event, pxc, evt) {
+   if (typeof trigger_update_event == "undefined") trigger_update_event = true
+   main.position = new_position
+   main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
+   if (main.position > main.position_logical_max) {
+    main.position = main.position_logical_max
+   } else {
+    if (main.position < 0) main.position = 0
+   }
+   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
+   update_foreground_width_height ()
+   if (typeof pivot_slice_style != 'undefined') {
+    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
+    main.pivot_end   = main.position
+    update_foreground_width_height ()
+   }
+   if (main.textbox_enabled == true) textbox_update_value (pxc)
+   if (trigger_update_event && main.events.update) main.events.update (main, evt)
+  }
+  main.set_position_percent = function (new_point_value, evt) {
+   main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit, true, px_to_css_unit_type(), evt)
+  }
+  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
+  
   main.destroy = function () {
-   if (!use_touch_events) {
+   if (use_mouse_events) {
     main.removeEventListener     ('mousedown', mousedown)
     main.removeEventListener     ('mouseover', mousemove)
-    document.removeEventListener ('mousemove', mousemove)
+    main.removeEventListener     ('mousemove', mousemove)
     document.removeEventListener ('mouseup'  , mouseup_or_blur)
     window.removeEventListener   ('blur'     , mouseup_or_blur)
     window.removeEventListener   ('mouseout' , mouseout)
-   } else {
+   }
+   if (use_touch_events) {
     main.removeEventListener     ('touchstart' , touchstart)
-    document.removeEventListener ('touchmove'  , mousemove)
+    main.removeEventListener     ('touchmove'  , mousemove)
     document.removeEventListener ('touchend'   , mouseup_or_blur)
     window.removeEventListener   ('touchcancel', mouseup_or_blur)
     window.removeEventListener   ('touchleave' , mouseup_or_blur)
    }
-   if (main.textbox_enabled == true) {
+   if (main.textbox) {
     document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
     textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
     textbox_number.removeEventListener ('input'   , textbox_change)
@@ -1863,7 +1922,7 @@ if (h.library_settings.gui_widgets) {
    var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild (main)
   }
   
-  // If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
+  //If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
   var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
   if (typeof MutationObserver != "undefined") {
    var observer = new MutationObserver (function (mutation_list) {
@@ -1878,60 +1937,6 @@ if (h.library_settings.gui_widgets) {
    })
    observer.observe (parent, {attributes: false, childList: true, subtree: false})
   }
-  
-  main.set_position = function (new_position, trigger_update_event, pxc, evt) {
-   if (typeof trigger_update_event == "undefined") trigger_update_event = true
-   main.position = new_position
-   main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
-   if (main.position > main.position_logical_max) {
-    main.position = main.position_logical_max
-   } else {
-    if (main.position < 0) main.position = 0
-   }
-   
-   main.control.style[left_top]        = (main.position + main.control_unit_offset) + main.css_unit_type
-   update_foreground_width_height ()
-   if (typeof pivot_slice_style != 'undefined') {
-    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
-    main.pivot_end   = main.position
-    update_foreground_width_height ()
-   }
-   if (main.textbox_enabled == true) textbox_update_value (pxc)
-   if (trigger_update_event && main.events.update) main.events.update (main, evt)
-  }
-  main.set_position_percent = function (new_point_value) {main.update (main.position_physical_max * new_point_value / main.point_upper_limit)}
-  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
-  
-  function touchstart (evt) {mousemove (evt); mousedown (evt)}
-  function mousemove (evt, pxc, zoom_level) {
-   if (evt.currentTarget == main) evt.preventDefault ()
-   if (startscroll == false) return
-   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
-   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
-   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
-   var xy = evt[pageXY] / (zoom_level * pxc)
-   main.set_position (xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
-  }
-  function mousedown (evt) {
-   evt.preventDefault ()
-   if (get_right_click(evt) || (main.start_condition && !main.start_condition(main)) || startscroll == true) return
-   var pxc        = px_to_css_unit_type ()
-   var zoom_level = calculate_zoom_level ()
-   main.update_position (pxc, zoom_level)
-   offsetxy = (main.control.getBoundingClientRect()[width_height] / 2) / (zoom_level * pxc)
-   startscroll = true
-   mousemove (evt, pxc, zoom_level)
-  }
-  function mouseout (evt) {
-   evt.preventDefault ()
-   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
-   var mouseX = evt.pageX; var mouseY = evt.pageY
-   var windowScrollX = (typeof window.scrollX != "undefined") ? window.scrollX : document.body.scrollLeft
-   var windowScrollY = (typeof window.scrollY != "undefined") ? window.scrollY : document.body.scrollTop
-   if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
-   mouseup_or_blur ()
-  }
-  function mouseup_or_blur () {if (startscroll == false) return; startscroll = false; main.events.update (main, true)}
   return main
  }
  h.red_blue_arrow         = function (init) {
