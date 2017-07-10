@@ -1874,7 +1874,6 @@ if (h.library_settings.gui_widgets) {
   }
   
   main.set_position = function (new_position, trigger_update_event, pxc, evt) {
-   if (typeof trigger_update_event == "undefined") trigger_update_event = true
    main.position = new_position
    main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
    if (main.position > main.position_logical_max) {
@@ -1892,8 +1891,8 @@ if (h.library_settings.gui_widgets) {
    if (main.textbox_enabled == true) textbox_update_value (pxc)
    if (trigger_update_event && main.events.update) main.events.update (main, evt)
   }
-  main.set_position_percent = function (new_point_value, evt) {
-   main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit, true, px_to_css_unit_type(), evt)
+  main.set_position_percent = function (new_point_value, trigger_update_event, evt) {
+   main.set_position (main.position_physical_max * new_point_value / main.point_upper_limit, trigger_update_event, px_to_css_unit_type(), evt)
   }
   main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
   
