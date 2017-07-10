@@ -1847,7 +1847,6 @@ if (h.library_settings.gui_widgets) {
   
   function mousemove (evt, pxc, zoom_level) {
    if (evt.currentTarget == main) evt.preventDefault()
-   if (evt.target != evt.currentTarget) return
    if (startscroll == false) return
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
@@ -1865,7 +1864,11 @@ if (h.library_settings.gui_widgets) {
    if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
    mouseup_or_blur (evt)
   }
-  function mouseup_or_blur (evt) {if (startscroll == false) return; startscroll = false; main.events.update (main, evt)}
+  function mouseup_or_blur (evt) {
+   if (startscroll == false) return
+   if (evt.target != main) {main.events.update(main, evt)} else {mousemove(evt, px_to_css_unit_type(), calculate_zoom_level())}
+   startscroll = false
+  }
   
   main.update_position = function (pxc, zoom_level) {
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
