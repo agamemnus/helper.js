@@ -2646,21 +2646,15 @@ if (h.library_settings.domain_and_directory) {
   var url_original = url
   var base_url_pattern = /^https?:\/\/[a-z\:0-9.]+/
   var result = ""
-  var match = base_url_pattern.exec (url)
+  var match = base_url_pattern.exec(url)
   if (match != null) result = match[0]
   if (result.length > 0) url = url.replace(result, "").substr(1)
-  
-  // Check if there is a base element in the head and if so, add to the URL.
-  var head_element = document.getElementsByTagName('head')
-  head_element = head_element[head_element.length - 1]
-  if (head_element != null) {
-   var base_element = document.getElementsByTagName('base')
-   base_element = base_element[base_element.length - 1]
-   if (base_element != null) {
-    var base_href = base_element.getAttribute("href")
-    base_href = base_href.substr (base_href.indexOf('/') + 1) + "/"
-    url = url.replace (base_href, "")
-   }
+  // Check if there is a base element, and if so, remove its href from the beginning of the URL.
+  var base_element = document.querySelector('base')
+  if (base_element != null) {
+   var base_href = base_element.getAttribute("href")
+   base_href = base_href.substr(base_href.indexOf('/') + 1) + "/"
+   url = url.replace(new RegExp("^(" + base_href + "\.)"), '')
   }
   return url
  }
