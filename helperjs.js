@@ -1317,6 +1317,7 @@ if (h.library_settings.download) {
    if (is_asynchronous == false) return process_http_request ()
    
    http_request.onreadystatechange = function () {if (http_request.readyState == 4) process_http_request ()}
+   return http_request
    
    function process_http_request () {
     var response_text = http_request.responseText
