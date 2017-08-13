@@ -2485,14 +2485,8 @@ if (h.library_settings.dom_manipulation) {
  }
  h.set_to_biggest_width              = function (dom_object_array) {
   var biggest_width = 0
-  var curlen = dom_object_array.length
-  for (var i = 0; i < curlen; i++) {
-   var current_width = dom_object_array[i].offsetWidth
-   if (biggest_width < current_width) biggest_width = current_width
-  }
-  for (var i = 0; i < curlen; i++) {
-   dom_object_array[i].style.width = (biggest_width + 1) + "px"
-  }
+  dom_object_array.forEach (function (dom_object) {if (biggest_width < dom_object.offsetWidth) biggest_width = dom_object.offsetWidth})
+  dom_object_array.forEach (function (dom_object) {dom_object.style.width = biggest_width + "px"})
  }
  h.dom_object_intersects_line        = function (obj, x, y) {
   var xy = findabspos (obj)
