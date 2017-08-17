@@ -1942,6 +1942,7 @@ if (h.library_settings.gui_widgets) {
   }
   return main
  }
+ 
  h.red_blue_arrow         = function (init) {
   var parent      = init['parent']
   var style       = init['style']
@@ -1998,7 +1999,7 @@ if (h.library_settings.gui_widgets) {
   
   loadingbar.update = function () {
    var rounded_percent = Math.round(loadingbar.percent)
-   if (rounded_percent >= 100) {removeAllDescendantsAndSelf (loadingbar); return}
+   if (rounded_percent >= 100) {remove_all_descendants_and_self (loadingbar); return}
    var percentstring = rounded_percent.toString()
    loadingbar.loadinginnerbar.style.width = percentstring + "%"
    loadingbar.loadingbartext1.innerHTML = loadingbar.loading_string + ((loadingbar.show_percent == true) ? (percentstring + "% done.") : "")
@@ -2154,18 +2155,18 @@ if (h.library_settings.dom_manipulation) {
   obj.styleSheetRuleArray  = []
   obj.styleSheetRuleAmount = 0
  }
- h.remove_all_descendants_and_self   = function (cell) {
-  if (cell.hasChildNodes()) {while (cell.childNodes.length > 0) {removeAllDescendantsAndSelf (cell.firstChild)}}
+ var remove_all_descendants_and_self = h.remove_all_descendants_and_self   = function (cell) {
+  if (cell.hasChildNodes()) {while (cell.childNodes.length > 0) {remove_all_descendants_and_self (cell.firstChild)}}
   if (cell.parentNode) (cell.parentNode).removeChild (cell)
   if (cell == window.cell) delete (window.cell)
   cell = null
  }
- h.remove_all_descendants            = function (cell) {
+ var remove_all_descendants = h.remove_all_descendants            = function (cell) {
   var childNodes = cell.childNodes
   if (!childNodes) return
   var childNodes = Array.prototype.slice.call(childNodes)
   for (var i = 0, curlen = childNodes.length; i < curlen; i++) {
-   removeAllDescendants (childNodes[i])
+   remove_all_descendants (childNodes[i])
    cell.removeChild(childNodes[i])
   }
  }
@@ -2281,8 +2282,8 @@ if (h.library_settings.dom_manipulation) {
   var parent             = init.parent
   var label_text         = init.label
   var input_name         = init.name
-  var pre  = init.pre
-  var post = init.post
+  var pre                = init.pre
+  var post               = init.post
   var input_type         = init.input_type
   var input_attributes   = init.input_attributes
   var input_sub_elements = init.input_sub_elements
