@@ -1311,7 +1311,7 @@ if (h.library_settings.download) {
    var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
    
    // Call the request function.
-   var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method)
+   var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method, params.with_credentials)
    var http_request        = http_request_result["http_request"]
    
    if (is_asynchronous == false) return process_http_request ()
@@ -1512,7 +1512,7 @@ if (h.library_settings.download) {
    }
   }
   
-  function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
+  function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method, with_credentials) {
    if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
    if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
    if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
@@ -1538,6 +1538,7 @@ if (h.library_settings.download) {
    if (header_list) {
     header_list.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
    }
+   if (typeof with_credentials != "undefined") http_request.withCredentials = with_credentials
    http_request.send (data)
    return {"http_request": http_request}
   }
