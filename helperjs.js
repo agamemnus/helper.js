@@ -1779,7 +1779,11 @@ if (h.library_settings.gui_widgets) {
   
   // Create the control object and set its class and style.
   var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
-  main.control = document.createElement(control_element_type); main.control.className = control_class || ''; add_style (main.control, control_style || '')
+  main.control = document.createElement(control_element_type)
+  main.control.style.pointerEvents = "none"
+  main.control.className = control_class || ''
+  add_style (main.control, control_style || '')
+  
   if (typeof control_image_src != "undefined") main.control.src = control_image_src
   main.appendChild (main.control)
   
