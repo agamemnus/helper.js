@@ -2580,9 +2580,7 @@ if (h.library_settings.dom_manipulation) {
  // "dom.create", "dom.createEventSubscriber", and "dom.databaseSyncSetter" are especially useful.
  var dom = h.dom = {}
  dom.setWidthLikeDiv  = function (input) {dom.matchElementDimensions(input,  "width", "inline-block", "left",  "right", "div")}
- 
  dom.setHeightLikeDiv = function (input) {dom.matchElementDimensions(input, "height",        "block",  "top", "bottom", "div")}
- 
  dom.matchElementDimensions = function (input, dimension, temp_display_type, min_edge, max_edge, temporary_element_type) {
   function capitalize (obj) {return obj.toLowerCase().replace(/^[a-z]|\s[a-z]/g, conv); function conv () {return arguments[0].toUpperCase()}}
   var dimension_c = capitalize(dimension), min_edge_c = capitalize(min_edge), max_edge_c = capitalize(max_edge)
@@ -2600,26 +2598,21 @@ if (h.library_settings.dom_manipulation) {
    parseFloat(s["border"  + min_edge_c + "Width"]) + parseFloat(s["border"  + max_edge_c + "Width"]) +
    parseFloat(s["margin"  + min_edge_c])           + parseFloat(s["margin"  + max_edge_c])
   ) + "px"
-  
   cousin.parentNode.removeChild (cousin)
  }
- 
- dom.isAttached = function (dom) {
+ dom.isAttached = function (obj) {
   while (true) {
    obj = obj.parentNode
    if (obj == document.documentElement) return true
    if (obj == null) return false
   }
  }
- 
  dom.appendChildren = function (init) {var parent = init.parent, children = init.children; children.forEach (function (child) {parent.appendChild (child)})}
- 
  dom.detachAll = function (parent, recursive) {
   Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
    parent.removeChild (child); if (recursive) dom.detachAll (child, recursive)
   })
  }
- 
  dom.detachAllOtherSiblings = function (exceptedChildren, recursive) {
   if (!Array.isArray(exceptedChildren)) exceptedChildren = [exceptedChildren]
   var parent = exceptedChildren[0].parentNode
@@ -2628,11 +2621,8 @@ if (h.library_settings.dom_manipulation) {
    parent.removeChild (child); if (recursive) dom.detachAll (child, recursive)
   })
  }
- 
  dom.detachAllRecursive = function (parent) {return dom.detachAll(parent, true)}
- 
  dom.detachAllOtherSiblingsRecursive = function (exceptedChildren, parent) {return dom.detachAllOtherSiblings(exceptedChildren, parent, true)}
- 
  dom.onRemoved = function (element, func) {
   var parent = element.parentNode
   var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
@@ -2647,9 +2637,7 @@ if (h.library_settings.dom_manipulation) {
   })
   observer.observe (parent, {attributes: false, childList: true, subtree: false})
  }
- 
  dom.insertBefore = function (element, sibling) {element.parentNode.insertBefore(element, sibling); return element}
- 
  dom.create = function (type, init) {
   // Note that an event in the event list with a "," (e.g.: "input, change") is split up into multiple events.
   var init = init || {}
@@ -2672,7 +2660,6 @@ if (h.library_settings.dom_manipulation) {
   element.dom = {insertBefore: function (sibling) {return dom.insertBefore(element, sibling)}}
   return element
  }
- 
  dom.createEventSubscriber = function (subscribeTarget, init) {
   init = init || {}
   var subscribeToEventName      = ("subscribeToEvent"      in init) ? init.subscribeToEvent      : "subscribeToEvent"
@@ -2715,7 +2702,6 @@ if (h.library_settings.dom_manipulation) {
   subscribeTarget[subscribeToEventName] = subscriber
   return subscriber
  }
- 
  dom.databaseSyncSetter = function (init) {
   var entry_name             = init.entry_name
   var database_action        = init.database_action
