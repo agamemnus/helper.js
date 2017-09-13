@@ -1311,7 +1311,7 @@ if (h.library_settings.download) {
    var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
    
    // Call the request function.
-   var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method, params.with_credentials)
+   var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method)
    var http_request        = http_request_result["http_request"]
    
    if (is_asynchronous == false) return process_http_request ()
@@ -1512,7 +1512,7 @@ if (h.library_settings.download) {
    }
   }
   
-  function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method, with_credentials) {
+  function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
    if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
    if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
    if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
@@ -1538,7 +1538,6 @@ if (h.library_settings.download) {
    if (header_list) {
     header_list.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
    }
-   if (typeof with_credentials != "undefined") http_request.withCredentials = with_credentials
    http_request.send (data)
    return {"http_request": http_request}
   }
@@ -2485,10 +2484,10 @@ if (h.library_settings.dom_manipulation) {
   row.rightdiv = rightdiv
   return row
  }
- h.set_to_biggest_width              = function (dom_object_array) {
+ h.set_to_biggest_width              = function (arr) {
   var biggest_width = 0
-  dom_object_array.forEach (function (dom_object) {if (biggest_width < dom_object.offsetWidth) biggest_width = dom_object.offsetWidth})
-  dom_object_array.forEach (function (dom_object) {dom_object.style.width = biggest_width + "px"})
+  arr.forEach (function (obj) {if (biggest_width < obj.offsetWidth) biggest_width = obj.offsetWidth})
+  arr.forEach (function (obj) {obj.style.width = biggest_width + "px"})
  }
  h.dom_object_intersects_line        = function (obj, x, y) {
   var xy = findabspos (obj)
@@ -2576,6 +2575,258 @@ if (h.library_settings.dom_manipulation) {
    return 0
   })
  }
+
+ // <Extra DOM things -- including a duplicated isAttached. Should we rework all dom-specific functions to this model?>
+ // "dom.create", "dom.createEventSubscriber", and "dom.databaseSyncSetter" are especially useful.
+ var dom = h.dom = {}
+ dom.setWidthLikeDiv  = function (input) {dom.matchElementDimensions(input,  "width", "inline-block", "left",  "right", "div")}
+ dom.setHeightLikeDiv = function (input) {dom.matchElementDimensions(input, "height",        "block",  "top", "bottom", "div")}
+ dom.matchElementDimensions = function (input, dimension, temp_display_type, min_edge, max_edge, temporary_element_type) {
+  function capitalize (obj) {return obj.toLowerCase().replace(/^[a-z]|\s[a-z]/g, conv); function conv () {return arguments[0].toUpperCase()}}
+  var dimension_c = capitalize(dimension), min_edge_c = capitalize(min_edge), max_edge_c = capitalize(max_edge)
+  input.style[dimension] = ""
+  var s = window.getComputedStyle(input); var cousin = document.createElement (temporary_element_type)
+  cousin.style.display = temp_display_type
+  new Array("padding", "fontFamily", "fontSize", "fontWeight", "letterSpacing", "fontKerning", "lineHeight", "textIndent").forEach (function (p) {cousin.style[p] = s[p]})
+  // 1) Converts end-of-line to "<br/>&nbsp;".
+  // 2) Any empty strings become "nbsp;".
+  // 3) Converts any trailing spaces into sets of "&nbsp;".
+  cousin.innerHTML = input.value.replace(/[\n\r]/g, "<br/>&nbsp;").replace(/^$/, '&nbsp;').replace(/ +$/, function(count) {return '&nbsp;'.repeat(count.length)})
+  input.parentNode.insertBefore(cousin, input)
+  input.style[dimension] = (
+   cousin["client" + dimension_c] +
+   parseFloat(s["border"  + min_edge_c + "Width"]) + parseFloat(s["border"  + max_edge_c + "Width"]) +
+   parseFloat(s["margin"  + min_edge_c])           + parseFloat(s["margin"  + max_edge_c])
+  ) + "px"
+  
+  cousin.parentNode.removeChild (cousin)
+ }
+ dom.isAttached = function () {
+  while (true) {
+   obj = obj.parentNode
+   if (obj == document.documentElement) return true
+   if (obj == null) return false
+  }
+ }
+ dom.appendChildren = function (init) {var parent = init.parent, children = init.children; children.forEach (function (child) {parent.appendChild (child)})}
+ dom.detachAll = function (parent, recursive) {
+  Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
+   parent.removeChild (child); if (recursive) dom.detachAll (child, recursive)
+  })
+ }
+ dom.detachAllOtherSiblings = function (exceptedChildren, recursive) {
+  if (!Array.isArray(exceptedChildren)) exceptedChildren = [exceptedChildren]
+  var parent = exceptedChildren[0].parentNode
+  Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
+   if (exceptedChildren.find(function (testchild) {return testchild == child})) return
+   parent.removeChild (child); if (recursive) dom.detachAll (child, recursive)
+  })
+ }
+ dom.detachAllRecursive = function (parent) {return dom.detachAll(parent, true)}
+ dom.detachAllOtherSiblingsRecursive = function (exceptedChildren, parent) {return dom.detachAllOtherSiblings(exceptedChildren, parent, true)}
+ dom.onRemoved = function (element, func) {
+  var parent = element.parentNode
+  var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
+  var observer = new MutationObserver(function (mutation_list) {
+   Array.prototype.slice.call(mutation_list).some(function (mutation_item) {
+    if (mutation_item.type != "childList") return
+    Array.prototype.slice.call(mutation_item.removedNodes).some(function (removed_element) {
+     if (removed_element != element) return
+     func (); observer.disconnect (); return true
+    })
+   })
+  })
+  observer.observe (parent, {attributes: false, childList: true, subtree: false})
+ }
+ dom.insertBefore = function (element, sibling) {element.parentNode.insertBefore(element, sibling); return element}
+ dom.create = function (type, init) {
+  // Note that an event in the event list with a "," (e.g.: "input, change") is split up into multiple events.
+  var init = init || {}
+  var events = init.events, parent = init.parent; delete (init.parent); delete (init.events)
+  var element = document.createElement (type)
+  if (init.className && dom.process_css) {element.className = dom.process_css(init.className); delete (init.className)}
+  for (var prop in init) {
+   if (typeof prop != "undefined") element[prop] = init[prop]
+  }
+  if (typeof events != "undefined") {
+   for (var eventNameList in events) {
+    var event = events[eventNameList]
+    if (eventNameList.indexOf(",") != -1) {eventNameList = eventNameList.split(",").map(function (n) {return n.trim()})} else {eventNameList = [eventNameList]}
+    eventNameList.forEach (function (eventName) {
+     element.addEventListener (eventName, event)
+    })
+   }
+  }
+  if (typeof parent != "undefined") parent.appendChild (element)
+  element.dom = {insertBefore: function (sibling) {return dom.insertBefore(element, sibling)}}
+  return element
+ }
+ dom.createEventSubscriber = function (subscribeTarget, init) {
+  init = init || {}
+  var subscribeToEventName      = ("subscribeToEvent"      in init) ? init.subscribeToEvent      : "subscribeToEvent"
+  var dispatchEventName         = ("dispatchEvent"         in init) ? init.dispatchEvent         : "dispatchEvent"
+  var dispatchEventOriginalName = ("dispatchEventOriginal" in init) ? init.dispatchEventOriginal : "dispatchEventOriginal"
+  
+  subscribeTarget[dispatchEventOriginalName] = subscribeTarget.dispatchEvent
+  var dispatchEventFunction = function (eventName, evt) {
+   if (typeof eventName != "string") {subscribeTarget[dispatchEventOriginalName].apply (this, arguments); return}
+   subscribeTarget[dispatchEventName] (new CustomEvent(eventName, {detail: evt}))
+  }
+  subscribeTarget[dispatchEventName] = dispatchEventFunction
+  
+  var subscriber = function (element, eventNameList, func, doNotRemoveIfDetached) {
+   if (!("nodeName" in element)) {
+    var init = element, element = init.element, func = init.callback
+    if ("column" in init) {var eventNameList = {}; eventNameList[init.event] = init.column} else {var eventNameList = init.event}
+   }
+   
+   if (!Array.isArray(eventNameList)) eventNameList = [eventNameList]
+   eventNameList.forEach (function (eventName) {
+    if (typeof eventName == "object") {var columnAffected = Object.values(eventName)[0]; eventName = Object.keys(eventName)[0]}
+    var functionwrapper = function (evt) {
+     Object.defineProperty(evt, "type", {enumerable: true, configurable: true, writable: true})
+     if (evt.detail) {
+      var detail = evt.detail
+      Object.defineProperty(evt, "detail", {enumerable: true, configurable: true, writable: true})
+      delete (evt.detail)
+      Object.assign (evt, detail)
+     }
+     if (!('name'     in evt)) evt.name   = eventName
+     if (!('target'   in evt)) evt.target = element
+     if (!doNotRemoveIfDetached && (!dom.isAttached(element))) {subscribeTarget.removeEventListener (eventName, functionwrapper); return}
+     if ((typeof columnAffected != "undefined") && !(evt.columnsAffected.includes(columnAffected))) return
+     func.apply (element, [evt])
+    }
+    subscribeTarget.addEventListener (eventName, functionwrapper)
+   })
+  }
+  subscribeTarget[subscribeToEventName] = subscriber
+  return subscriber
+ }
+ dom.databaseSyncSetter = function (init) {
+  var entry_name             = init.entry_name
+  var database_action        = init.database_action
+  var action_type            = init.action_type
+  var entry_id_string        = init.entry_id
+  var entry_container_string = init.entry_container
+  var central_data           = init.central_data
+  var query_parameters       = init.query_parameters
+  var event_name             = init.event_name
+  var event_dispatcher       = init.event_dispatcher
+  var dbrequest_queue        = init.dbrequest_queue
+  var wait_for_result        = (action_type == "create" || action_type == "remove") ? true : (("wait_for_result" in init) ? init.wait_for_result : false)
+  var init                   = init.init
+  
+  var entry_id = init[entry_id_string]
+  var entry_container = central_data[entry_container_string]
+  
+  if (action_type == "set") {
+   var entry = get_entry_object({container: entry_container, entry_id: entry_id})
+   var entry_original = Object.assign({}, entry)
+   var additions = {}, columns_affected = []
+   query_parameters.forEach (function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push (prop)}})
+   Object.assign (entry, additions)
+   event_name = (typeof event_name == "string") ? event_name : event_name(additions)
+   var id_param = {}; id_param[entry_name] = entry // id_param is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
+   if (!wait_for_result) event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+  }
+  
+  if (typeof init.callback == "undefined") init.callback = function () {}
+  var callback_original = init.callback
+  init.callback = function (result) {
+   if (result && result.error) {
+    additions = {}
+    if (action_type == "set") {
+     query_parameters.forEach (function (prop) {if (prop in init) additions[prop] = entry_original[prop]})
+     event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+    }
+   } else if (wait_for_result) {
+    var effects = (typeof result == "object") ? result.effects : undefined
+    if (effects) {
+     dispatch_events (effects)
+    } else {
+     event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+    }
+   }
+   callback_original (result)
+  }
+  dbrequest_queue (database_action, query_parameters.concat(entry_id_string), init)
+  
+  function get_entry_object (init) {
+   var container = init.container, entry_id = init.entry_id
+   if (Array.isArray(container)) {
+    return container.find(function (test_entry) {return test_entry.id == entry_id})
+   } else {
+    return container[entry_id]
+   }
+  }
+  function set_entry_object (init) {
+   var container = init.container, entry_id = init.entry_id, entry = init.entry_data
+   var sort_column = init.sort_column, sort_direction = init.sort_direction
+   if (!Array.isArray(container)) {
+    container[entry_id] = entry
+   } else {
+    if (!sort_column) {
+     container.push(entry)
+    } else {
+     var insert_position = container.findIndex(
+      (!sort_direction || sort_direction.toLowerCase() == "asc") ?
+      function (test_entry) {return entry[sort_column]  < test_entry[sort_column]} :
+      function (test_entry) {return entry[sort_column] >= test_entry[sort_column]}
+     )
+     if (insert_position == -1) insert_position = container.length
+     container.splice(insert_position, 0, entry)
+    }
+   }
+   return entry
+  }
+  function delete_entry_object (init) {
+   var container = init.container, entry_id = init.entry_id
+   if (!Array.isArray(container)) {
+    var entry = container[entry_id]
+    delete (container[entry_id])
+   } else {
+    var entry_index = container.findIndex(function (entry) {if (entry.id == entry_id) return true})
+    var entry = container[entry_index]
+    container.splice(entry_index, 1)
+   }
+   return entry
+  }
+  
+  function dispatch_events (event_list) {
+   var dispatch_list = []
+   for (var event_name in event_list) {
+    var event = event_list[event_name]
+    var columns_affected = [], id_param_list = {}, additions = {}
+    for (var entry_name in event) {
+     var entry_descriptor = event[entry_name]
+     var location = entry_descriptor.location, data = entry_descriptor.data
+     var entry_container_string = location.container, entry_id = location.id
+
+     // If data is undefined, we are removing an object, not modifying or creating it.
+     if (typeof data == "undefined") {
+      var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+     } else {
+      // If data is set, modify or create an object.
+      var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+      columns_affected = columns_affected.concat(Object.keys(data))
+      
+      if (typeof entry == "undefined") {
+       var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
+       entry.id = entry_id
+      } else {
+       Object.assign(entry, data)
+      }
+      Object.assign(additions, data)
+     }
+     id_param_list[entry_name] = entry
+    }
+    dispatch_list.push([event_name, Object.assign({}, id_param_list, {columnsAffected: columns_affected}, (Object.keys(event).length == 1 ? additions : {}))])
+   }
+   dispatch_list.forEach (function (dispatch_data) {event_dispatcher.dispatchEvent.apply(null, dispatch_data)})
+  }
+ }
+ // </Extra DOM things -- including a duplicated isAttached. Should we rework all dom-specific functions to this model?>
 }
 // </DOM manipulation functions.>
 
