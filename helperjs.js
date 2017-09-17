@@ -2583,6 +2583,26 @@ if (h.library_settings.dom_manipulation) {
  // <Extra DOM things -- including a duplicated isAttached. Should we rework all dom-specific functions to this model?>
  // "dom.create", "dom.createEventSubscriber", and "dom.databaseSyncSetter" are especially useful.
  var dom = h.dom = {}
+ dom.enhanceNative = function (nativeToEnhanceList) {
+  var enhanceList = {
+   "addEventListener" : function () { // Allows an array of strings in addEventListener. Very non-standard!!!
+    var addEventListenerNative = HTMLElement.prototype.addEventListener
+    HTMLElement.prototype.addEventListener = function () {
+     var args = Array.prototype.slice.call(arguments)
+     if (typeof args[0] == "string") {addEventListenerNative.apply (this, args); return}
+     if (Array.isArray(args[0])) {
+      var args0 = args[0]
+      args0.forEach (function (eventName) {args[0] = eventName; addEventListenerNative.apply (this, args)}, this)
+     }
+    }
+   }
+  }
+  if (nativeToEnhanceList == "all") {enhanceList.forEach(function (func) {func()}); return}
+  if (!Array.isArray(nativeToEnhanceList)) nativeToEnhanceList = [nativeToEnhanceList];
+  nativeToEnhanceList.forEach (function (nativeToEnhance) {
+   if (nativeToEnhance in enhanceList) enhanceList[nativeToEnhance]()
+  })
+ }
  dom.setWidthLikeDiv  = function (input) {dom.matchElementDimensions(input,  "width", "inline-block", "left",  "right", "div")}
  dom.setHeightLikeDiv = function (input) {dom.matchElementDimensions(input, "height",        "block",  "top", "bottom", "div")}
  dom.matchElementDimensions = function (input, dimension, temp_display_type, min_edge, max_edge, temporary_element_type) {
