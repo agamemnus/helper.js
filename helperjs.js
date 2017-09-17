@@ -2648,9 +2648,12 @@ if (h.library_settings.dom_manipulation) {
   var events = init.events, parent = init.parent; delete (init.parent); delete (init.events)
   var element = document.createElement (type)
   if (init.className && dom.process_css) {element.className = dom.process_css(init.className); delete (init.className)}
-  for (var prop in init) {
-   if (typeof prop != "undefined") element[prop] = init[prop]
+  if (init.style) {
+   var style = init.style
+   for (var styleProp in style) {element.style[prop] = style[prop]}
+   delete (init.style)
   }
+  for (var prop in init) {if (typeof prop != "undefined") element[prop] = init[prop]}
   if (typeof events != "undefined") {
    for (var eventNameList in events) {
     var event = events[eventNameList]
