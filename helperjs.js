@@ -3844,9 +3844,20 @@ if (h.library_settings.cookie) {
 // <Font loading/handling functions. TAG: text, TAG: fonts, TAG: font loading.>
 if (h.library_settings.font_loading) {
  // Check that a list of fonts have loaded, and if so, run the specified callback functions.
- h.load_web_fonts = function (font_list, callback) {
+ h.load_web_fonts = function (font_list, callback, timeout_attempt_limit) {
+  var timeout_attempt_limit = (typeof timeout_attempt_limit == "undefined") ? 300 : timeout_attempt_limit
   var loaded_font_amount = 0
-  for (var i = 0; i < font_list.length; i++) {
+  font_list.forEach (function (font_family) {
+   if (typeof font_family == "string") {load_font_by_family_and_size (font_family, "normal"); return}
+   var font_weight_list = font_family.font_weight, font_family = font_family.font_family
+   font_weight_list.forEach (function (font_weight) {load_font_by_family_and_size (font_family, font_weight)})
+  })
+  
+  if (typeof callback == "undefined") return
+  
+  check_that_all_fonts_have_loaded ()
+  
+  function load_font_by_family_and_size (font_family, font_weight) {
    var node = document.createElement ('span')
    // Set characters that vary significantly among different fonts.
    node.innerHTML = 'giItT1WQy@!-/#'
@@ -3859,30 +3870,31 @@ if (h.library_settings.font_loading) {
    node.style.fontSize      = '300px'
    // Reset any font properties.
    node.style.fontVariant   = 'normal'
-   node.style.fontWeight    = 'normal'
+   node.style.fontWeight    = font_weight
    node.style.letterSpacing = '0'
    document.body.appendChild (node)
    // Remember width with no applied web font.
    node.original_width = node.getBoundingClientRect().width
-   node.style.fontFamily = font_list[i]
-   check_font (node)
+   node.style.fontFamily = font_family
+   check_font (node, 0)
   }
-  if (typeof callback != "undefined") {
-   var check_that_all_fonts_have_loaded_timeout = null
-   function check_that_all_fonts_have_loaded () {
-    if (loaded_font_amount < font_list.length) {check_that_all_fonts_have_loaded_timeout = setTimeout (check_that_all_fonts_have_loaded, 30); return}
-    callback ()
-   }
-   check_that_all_fonts_have_loaded ()
-  }
-  function check_font (node) {
+  
+  function check_font (node, timeout_attempt) {
    // Compare current width with original width.
-   if (node.offsetWidth == node.original_width) {var check_font_timeout = setTimeout (function () {check_font(node)}, 30); return}
+   if (node.offsetWidth == node.original_width && timeout_attempt < timeout_attempt_limit) {
+    timeout_attempt += 1
+    var check_font_timeout = setTimeout (function () {check_font(node, timeout_attempt)}, 30); return
+   }
    loaded_font_amount += 1
    node.parentNode.removeChild (node)
-   node = null
+  }
+  
+  function check_that_all_fonts_have_loaded () {
+   if (loaded_font_amount < font_list.length) {setTimeout (check_that_all_fonts_have_loaded, 30); return}
+   callback ()
   }
  }
+ 
  // Thanks to ImBcmDth for helping with this.
  h.fit_text_to_parent = function (element, init, transform_scale) {
   if (typeof init == "undefined") init = {}
