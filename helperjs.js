@@ -1751,7 +1751,7 @@ if (h.library_settings.gui_widgets) {
   
   function update_foreground_width_height () {
    main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
-   main.foreground_inverse.style[width_height] = (((main.position + main.control_unit_offset) >= 0) ? ("calc(100% - " + main.position + main.css_unit_type + ")") : "100%")
+   main.foreground_inverse.style[width_height] = "100%"
   }
   
   // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
@@ -1764,7 +1764,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Create the foreground object and set its class and style.
-  main.foreground_container = document.createElement ('div'); add_style (main.foreground_container, "position: relative; "+width_height+": 100%; line-height: 0")
+  main.foreground_container = document.createElement ('div'); add_style (main.foreground_container, "position: relative; overflow: hidden; "+width_height+": 100%; line-height: 0")
   main.foreground_container.className = foreground_container_class || ''; add_style (main.foreground_container, foreground_container_style || '')
   main.appendChild (main.foreground_container)
   main.foreground_container.style.pointerEvents = "none"
