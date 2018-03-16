@@ -3324,20 +3324,23 @@ if (h.library_settings.graphics) {
    init.callback (target)
   }
  }
- h.hex_to_rgb                         = function (hex) {
-  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-   return r + r + g + g + b + b
-  })
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result ? {
-   r: parseInt(result[1], 16),
-   g: parseInt(result[2], 16),
-   b: parseInt(result[3], 16)
-  } : null
+var hex_to_color = h.hex_to_color = function (hex) {
+   if (hex[0] == "#") hex = hex.substr(1)
+  // Expand shorthand form (e.g. "#03F") to full form (e.g. "#0033FF")
+  if (hex.length / 2 != Math.round(hex.length / 2)) hex = hex.split("").reduce(function(accumulator, value) {return accumulator + value + value}, "")
+  function hex2dec (v) {return parseInt(v, 16)}
+  var result = []; for (var i = 0; i < hex.length / 2; i++) {
+   result[i] = hex2dec(hex[i * 2] + hex[i * 2 + 1])
+  }
+  return result
  }
- h.rgb_to_hex                         = function (r, g, b) {return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}
+ h.hex_to_rgb = function (hex) {var result = hex_to_color(hex); return {r: result[0], g: result[1], b: result[2]}}
+ h.hex_to_rgba = function (hex) {var result = hex_to_color(hex); return {r: result[0], g: result[1], b: result[2], a: result[3]}}
+ h.rgb_to_hex = h.rgba_to_hex = h.color_to_hex = function () {
+  function dec2hex (v) {var hex = v.toString(16); if (hex.length == 1) hex = "0" + hex; return hex}
+  var args = Array.prototype.slice.call(arguments)
+  return "#" + args.reduce(function(accumulator, value) {return accumulator + dec2hex(value)}, "")
+ }
  h.create_single_color_image_elements = function (init) {
   var obj_list = {}
   var n = 0
@@ -3747,16 +3750,16 @@ if (h.library_settings.graphics) {
    })
   }
  }
- h.average_r_g_b                      = function (color1, color2, strength1) {
+ h.hex_color_blend = function (color1, color2, strength) {
+  // Can be used to average RGB/RGBA hex values or to average individual components.
   function dec2hex (v) {var hex = v.toString(16); if (hex.length == 1) hex = "0" + hex; return hex}
   function hex2dec (v) {return parseInt(v, 16)}
-  var colorR = hex2dec(color1.slice(1, 3)) * strength1 + hex2dec(color2.slice(1, 3)) * (1 - strength1)
-  if (colorR > 256) colorR = 256
-  var colorG = hex2dec(color1.slice(3, 5)) * strength1 + hex2dec(color2.slice(3, 5)) * (1 - strength1)
-  if (colorG > 256) colorG = 256
-  var colorB = hex2dec(color1.slice(5, 7)) * strength1 + hex2dec(color2.slice(5, 7)) * (1 - strength1)
-  if (colorB > 256) colorB = 256
-  return ("#" + dec2hex(parseInt(colorR)) + dec2hex(parseInt(colorG)) + dec2hex(parseInt(colorB)) )
+  return ("#" + Array(color1.length / 2).fill(0, 0, color1.length / 2).reduce(function(accumulator, value, n) {
+   var start = n * 2, end = (n + 1) * 2
+   var color = Math.round(hex2dec(color1.slice(start, end)) * strength + hex2dec(color2.slice(start, end)) * (1 - strength))
+   if (color > 256) color = 256
+   return accumulator + dec2hex(color)
+  }, ""))
  }
  h.cleanup_canvases                   = function (parent) {
   check_children (parent)
