@@ -3325,7 +3325,7 @@ if (h.library_settings.graphics) {
   }
  }
 var hex_to_color = h.hex_to_color = function (hex) {
-   if (hex[0] == "#") hex = hex.substr(1)
+  if (hex[0] == "#") hex = hex.substr(1)
   // Expand shorthand form (e.g. "#03F") to full form (e.g. "#0033FF")
   if (hex.length / 2 != Math.round(hex.length / 2)) hex = hex.split("").reduce(function(accumulator, value) {return accumulator + value + value}, "")
   function hex2dec (v) {return parseInt(v, 16)}
@@ -3751,6 +3751,8 @@ var hex_to_color = h.hex_to_color = function (hex) {
   }
  }
  h.hex_color_blend = function (color1, color2, strength) {
+  if (color1[0] == "#") color1 = color1.substr(1)
+  if (color2[0] == "#") color2 = color2.substr(1)
   // Can be used to average RGB/RGBA hex values or to average individual components.
   function dec2hex (v) {var hex = v.toString(16); if (hex.length == 1) hex = "0" + hex; return hex}
   function hex2dec (v) {return parseInt(v, 16)}
