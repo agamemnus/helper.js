@@ -2603,6 +2603,33 @@ if (h.library_settings.dom_manipulation) {
    if (nativeToEnhance in enhanceList) enhanceList[nativeToEnhance]()
   })
  }
+ 
+ dom.removeEventListeners = function (element) {
+  element.dom.eventListenerArgumentList.forEach (function (eventListenerArgs) {
+   element.removeEventListener.apply(null, eventListenerArgs)
+  })
+  element.dom.eventListenerArgumentList = []
+ }
+ 
+ dom.enableEventListenerTracking = function (element) {
+  element.addEventListenerOriginal = element.addEventListener
+  element.dom.eventListenerArgumentList = []
+  element.addEventListener = function () {
+   var args = Array.prototype.slice.call(arguments)
+   element.dom.eventListenerArgumentList.push(args)
+   element.addEventListenerOriginal.apply(null, args)
+  }
+  this.removeEventListenerOriginal = element.removeEventListener
+  this.removeEventListener = function () {
+   var args = Array.prototype.slice.call(arguments)
+   element.dom.eventListenerArgumentList.some(function (eventListenerArgs) {
+    if (eventListenerArgs.length != args.length) return
+    return args.every(function (param, i) {return (param === eventListenerArgs[i])})
+   })
+   element.removeEventListenerOriginal.apply(null, args)
+  }
+ }
+ 
  dom.setWidthLikeDiv  = function (input) {dom.matchElementDimensions(input,  "width", "inline-block", "left",  "right", "div")}
  dom.setHeightLikeDiv = function (input) {dom.matchElementDimensions(input, "height",        "block",  "top", "bottom", "div")}
  dom.matchElementDimensions = function (input, dimension, temp_display_type, min_edge, max_edge, temporary_element_type) {
