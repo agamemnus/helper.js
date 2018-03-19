@@ -2606,7 +2606,7 @@ if (h.library_settings.dom_manipulation) {
  
  dom.removeEventListeners = function (element) {
   element.dom.eventListenerArgumentList.forEach (function (eventListenerArgs) {
-   element.removeEventListener.apply(null, eventListenerArgs)
+   element.removeEventListener.apply(element, eventListenerArgs)
   })
   element.dom.eventListenerArgumentList = []
  }
@@ -2617,7 +2617,7 @@ if (h.library_settings.dom_manipulation) {
   element.addEventListener = function () {
    var args = Array.prototype.slice.call(arguments)
    element.dom.eventListenerArgumentList.push(args)
-   element.addEventListenerOriginal.apply(null, args)
+   element.addEventListenerOriginal.apply(element, args)
   }
   this.removeEventListenerOriginal = element.removeEventListener
   this.removeEventListener = function () {
@@ -2626,7 +2626,7 @@ if (h.library_settings.dom_manipulation) {
     if (eventListenerArgs.length != args.length) return
     return args.every(function (param, i) {return (param === eventListenerArgs[i])})
    })
-   element.removeEventListenerOriginal.apply(null, args)
+   element.removeEventListenerOriginal.apply(element, args)
   }
  }
  
