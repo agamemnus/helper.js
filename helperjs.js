@@ -2638,7 +2638,7 @@ if (h.library_settings.dom_manipulation) {
   input.style[dimension] = ""
   var s = window.getComputedStyle(input); var cousin = document.createElement (temporary_element_type)
   cousin.style.display = temp_display_type
-  new Array("padding", "fontFamily", "fontSize", "fontWeight", "letterSpacing", "fontKerning", "lineHeight", "textIndent").forEach (function (p) {cousin.style[p] = s[p]})
+  new Array("paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "fontFamily", "fontSize", "fontWeight", "letterSpacing", "fontKerning", "lineHeight", "textIndent").forEach (function (p) {cousin.style[p] = s[p]})
   // 1) Converts end-of-line to "<br/>&nbsp;".
   // 2) Any empty strings become "nbsp;".
   // 3) Converts any trailing spaces into sets of "&nbsp;".
