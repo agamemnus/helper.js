@@ -1855,7 +1855,6 @@ if (h.library_settings.gui_widgets) {
    if (startscroll == false) return
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
-   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
    var xy = (evt.changedTouches ? evt.changedTouches[0] : evt)[pageXY] / (zoom_level * pxc)
    main.set_position (xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
   }
