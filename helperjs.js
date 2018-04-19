@@ -1856,14 +1856,13 @@ if (h.library_settings.gui_widgets) {
    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type ()
    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level ()
    if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
-   var xy = evt[pageXY] / (zoom_level * pxc)
+   var xy = (evt.changedTouches ? evt.changedTouches[0] : evt)[pageXY] / (zoom_level * pxc)
    main.set_position (xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
   }
   
   function mouseout (evt) {
    evt.preventDefault ()
-   if (typeof evt.changedTouches != "undefined") evt = evt.changedTouches[0]
-   var mouseX = evt.pageX; var mouseY = evt.pageY
+   var coords = (evt.changedTouches ? evt.changedTouches[0] : evt), mouseX = coords.pageX, mouseY = coords.pageY
    var windowScrollX = (typeof window.scrollX != "undefined") ? window.scrollX : document.body.scrollLeft
    var windowScrollY = (typeof window.scrollY != "undefined") ? window.scrollY : document.body.scrollTop
    if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
