@@ -2709,7 +2709,13 @@ if (h.library_settings.dom_manipulation) {
    }
   }
   if (typeof parent != "undefined") parent.appendChild (element)
-  element.dom = {insertBefore: function (sibling) {return dom.insertBefore(element, sibling)}}
+  element.dom = {
+   insertBefore: function (sibling) {return dom.insertBefore(element, sibling)},
+   classList: {
+    add: function (element, string) {element.classList.add.apply(element.classList, string.split(" "))},
+    remove: function (element, string) {element.classList.remove.apply(element.classList, string.split(" "))}
+   }
+  }
   return element
  }
  dom.createEventSubscriber = function (subscribeTarget, init) {
