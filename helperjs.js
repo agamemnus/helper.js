@@ -2712,8 +2712,8 @@ if (h.library_settings.dom_manipulation) {
   element.dom = {
    insertBefore: function (sibling) {return dom.insertBefore(element, sibling)},
    classList: {
-    add: function (element, string) {element.classList.add.apply(element.classList, string.split(" "))},
-    remove: function (element, string) {element.classList.remove.apply(element.classList, string.split(" "))}
+    add: function (string) {element.classList.add.apply(element.classList, string.split(" "))},
+    remove: function (string) {element.classList.remove.apply(element.classList, string.split(" "))}
    }
   }
   return element
