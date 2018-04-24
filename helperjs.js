@@ -1086,7 +1086,7 @@ if (h.library_settings.dom_position) {
   var curleft = 0, borderWidthTest = 0
   if (typeof lastobj == "undefined") lastobj = null
   do {
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
    if (!isNaN(borderWidthTest)) curleft += borderWidthTest
    if (obj.offsetParent == lastobj) return curleft // If offsetParent is lastobj (or null if lastobj is null), return the result.
    curleft += obj.offsetLeft
@@ -1098,7 +1098,7 @@ if (h.library_settings.dom_position) {
   var curtop = 0, borderWidthTest = 0
   if (typeof lastobj == "undefined") lastobj = null
   do {
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
    if (!isNaN(borderWidthTest)) curtop += borderWidthTest
    if (obj.offsetParent == lastobj) return curtop // If offsetParent is lastobj (or null if lastobj is null), return the result.
    curtop += obj.offsetTop
@@ -1114,12 +1114,12 @@ if (h.library_settings.dom_position) {
    if (obj.offsetParent == lastobj) {
     zoom_level_x = 1; zoom_level_y = 1
    } else {
-    zoom_level_x = get_inherited_transform (obj.offsetParent, {transform_type: "scale", xy: "x"})
-    zoom_level_y = get_inherited_transform (obj.offsetParent, {transform_type: "scale", xy: "y"})
+    zoom_level_x = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "x"})
+    zoom_level_y = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "y"})
    }
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
    if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
    curleft += obj.offsetLeft * zoom_level_x
@@ -1136,9 +1136,9 @@ if (h.library_settings.dom_position) {
    if (obj.offsetParent == lastobj) {
     zoom_level_x = 1
    } else {
-    zoom_level_x = get_inherited_transform (obj.offsetParent, {transform_type: "scale", xy: "x"})
+    zoom_level_x = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "x"})
    }
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderLeftWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
    if (obj.offsetParent == lastobj) return curleft // If offsetParent is lastobj (or null if lastobj is null), return the result.
    curleft += obj.offsetLeft * zoom_level_x
@@ -1154,9 +1154,9 @@ if (h.library_settings.dom_position) {
    if (obj.offsetParent == lastobj) {
     zoom_level_y = 1
    } else {
-    zoom_level_y = get_inherited_transform (obj.offsetParent, {transform_type: "scale", xy: "y"})
+    zoom_level_y = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "y"})
    }
-   borderWidthTest = parseFloat(getComputedStyle(obj).borderTopWidth)
+   borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
    if (obj.offsetParent == lastobj) return curtop // If offsetParent is lastobj (or null if lastobj is null), return the result.
    curtop += obj.offsetTop * zoom_level_y
@@ -1174,7 +1174,7 @@ if (h.library_settings.dom_position) {
    case "scale":
     var scale = 1
     while (true) {
-     transform_string = getTransformString (obj)
+     transform_string = getTransformString(obj)
      if (transform_string != false) {
       transform_array = (transform_string.slice(7, transform_string.length - 6)).split(",")
       switch (xy) {
