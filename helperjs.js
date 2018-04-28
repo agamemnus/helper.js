@@ -2701,9 +2701,9 @@ if (h.library_settings.dom_manipulation) {
  dom.create = function (type, init) {
   // Note that an event in the event list with a "," (e.g.: "input, change") is split up into multiple events.
   var init = init || {}
-  var events = init.events, parent = init.parent; delete (init.parent); delete (init.events)
-  var element = document.createElement (type)
-  if (init.className && dom.process_css) {element.className = dom.process_css(init.className); delete (init.className)}
+  var children = init.children, events = init.events, parent = init.parent; delete (init.children); delete (init.events); delete (init.parent)
+  var element = document.createElement(type)
+  if (init.className && dom.processCss) {element.className = dom.processCss(init.className); delete (init.className)}
   if (init.style) {
    var style = init.style
    for (var prop in style) {element.style[prop] = style[prop]}
@@ -2714,18 +2714,27 @@ if (h.library_settings.dom_manipulation) {
    for (var eventNameList in events) {
     var event = events[eventNameList]
     if (eventNameList.indexOf(",") != -1) {eventNameList = eventNameList.split(",").map(function (n) {return n.trim()})} else {eventNameList = [eventNameList]}
-    eventNameList.forEach (function (eventName) {
-     element.addEventListener (eventName, event)
+    eventNameList.forEach(function (eventName) {
+     element.addEventListener(eventName, event)
     })
    }
   }
-  if (typeof parent != "undefined") parent.appendChild (element)
+  if (typeof parent != "undefined") parent.appendChild(element)
   element.dom = {
    insertBefore: function (sibling) {return dom.insertBefore(element, sibling)},
    classList: {
     add: function (string) {element.classList.add.apply(element.classList, string.split(" ")); return element.dom},
     remove: function (string) {element.classList.remove.apply(element.classList, string.split(" ")); return element.dom}
-   }
+   },
+   children: {}
+  }
+  if (children) {
+   children.forEach(function (arr) {
+    var childName = arr[0], tagTypeName = arr[1], childData = arr[2]
+    var child = dom.create(tagTypeName, childData
+    element.dom.children[childName] = child
+    element.appendChild(child)
+   })
   }
   return element
  }
