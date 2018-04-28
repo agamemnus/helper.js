@@ -2731,7 +2731,7 @@ if (h.library_settings.dom_manipulation) {
   if (children) {
    children.forEach(function (arr) {
     var childName = arr[0], tagTypeName = arr[1], childData = arr[2]
-    var child = dom.create(tagTypeName, childData
+    var child = dom.create(tagTypeName, childData)
     element.dom.children[childName] = child
     element.appendChild(child)
    })
