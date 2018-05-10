@@ -188,8 +188,8 @@ if (h.library_settings.timer) {
  void function () {
   // Add a setTimeout and setInterval to HTMLElement. The setTimeout and setInterval remove themselves if the element is removed.
   var set_timeout_upgraded  = h.set_timeout_upgraded  = function () {
-   var args = Array.prototype.slice.call (arguments)
-    var curtime = new Date().getTime ()
+   var args = Array.prototype.slice.call(arguments)
+    var curtime = new Date().getTime()
     return {
      timeLeft : args[1],
      start    : curtime,
@@ -205,23 +205,23 @@ if (h.library_settings.timer) {
      delete (this.paused)
      this.start = new Date().getTime()
      args[1] = this.timeLeft
-     this.id = window.setTimeout.apply (window, args)
+     this.id = window.setTimeout.apply(window, args)
     },
     restart  : function () {
      if (this.paused) delete (this.paused)
-     window.clearTimeout (this.id)
+     window.clearTimeout(this.id)
      this.start = new Date().getTime()
-     this.id = window.setTimeout.apply (window, args)
+     this.id = window.setTimeout.apply(window, args)
     },
-    id       : setTimeout.apply (window, args)
+    id       : setTimeout.apply(window, args)
    }
   }
   var set_interval_upgraded = h.set_interval_upgraded = function () {
    var args = Array.prototype.slice.call(arguments)
    return {
-    pause  : function () {if (typeof this.paused == "undefined") {window.clearInterval (this.id); this.paused = true}},
-    resume : function () {if (typeof this.paused != "undefined") {this.id = window.setInterval.apply (window, args); delete (this.paused)}},
-    id     : window.setInterval.apply (window, args)
+    pause  : function () {if (typeof this.paused == "undefined") {window.clearInterval(this.id); this.paused = true}},
+    resume : function () {if (typeof this.paused != "undefined") {this.id = window.setInterval.apply(window, args); delete (this.paused)}},
+    id     : window.setInterval.apply(window, args)
    }
   }
   
@@ -229,27 +229,27 @@ if (h.library_settings.timer) {
    while (true) {obj = obj.parentNode; if (obj == document.documentElement) return true; if (obj == null) return false}
   }
   h.proto.HTMLElement.set_timeout_upgraded  = function (obj, callback, calltime) {
-   function callback_wrapper () {if (is_attached(obj)) callback.apply (null, Array.prototype.slice.call (arguments))}
-   var timeout_object = set_timeout_upgraded (callback_wrapper, calltime)
+   function callback_wrapper () {if (is_attached(obj)) callback.apply (null, Array.prototype.slice.call(arguments))}
+   var timeout_object = set_timeout_upgraded(callback_wrapper, calltime)
    return timeout_object
   }
   h.proto.HTMLElement.set_interval_upgraded = function (obj, callback, calltime) {
    function callback_wrapper () {
-    if (!is_attached(obj)) {window.clearInterval (interval_object.id); return}
-    callback.apply (null, Array.prototype.slice.call (arguments))
+    if (!is_attached(obj)) {window.clearInterval(obj.id); return}
+    callback.apply (null, Array.prototype.slice.call(arguments))
    }
-   return set_interval_upgraded (callback_wrapper, calltime)
+   return set_interval_upgraded(callback_wrapper, calltime)
   }
   h.proto.HTMLElement.set_timeout           = function (obj, callback, calltime) {
-   function callback_wrapper () {if (is_attached(obj)) callback.apply (null, Array.prototype.slice.call (arguments))}
-   return window.setTimeout (callback_wrapper, calltime)
+   function callback_wrapper () {if (is_attached(obj)) callback.apply (null, Array.prototype.slice.call(arguments))}
+   return window.setTimeout(callback_wrapper, calltime)
   }
   h.proto.HTMLElement.set_interval          = function (obj, callback, calltime) {
    function callback_wrapper () {
-    if (!is_attached(obj)) {window.clearInterval (interval_object.id); return}
-    callback.apply (null, Array.prototype.slice.call (arguments))
+    if (!is_attached(obj)) {window.clearInterval(obj.id); return}
+    callback.apply(null, Array.prototype.slice.call(arguments))
    }
-   return window.setInterval (callback_wrapper, calltime)
+   return window.setInterval(callback_wrapper, calltime)
   }
  } ()
 }
