@@ -354,7 +354,7 @@ if (h.library_settings.sorting) {
  // Sample sort function is: function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
  h.sort_linked_arrays        = function (input_array, linked_array, sort_function) {
   if (typeof sort_function == "undefined") {
-   if (input_array.length == 0) return
+   if (input_array.length == 0) returnsor
    var starts = [0]
    var ends = [input_array.length]
    while (starts.length) {
@@ -381,7 +381,7 @@ if (h.library_settings.sorting) {
   for (var i = 0; i < curlen; i++) {
    input_array_obj[i] = [input_array[i], linked_array[i]]
   }
-  input_array_obj.sort (sort_function)
+  input_array_obj.sort(sort_function)
   for (var i = 0; i < curlen; i++) {
    input_array[i]  = input_array_obj[i][0]
    linked_array[i] = input_array_obj[i][1]
@@ -391,15 +391,9 @@ if (h.library_settings.sorting) {
  h.get_indices_from_sort     = function (input_array, sort_function) {
   if (typeof sort_function == "undefined") var sort_function = function (a, b) {if (a[0] > b[0]) return 1; return -(a[0] < b[0])}
   var curlen = input_array.length
-  var input_array_obj = new Array(curlen)
-  for (var i = 0; i < curlen; i++) {
-   input_array_obj[i] = [input_array[i], i]
-  }
-  input_array_obj.sort (sort_function)
-  var output_array = new Array(curlen)
-  for (var i = 0; i < curlen; i++) {
-   output_array[input_array_obj[i][1]] = i
-  }
+  var input_array_obj = new Array(curlen); input_array.forEach(function (entry, i) {input_array_obj[i] = [entry, i]})
+  input_array_obj.sort(sort_function)
+  var output_array = new Array(curlen); input_array_obj.forEach(function (entry, i) {output_array[entry[1]] = i})
   return output_array
  }
 }
@@ -409,15 +403,11 @@ if (h.library_settings.sorting) {
 if (h.library_settings.object_manipulation) {
  h.proto.Array.combine_with         = function (obj, secondary) {
   var primary = obj, primary_length = primary.length
-  for (var i = 0, secondary_length = secondary.length; i < secondary_length; i++) {
-   var current_entry = secondary[i]
+  secondary.forEach(function (current_entry) {
    var target_found = false
    for (var j = 0; j < primary_length; j++) {if (primary[j] === current_entry) {target_found = true; break}}
-   if (target_found != true) {
-    primary.push (current_entry)
-    primary_length += 1
-   }
-  }
+   if (target_found != true) {primary.push(current_entry); primary_length += 1}
+  })
   return primary
  }
  h.proto.Array.send_to_front        = function (obj, target) {
