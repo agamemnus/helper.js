@@ -2673,19 +2673,20 @@ if (h.library_settings.dom_manipulation) {
  }
  dom.detachAllRecursive = function (parent) {return dom.detachAll(parent, true)}
  dom.detachAllOtherSiblingsRecursive = function (exceptedChildren, parent) {return dom.detachAllOtherSiblings(exceptedChildren, parent, true)}
- dom.onRemoved = function (element, func) {
-  var parent = element.parentNode
+ dom.onRemoved = function (element, callback) {
   var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
-  var observer = new MutationObserver(function (mutation_list) {
-   Array.prototype.slice.call(mutation_list).some(function (mutation_item) {
-    if (mutation_item.type != "childList") return
-    Array.prototype.slice.call(mutation_item.removedNodes).some(function (removed_element) {
-     if (removed_element != element) return
-     func (); observer.disconnect (); return true
-    })
-   })
+  var observer = new MutationObserver(function () {
+   if (!isAttached(element)) {callback(element); observer.disconnect()}
+   function isAttached (element) {
+    while (true) {
+     element = element.parentNode
+     if (element == document.documentElement) return true
+     if (element == null) return false
+    }
+   }
   })
-  observer.observe (parent, {attributes: false, childList: true, subtree: false})
+  observer.observe(document, {childList: true, subtree: true})
+  return observer
  }
  dom.insertBefore = function (element, sibling) {element.parentNode.insertBefore(element, sibling); return element}
  dom.create = function (type, init) {
