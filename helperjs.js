@@ -2822,6 +2822,7 @@ if (h.library_settings.dom_manipulation) {
   
   function get_entry_object (init) {
    var container = init.container, entry_id = init.entry_id
+   if (typeof entry_id == "undefined") return container
    if (Array.isArray(container)) {
     return container.find(function (test_entry) {return test_entry.id == entry_id})
    } else {
