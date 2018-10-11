@@ -2877,13 +2877,16 @@ if (h.library_settings.dom_manipulation) {
       var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
      } else {
       // If data is set, modify or create an object.
+      console.log (entry_container_string, entry_id)
       var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+      console.log (entry)
       columns_affected = columns_affected.concat(Object.keys(data))
       
       if (typeof entry == "undefined") {
        var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
        entry.id = entry_id
       } else {
+       console.log (data)
        Object.assign(entry, data)
       }
       Object.assign(additions, data)
