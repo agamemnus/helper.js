@@ -1607,7 +1607,7 @@ if (h.library_settings.gui_widgets) {
   addEvent (close_button, 'click', function (evt) {init.close_function (); evt.stopPropagation(); return false})
   return close_button
  }
- h.sliderbar              = function (init) {
+helperjs.sliderbar              = function (init) {
   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
   Object.defineProperty(main, 'parent', {
    get: function () {return parent},
@@ -1653,43 +1653,7 @@ if (h.library_settings.gui_widgets) {
   
   var px_to_css_unit_type_fixed = undefined
   
-  function px_to_css_unit_type () {
-   if (main.css_unit_type == "px") return 1
-   if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
-   var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
-   parent.appendChild(mydiv); var w = mydiv.getBoundingClientRect().width; parent.removeChild(mydiv)
-   if (!main.recalculate_size) px_to_css_unit_type_fixed = w
-   return w
-  }
-  function calculate_physical_max (pxc, zoom_level) {
-   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
-   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
-   var style = window.getComputedStyle(main)
-   var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
-   if (box_sizing == "border-box") {
-    var border_and_padding_adjustment = 0
-   } else {
-    var border_and_padding_adjustment = (orientation == "horizontal"
-     ? parseFloat(window.getComputedStyle(main).borderLeftWidth) + parseFloat(window.getComputedStyle(main).borderRightWidth)
-     : parseFloat(window.getComputedStyle(main).borderTopWidth)  + parseFloat(window.getComputedStyle(main).borderBottomWidth)
-    )
-   }
-   border_and_padding_adjustment += (orientation == "horizontal"
-    ? parseFloat(window.getComputedStyle(main).paddingLeft) + parseFloat(window.getComputedStyle(main).paddingRight)
-    : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
-   )
-   var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
-   return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_unit_offset * 2
-  }
-  
   var zoom_level_fixed = undefined
-  function calculate_zoom_level () {
-   if ((!main.recalculate_size) && (typeof zoom_level_fixed != "undefined")) return zoom_level_fixed
-   var zoom_level = h.get_inherited_transform(main, {transform_type: "scale", xy: orientation_xy})
-   if (!main.recalculate_size) zoom_level_fixed = zoom_level
-   return zoom_level
-  }
-  
   // Add a linked textbox object if it is set.
   if (main.textbox_enabled != true) {
    var textbox = main.textbox = undefined
@@ -1716,32 +1680,6 @@ if (h.library_settings.gui_widgets) {
     textbox_suffix.innerHTML = init.textbox_suffix || ''
     textbox.appendChild(textbox_suffix)
    }
-   function textbox_change (evt) {
-    var curvalue = parseFloat(textbox_number.value)
-    if ((isNaN(curvalue)) || (curvalue < 0)) curvalue = 0
-    if (curvalue > main.point_upper_limit) curvalue = main.point_upper_limit
-    main.set_position_by_point_value(curvalue)
-   }
-   function textbox_keypress (evt) {var keyCode = evt.keyCode; if (keyCode == 13) textbox_number.blur()}
-   function textbox_update_value (pxc) {
-    if (typeof pxc == "undefined") pxc = px_to_css_unit_type()
-    textbox_number.value = Math.round((main.point_upper_limit * main.position) / calculate_physical_max(pxc))
-   }
-   function textbox_blur (evt) {
-    if (main.textbox_enabled == false) return
-    if (evt.currentTarget == textbox_number) return
-    textbox_number.blur()
-   }
-   function textbox_focus (evt) {
-    if (main.textbox_enabled == true) return
-    if (evt.currentTarget == textbox_number) return
-    textbox_number.focus()
-   }
-  }
-  
-  function update_foreground_width_height () {
-   main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
-   main.foreground_inverse.style[width_height] = "100%"
   }
   
   // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
@@ -1754,7 +1692,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Create the foreground object and set its class and style.
-  main.foreground_container = document.createElement ('div'); h.add_style(main.foreground_container, "position: relative; overflow: hidden; "+width_height+": 100%; line-height: 0")
+  main.foreground_container = document.createElement('div'); h.add_style(main.foreground_container, "position: relative; overflow: hidden; "+width_height+": 100%; line-height: 0")
   main.foreground_container.className = foreground_container_class || ''; h.add_style(main.foreground_container, foreground_container_style || '')
   main.appendChild(main.foreground_container)
   main.foreground_container.style.pointerEvents = "none"
@@ -1784,33 +1722,7 @@ if (h.library_settings.gui_widgets) {
   }
   
   // Calculate the physical control position max, calculate the logical control position max, and set the initial physical control position.
-  main.update = function () {
-   if (typeof main.position != "undefined") var logical_position = main.position / main.position_logical_max
-   var pxc        = px_to_css_unit_type()
-   var zoom_level = calculate_zoom_level()
-   main.position_physical_max = calculate_physical_max(pxc, zoom_level)
-   main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
-   if (typeof main.position == "undefined") {
-    main.position = main.position_physical_max * (point_initial / main.point_upper_limit)
-   } else {
-    main.position = logical_position * main.position_logical_max
-   }
-   // Set the control left/top position and the foreground width/height.
-   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
-   update_foreground_width_height()
-   if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
-    main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
-    main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
-   }
-   if (typeof pivot_slice_style != 'undefined') {
-    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
-    main.pivot_end   = main.position
-    main.pivot_slice.style[width_height] = Math.abs(main.pivot_end - main.pivot_start) + main.css_unit_type
-    main.pivot_slice.style[left_top]     = ((main.pivot_end > main.pivot_start) ? main.pivot_start : main.pivot_end) + main.css_unit_type
-   }
-   if (main.textbox) textbox_update_value(pxc)
-  }
-  
+  main.update = function () {update(main)}
   main.update()
   
   var startscroll = false, startxy = 0, offsetxy = 0     
@@ -1836,6 +1748,95 @@ if (h.library_settings.gui_widgets) {
    textbox_number.removeEventListener ('keypress', textbox_keypress)
   }
   
+  main.update_position = function (pxc, zoom_level) {
+   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
+   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
+   startxy = findabspos_zoom(main) / (pxc * zoom_level)
+  }
+  main.set_position = function (new_position, trigger_update_event, pxc, evt) {return set_position(new_position, trigger_update_event, pxc, evt)}
+  main.set_position_percent = function (new_point_value, trigger_update_event, evt) {
+   main.set_position(main.position_physical_max * new_point_value / main.point_upper_limit, trigger_update_event, px_to_css_unit_type(), evt)
+  }
+  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
+  main.destroy = function () {return destroy(main, use_mouse_events, use_touch_events)}
+  
+  //If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
+  var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
+  if (typeof MutationObserver != "undefined") {
+   var observer = new MutationObserver (function (mutation_list) {
+    for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
+     var mutation_item = mutation_list[i]
+     if (mutation_item.type != 'childList') return
+     for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
+      if (mutation_item.removedNodes[j] != main) continue
+      main.destroy(); observer.disconnect(); return
+     }
+    }
+   })
+   observer.observe(parent, {attributes: false, childList: true, subtree: false})
+  }
+  return main
+  
+  function px_to_css_unit_type () {
+   if (main.css_unit_type == "px") return 1
+   if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
+   var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
+   parent.appendChild(mydiv); var w = mydiv.getBoundingClientRect().width; parent.removeChild(mydiv)
+   if (!main.recalculate_size) px_to_css_unit_type_fixed = w
+   return w
+  }
+  function calculate_physical_max (pxc, zoom_level) {
+   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
+   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
+   var style = window.getComputedStyle(main)
+   var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
+   if (box_sizing == "border-box") {
+    var border_and_padding_adjustment = 0
+   } else {
+    var border_and_padding_adjustment = (orientation == "horizontal"
+     ? parseFloat(window.getComputedStyle(main).borderLeftWidth) + parseFloat(window.getComputedStyle(main).borderRightWidth)
+     : parseFloat(window.getComputedStyle(main).borderTopWidth)  + parseFloat(window.getComputedStyle(main).borderBottomWidth)
+    )
+   }
+   border_and_padding_adjustment += (orientation == "horizontal"
+    ? parseFloat(window.getComputedStyle(main).paddingLeft) + parseFloat(window.getComputedStyle(main).paddingRight)
+    : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
+   )
+   if (isNaN(border_and_padding_adjustment)) border_and_padding_adjustment = 0
+   var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
+   return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_unit_offset * 2
+  }
+  function calculate_zoom_level () {
+   if ((!main.recalculate_size) && (typeof zoom_level_fixed != "undefined")) return zoom_level_fixed
+   var zoom_level = h.get_inherited_transform(main, {transform_type: "scale", xy: orientation_xy})
+   if (!main.recalculate_size) zoom_level_fixed = zoom_level
+   return zoom_level
+  }
+  function textbox_change (evt) {
+   var curvalue = parseFloat(textbox_number.value)
+   if ((isNaN(curvalue)) || (curvalue < 0)) curvalue = 0
+   if (curvalue > main.point_upper_limit) curvalue = main.point_upper_limit
+   main.set_position_by_point_value(curvalue)
+  }
+  function textbox_keypress (evt) {var keyCode = evt.keyCode; if (keyCode == 13) textbox_number.blur()}
+  function textbox_update_value (pxc) {
+   if (typeof pxc == "undefined") pxc = px_to_css_unit_type()
+   textbox_number.value = Math.round((main.point_upper_limit * main.position) / calculate_physical_max(pxc))
+  }
+  function textbox_blur (evt) {
+   if (main.textbox_enabled == false) return
+   if (evt.currentTarget == textbox_number) return
+   textbox_number.blur()
+  }
+  function textbox_focus (evt) {
+   if (main.textbox_enabled == true) return
+   if (evt.currentTarget == textbox_number) return
+   textbox_number.focus()
+  }  
+  function update_foreground_width_height () {
+   main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+   main.foreground_inverse.style[width_height] = "100%"
+  }
   function mousedown (evt) {
    evt.preventDefault()
    if (evt.target != evt.currentTarget) return
@@ -1847,9 +1848,7 @@ if (h.library_settings.gui_widgets) {
    startscroll = true
    mousemove(evt, pxc, zoom_level)
   }
-  
   function touchstart (evt) {mousemove(evt); mousedown (evt)}
-  
   function mousemove (evt, pxc, zoom_level) {
    if (evt.currentTarget == main) evt.preventDefault()
    if (startscroll == false) return
@@ -1858,7 +1857,6 @@ if (h.library_settings.gui_widgets) {
    var xy = (evt.changedTouches ? evt.changedTouches[0] : evt)[pageXY] / (zoom_level * pxc)
    main.set_position(xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
   }
-  
   function mouseout (evt) {
    evt.preventDefault()
    var coords = (evt.changedTouches ? evt.changedTouches[0] : evt)
@@ -1874,14 +1872,42 @@ if (h.library_settings.gui_widgets) {
    mousemove(evt, px_to_css_unit_type(), calculate_zoom_level())}
    startscroll = false
   }
-  
-  main.update_position = function (pxc, zoom_level) {
-   if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
-   if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
-   startxy = findabspos_zoom(main) / (pxc * zoom_level)
+  function update (main) {
+   var pxc        = px_to_css_unit_type()
+   var zoom_level = calculate_zoom_level()
+   main.position_physical_max = calculate_physical_max(pxc, zoom_level)
+   if (main.point_upper_limit != 0) {
+    main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
+   }
+   if (typeof main.position != "undefined" && main.position_logical_max != 0) {
+    var logical_position = main.position / main.position_logical_max
+   }
+   if (typeof main.position == "undefined") {
+    if (main.point_upper_limit != 0) {
+     main.position = main.position_physical_max * (point_initial / main.point_upper_limit)
+    }
+   } else {
+    if (typeof main.position_logical_max != "undefined" && typeof logical_position != "undefined") {
+     main.position = logical_position * main.position_logical_max
+    }
+   }
+   
+   // Set the control left/top position and the foreground width/height.
+   main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
+   update_foreground_width_height()
+   if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
+    main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
+    main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
+   }
+   if (typeof pivot_slice_style != 'undefined') {
+    main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
+    main.pivot_end   = main.position
+    main.pivot_slice.style[width_height] = Math.abs(main.pivot_end - main.pivot_start) + main.css_unit_type
+    main.pivot_slice.style[left_top]     = ((main.pivot_end > main.pivot_start) ? main.pivot_start : main.pivot_end) + main.css_unit_type
+   }
+   if (main.textbox) textbox_update_value(pxc)
   }
-  
-  main.set_position = function (new_position, trigger_update_event, pxc, evt) {
+  function set_position (new_position, trigger_update_event, pxc, evt) {
    main.position = new_position
    main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
    if (main.position > main.position_logical_max) {
@@ -1899,12 +1925,7 @@ if (h.library_settings.gui_widgets) {
    if (main.textbox_enabled == true) textbox_update_value(pxc)
    if (trigger_update_event && main.events.update) main.events.update(main, evt)
   }
-  main.set_position_percent = function (new_point_value, trigger_update_event, evt) {
-   main.set_position(main.position_physical_max * new_point_value / main.point_upper_limit, trigger_update_event, px_to_css_unit_type(), evt)
-  }
-  main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
-  
-  main.destroy = function () {
+  function destroy (main, use_mouse_events, use_touch_events) {
    if (use_mouse_events) {
     main.removeEventListener     ('mousedown', mousedown)
     main.removeEventListener     ('mouseover', mousemove)
@@ -1928,23 +1949,6 @@ if (h.library_settings.gui_widgets) {
    }
    var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild(main)
   }
-  
-  //If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
-  var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
-  if (typeof MutationObserver != "undefined") {
-   var observer = new MutationObserver (function (mutation_list) {
-    for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
-     var mutation_item = mutation_list[i]
-     if (mutation_item.type != 'childList') return
-     for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
-      if (mutation_item.removedNodes[j] != main) continue
-      main.destroy(); observer.disconnect(); return
-     }
-    }
-   })
-   observer.observe(parent, {attributes: false, childList: true, subtree: false})
-  }
-  return main
  }
  h.red_blue_arrow         = function (init) {
   var parent      = init['parent']
