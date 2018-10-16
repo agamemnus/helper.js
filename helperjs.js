@@ -1,7 +1,7 @@
 void function () {
 // browserify -s someGlobal entry.js -o bundle.js
 // browserify -s helperjs helperjs.js -o helperjsbundle.js
-// HelperJS II version 0.1. ☃
+// HelperJS II version 0.1. ?
 // Easter egg in plain sight: (thanks to Brigand)
 // function foo(){return XII}fooFixed=new Function(foo.toString().replace(/function\s*\w+\(\)\s*{/,"").slice(0,-1).replace(/[IVXLCDM]+/g,function(a){for(k=d=l=0;i={I:1,V:5,X:10,L:50,C:100,D:500,M:1E3}[a[k++]];l=i)d+=i>l?i-2*l:i;return d})); fooFixed()
 //
@@ -2881,16 +2881,12 @@ if (h.library_settings.dom_manipulation) {
       var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
      } else {
       // If data is set, modify or create an object.
-      console.log (entry_container_string, entry_id)
       var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
-      console.log (entry)
       columns_affected = columns_affected.concat(Object.keys(data))
-      
       if (typeof entry == "undefined") {
        var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
        entry.id = entry_id
       } else {
-       console.log (data)
        Object.assign(entry, data)
       }
       Object.assign(additions, data)
@@ -3155,10 +3151,8 @@ if (h.library_settings.audio) {
    audio_object.stop ()
    if (typeof audio_object.release != "undefined") audio_object.release ()
   }
-  
-  parentNode_test ()
+  parentNode_test()
   var args = Array.prototype.slice.call(arguments)
-  console.log (args)
   var audio_object = play_audio.apply (null, args)
   return audio_object
  }
