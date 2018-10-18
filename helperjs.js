@@ -1464,11 +1464,11 @@ if (h.library_settings.download) {
     var filename = init.filename
     var async    = (typeof init.async    != "undefined") ? init.async    : true
     var callback = (typeof init.callback != "undefined") ? init.callback : function () {}
-    var charset  = (typeof init.charset  != "undefined") ? init.charset  : true
+    var charset  = (typeof init.charset  != "undefined") ? init.charset  : undefined
     
     var base_url = window.location.protocol + "//" + window.location.host + '/'
     
-    var make_request_result = make_request (filename, "", undefined, charset, async, 'arraybuffer', undefined, 'GET')
+    var make_request_result = make_request(filename, "", undefined, charset, async, 'arraybuffer', undefined, 'GET')
     var http_request        = make_request_result["http_request"]
     
     if (async == false) return process_http_request ()
