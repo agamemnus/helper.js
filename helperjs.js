@@ -1835,7 +1835,6 @@ h.sliderbar              = function (init) {
   }  
   function update_foreground_width_height () {
    main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
-   main.foreground_inverse.style[width_height] = "100%"
   }
   function mousedown (evt) {
    evt.preventDefault()
