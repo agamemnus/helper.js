@@ -1505,15 +1505,16 @@ if (h.library_settings.download) {
   function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
    if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
    if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
-   if (typeof charset == "undefined") {charset = ''} else {charset = '; charset=' + charset}
+   if (typeof charset == "undefined" || charset == '') {charset = ''} else {charset = '; charset=' + charset}
    var http_request = new XMLHttpRequest()
    if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
-   if (typeof request_method == "undefined") var request_method = ((data === null) ? "GET" : "POST")
+   if (typeof request_method == "undefined") var request_method = ((data === null || data === '') ? "GET" : "POST")
    if (request_method == "GET") {
-    // Add a "?" if the "?" doesn't already exist in the url. If "data" doesn't start with a "&", add it.
     if (typeof data == "string") {
+     // Add a "?" or "&" if the "?" doesn't already exist in the ending part of the url.
      var altchar = (data[0] != "&") ? "&" : ""
-     url += ((url.indexOf ("?") == -1) ? "?" : altchar) + data
+     var connecting_character = (url.indexOf("?") == -1) ? "?" : altchar
+     url += connecting_character + data
     }
     data = null
    }
@@ -1526,9 +1527,9 @@ if (h.library_settings.download) {
     http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
    }
    if (header_list) {
-    header_list.forEach (function (header) {http_request.setRequestHeader(header.name, header.content)})
+    header_list.forEach(function (header) {http_request.setRequestHeader(header.name, header.content)})
    }
-   http_request.send (data)
+   http_request.send(data)
    return {"http_request": http_request}
   }
   ajax.is_library_container = true
