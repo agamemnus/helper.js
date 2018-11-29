@@ -9,7 +9,7 @@ void function () {
  var h = {}
  if (typeof module == "undefined") var module = {}
  module.exports = h
- if (typeof window != "undefined") global = window
+ if (typeof window != "undefined") var global = window
  if (global) global.helperjs = h
  
  // Settings.
