@@ -399,7 +399,7 @@ if (h.library_settings.sorting) {
 }
 // </Array sorting functions.>
 
-// <Array manipulation functions. TAG: array, TAG: arrays, TAG: array manipulation, TAG: object manipulation, TAG: copy, TAG: test.>
+// <Object manipulation functions. TAG: array, TAG: arrays, TAG: array manipulation, TAG: object manipulation, TAG: copy, TAG: test.>
 if (h.library_settings.object_manipulation) {
  h.proto.Array.combine_with         = function (obj, secondary) {
   var primary = obj, primary_length = primary.length
