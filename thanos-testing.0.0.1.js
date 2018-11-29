@@ -1,6 +1,6 @@
 "use strict";
 
-// Thanos.js version 0.1.
+// Thanos.js version 0.0.1.
 
 // Modifications or additions to native functionality:
 // 1) In .misc_polyfills: polyfills or fixes to IE.
