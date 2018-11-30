@@ -29,9 +29,9 @@ void function () {
   misc                  : true,
  }
  
- var add_style = function (element, text) {
+ var addStyle = function (element, text) {
   // Multiple element support.
-  if ((typeof element == "object") && (element instanceof Array)) {element.forEach(function (current_element) {add_style (current_element, text)}); return}
+  if ((typeof element == "object") && (element instanceof Array)) {element.forEach(function (currentElement) {addStyle(currentElement, text)}); return}
   if (element.getAttribute("style") == null) {element.setAttribute("style", element, text); return}
   element.setAttribute("style", element, element.getAttribute("style") + "; " + text)
  }
@@ -45,23 +45,23 @@ void function () {
   // IE .innerHTML shim/polyfill.
   if (/(msie|trident)/i.test(navigator.userAgent)) {
    void function () {
-    var innerhtml_get = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").get
-    var innerhtml_set = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").set
+    var innerhtmlGet = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").get
+    var innerhtmlSet = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "innerHTML").set
     Object.defineProperty(HTMLElement.prototype, "innerHTML", {
-     get: function () {return innerhtml_get.call (this)},
-     set: function (new_html) {
+     get: function () {return innerhtmlGet.call(this)},
+     set: function (html) {
       var childNodes = this.childNodes
       for (var curlen = childNodes.length, i = curlen; i > 0; i--) {
        this.removeChild(childNodes[0])
       }
-      innerhtml_set.call (this, new_html)
+      innerhtmlSet.call(this, html)
      }
     })
    } ()
   }
   // Fix for IE HTMLImageElement.start being unwritable.
   if (/(msie|trident)/i.test(navigator.userAgent)) {
-   Object.defineProperty (HTMLImageElement.prototype, "start", {writable: true})
+   Object.defineProperty(HTMLImageElement.prototype, "start", {writable: true})
   }
   window.requestAnimationFrame = function () {
    return window.requestAnimationFrame       || 
@@ -69,7 +69,7 @@ void function () {
           window.mozRequestAnimationFrame    || 
           window.oRequestAnimationFrame      || 
           window.msRequestAnimationFrame     || 
-          function (callback) {window.setTimeout (callback, 1000 / 60)}
+          function (callback) {window.setTimeout(callback, 1000 / 60)}
   } ()
  }
  // </Miscellaneous browser fixes and polyfills.>
@@ -91,88 +91,89 @@ void function () {
  
  // <Physical control functions. TAG: mouse, TAG: keyboard, TAG: pointer, TAG: pinch, TAG: swipe.>
  if (h.library_settings.physical_control) {
-  var get_right_click =
-  h.get_right_click     = function (evt) {return (evt.which) ? (evt.which == 3) : ((evt.button) ? (evt.button == 2) : false)}
-  h.get_wheel_data      = function (evt) {return evt.detail ? evt.detail * -1 : evt.wheelDelta / 40}
-  h.get_key_code_string = function (evt) {
+  var getRightClick  =
+  h.getRightClick    = function (evt) {return (evt.which) ? (evt.which == 3) : ((evt.button) ? (evt.button == 2) : false)}
+  h.getWheelData     = function (evt) {return evt.detail ? evt.detail * -1 : evt.wheelDelta / 40}
+  h.getKeyCodeString = function (evt) {
    var keyCode = evt.keyCode
    var keyMap = {37: "left", 38: "up", 39: "right", 40: "down", 107: "+", 187: "+", 109: "-", 189: "-", 16: "shift", 27: "escape", 13: "enter"}
    if (typeof keyCode[keyMap] == "undefined") {return String.fromCharCode(keyCode).toUpperCase()} else {return keyCode[keyMap]}
   }
   if (h.library_settings.dom_position) {
-   h.add_pinch_controls  = function (init) {
-    var target_obj = init.target, current_distance = false, zoom_x = undefined, zoom_y = undefined
-    target_obj.addEventListener('touchend'    , end_effect)
-    target_obj.addEventListener('touchcancel' , end_effect)
-    target_obj.addEventListener('touchleave'  , end_effect)
-    target_obj.addEventListener('touchstart'  , pinch)
-    target_obj.addEventListener('touchmove'   , pinch)
-    function end_effect (evt) {if (current_distance != false) if (typeof init.end_effect != "undefined") init.end_effect (evt)}
+   h.addPinchControls  = function (init) {
+    var target = init.target, currentDistance = false, zoomX = undefined, zoomY = undefined
+    target.addEventListener('touchend'    , endEffect)
+    target.addEventListener('touchcancel' , endEffect)
+    target.addEventListener('touchleave'  , endEffect)
+    target.addEventListener('touchstart'  , pinch)
+    target.addEventListener('touchmove'   , pinch)
+    function endEffect (evt) {if (currentDistance != false) if (typeof init.endEffect != "undefined") init.endEffect(evt)}
     function pinch (evt) {
-     if (evt.touches.length < 2) {current_distance = false; return}
+     if (evt.touches.length < 2) {currentDistance = false; return}
      if (evt.type == 'touchmove') {
-      if (current_distance == false) {return} else {var last_distance = current_distance}
+      if (currentDistance == false) {return} else {var lastDistance = currentDistance}
      } else {
-      if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) === false)) return
+      if ((typeof init.startCondition != "undefined") && (init.startCondition (evt) === false)) return
      }
-     var xy0 = get_x_y(evt.touches[0], target_obj); var x0 = xy0[0]; var y0 = xy0[1]
-     var xy1 = get_x_y(evt.touches[1], target_obj); var x1 = xy1[0]; var y1 = xy1[1]
-     if ((init.always_recalculate_zoom_target === true) || (current_distance == false)) {
-      zoom_x = (x0 + x1) / 2, zoom_y = (y0 + y1) / 2
+     var xy0 = getXY(evt.touches[0], target); var x0 = xy0[0]; var y0 = xy0[1]
+     var xy1 = getXY(evt.touches[1], target); var x1 = xy1[0]; var y1 = xy1[1]
+     if ((init.alwaysRecalculateZoomTarget === true) || (currentDistance == false)) {
+      zoomX = (x0 + x1) / 2, zoomY = (y0 + y1) / 2
      }
-     current_distance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
+     currentDistance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
      if (evt.type == 'touchstart') {
-      if (typeof init.start_effect != "undefined") init.start_effect (evt, x0, y0, x1, y1)
+      if (typeof init.startEffect != "undefined") init.startEffect(evt, x0, y0, x1, y1)
       return
      }
-     init.result_function (current_distance / last_distance, zoom_x, zoom_y)
-     if (typeof init.move_effect != "undefined") init.move_effect (evt)
+     init.resultFunction(currentDistance / lastDistance, zoomX, zoomY)
+     if (typeof init.moveEffect != "undefined") init.moveEffect(evt)
     }
    }
-   h.add_swipe_controls  = function (init) {
+   
+   h.addSwipeControls  = function (init) {
     // N.B.: For PCs, use .preventDefault on dragstart. For mobile, use .preventDefault on touchmove.
-    if (typeof init.is_mobile == "undefined") init.is_mobile = true
-    var target_obj = init.target, initial_x, initial_y, current_x, current_y, swipe_in_effect = false
-    target_obj.addEventListener(init.is_mobile ? 'touchstart'  : 'mousedown', swipe_start_event)
-    target_obj.addEventListener(init.is_mobile ? 'touchmove'   : 'mousemove', swipe_event)
-    target_obj.addEventListener(init.is_mobile ? 'touchend'    : 'mouseup'  , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
-    target_obj.addEventListener(init.is_mobile ? 'touchleave'  : 'mouseout' , function (evt) {if (swipe_in_effect == false) return; swipe_end_event (evt)})
-    target_obj.addEventListener(init.is_mobile ? 'touchcancel' : 'blur'     , function (evt) {if (swipe_in_effect == false) return; swipe_end (evt)})
-    function swipe_end (evt) {
-     if (swipe_in_effect == false) return
-     swipe_in_effect = false
-     if (typeof init.end_effect != "undefined") init.end_effect (evt)
+    if (typeof init.isMobile == "undefined") init.isMobile = true
+    var target = init.target, initialX, initialY, currentX, currentY, swipeInEffect = false
+    target.addEventListener(init.isMobile ? 'touchstart'  : 'mousedown', swipeStartEvent)
+    target.addEventListener(init.isMobile ? 'touchmove'   : 'mousemove', swipeEvent)
+    target.addEventListener(init.isMobile ? 'touchend'    : 'mouseup'  , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
+    target.addEventListener(init.isMobile ? 'touchleave'  : 'mouseout' , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
+    target.addEventListener(init.isMobile ? 'touchcancel' : 'blur'     , function (evt) {if (swipeInEffect == false) return; swipeEnd(evt)})
+    function swipeEnd (evt) {
+     if (swipeInEffect == false) return
+     swipeInEffect = false
+     if (typeof init.endEffect != "undefined") init.endEffect(evt)
     }
-    function swipe_start_event (evt) {
-     if ((typeof init.start_condition != "undefined") && (init.start_condition (evt) == false)) return
-     if ((init.is_mobile) && (evt.touches.length != 1)) return
-     var xy = get_x_y((init.is_mobile) ? evt.touches[0] : evt, target_obj); initial_x = xy[0]; initial_y = xy[1]
-     current_x = initial_x; current_y = initial_y
-     if (swipe_in_effect == true) return
-     swipe_in_effect = true
-     if (typeof init.start_effect != "undefined") init.start_effect (evt)
+    function swipeStartEvent (evt) {
+     if ((typeof init.startCondition != "undefined") && (init.startCondition(evt) == false)) return
+     if ((init.isMobile) && (evt.touches.length != 1)) return
+     var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); initialX = xy[0]; initialY = xy[1]
+     currentX = initialX; currentY = initialY
+     if (swipeInEffect == true) return
+     swipeInEffect = true
+     if (typeof init.startEffect != "undefined") init.startEffect(evt)
     }
-    function swipe_event (evt) {
+    function swipeEvent (evt) {
      if (
-         ((init.is_mobile) && (evt.touches.length != 1)) ||
-         ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false))
-        ) {swipe_end (evt); return}
-     var xy = get_x_y((init.is_mobile) ? evt.touches[0] : evt, target_obj); current_x = xy[0]; current_y = xy[1]
-     if (typeof init.swipe_move != "undefined") init.swipe_move ({evt: evt, init: init, initial_x: initial_x, initial_y: initial_y, current_x: current_x, current_y: current_y, swipe_in_effect: swipe_in_effect})
+         ((init.isMobile) && (evt.touches.length != 1)) ||
+         ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false))
+        ) {swipeEnd(evt); return}
+     var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); currentX = xy[0]; currentY = xy[1]
+     if (typeof init.swipeMove != "undefined") init.swipeMove({evt: evt, init: init, initialX: initialX, initialY: initialY, currentX: currentX, currentY: currentY, swipeInEffect: swipeInEffect})
     }
-    function swipe_end_event (evt) {
-     if ((typeof init.continue_condition != "undefined") && (init.continue_condition(evt) === false)) {swipe_end (evt); return}
-     if (current_x < initial_x) {
-      if (typeof init.swipe_left != "undefined") init.swipe_left (evt)
+    function swipeEndEvent (evt) {
+     if ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false)) {swipeEnd(evt); return}
+     if (currentX < initialX) {
+      if (typeof init.swipeLeft != "undefined") init.swipeLeft(evt)
      } else {
-      if ((current_x > initial_x) && (typeof init.swipe_right != "undefined")) init.swipe_right (evt)
+      if ((currentX > initialX) && (typeof init.swipeRight != "undefined")) init.swipeRight(evt)
      }
-     if (current_y < initial_y) {
-      if (typeof init.swipe_down != "undefined") init.swipe_down (evt)
+     if (currentY < initialY) {
+      if (typeof init.swipeDown != "undefined") init.swipeDown(evt)
      } else {
-      if ((current_y > initial_y) && (typeof init.swipe_up != "undefined")) init.swipe_up (evt)
+      if ((currentY > initialY) && (typeof init.swipeUp != "undefined")) init.swipeUp(evt)
      }
-     swipe_end (evt)
+     swipeEnd(evt)
     }
    }
   }
@@ -181,21 +182,20 @@ void function () {
  
  // <Mouse/DOM object position functions. TAG: mouse, TAG: mouse position, TAG: positions, TAG: object positions, TAG: element positions.>
  if (h.library_settings.dom_position) {
-  var get_x_y = h.get_x_y   = function (evt, target) {
+  var getXY = h.getXY   = function (evt, target) {
    if (typeof target == "undefined") target = evt.target
    var rect = target.getBoundingClientRect(); return [evt.clientX - rect.left, evt.clientY - rect.top]
   }
-  var get_x = h.get_x       = function (evt, target) {
+  var getX = h.getX       = function (evt, target) {
    if (typeof target == "undefined") target = evt.target
    return evt.clientX - target.getBoundingClientRect().left
   }
-  var get_y = h.get_y       = function (evt, target) {
+  var getY = h.getY       = function (evt, target) {
    if (typeof target == "undefined") target = evt.target
    return evt.clientY - target.getBoundingClientRect().top
   }
   // Function to find the absolute position of a DOM object.
-  var findabspos =
-  h.findabspos              = function (obj, lastobj) {
+  var findabspos = h.findabspos = function (obj, lastobj) {
    var curleft = 0, curtop = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
@@ -210,7 +210,7 @@ void function () {
    } while (true)
   }
   // Function to find the absolute x-position of a DOM object.
-  h.findabspos_x            = function (obj, lastobj) {
+  h.findabsposX            = function (obj, lastobj) {
    var curleft = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
@@ -222,7 +222,7 @@ void function () {
    } while (true)
   }
   // Function to find the absolute y-position of a DOM object.
-  h.findabspos_y            = function (obj, lastobj) {
+  h.findabsposY            = function (obj, lastobj) {
    var curtop = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
@@ -234,80 +234,76 @@ void function () {
    } while (true)
   }
   // Function to find the absolute position of a DOM object, taking CSS scale transforms into account.
-  var findabspos_zoom =
-  h.findabspos_zoom         = function (obj, lastobj) {
-   var curleft = 0, curtop = 0, zoom_level_x = 0, zoom_level_y = 0, borderWidthTest = 0
+  var findabsposZoom = h.findabsposZoom = function (obj, lastobj) {
+   var curleft = 0, curtop = 0, zoomLevelX = 0, zoomLevelY = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
    if (obj.offsetParent == lastobj) {
-     zoom_level_x = 1; zoom_level_y = 1
+     zoomLevelX = 1; zoomLevelY = 1
     } else {
-     zoom_level_x = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "x"})
-     zoom_level_y = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "y"})
+     zoomLevelX = getInheritedTransform(obj.offsetParent, {type: "scale", xy: "x"})
+     zoomLevelY = getInheritedTransform(obj.offsetParent, {type: "scale", xy: "y"})
     }
     borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
-    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
+    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoomLevelX
     borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
-    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
+    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoomLevelY
     if (obj.offsetParent == lastobj) return [curleft, curtop] // If offsetParent is lastobj (or null if lastobj is null), return the result.
-    curleft += obj.offsetLeft * zoom_level_x
-    curtop  += obj.offsetTop  * zoom_level_y
+    curleft += obj.offsetLeft * zoomLevelX
+    curtop  += obj.offsetTop  * zoomLevelY
     obj = obj.offsetParent
    } while (true)
   }
   // Function to find the absolute x-position of a DOM objet, taking CSS scale transforms into account.
-  var findabspos_zoom_x = 
-  h.findabspos_zoom_x       = function (obj, lastobj) {
-   var curleft = 0, zoom_level_x = 0, borderWidthTest = 0
+  var findabsposZoomX = h.findabsposZoomX = function (obj, lastobj) {
+   var curleft = 0, zoomLevelX = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
    if (obj.offsetParent == lastobj) {
-     zoom_level_x = 1
+     zoomLevelX = 1
     } else {
-     zoom_level_x = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "x"})
+     zoomLevelX = getInheritedTransform(obj.offsetParent, {type: "scale", xy: "x"})
     }
     borderWidthTest = parseFloat(window.getComputedStyle(obj).borderLeftWidth)
-    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoom_level_x
+    if (!isNaN(borderWidthTest)) curleft += borderWidthTest * zoomLevelX
     if (obj.offsetParent == lastobj) return curleft // If offsetParent is lastobj (or null if lastobj is null), return the result.
-    curleft += obj.offsetLeft * zoom_level_x
+    curleft += obj.offsetLeft * zoomLevelX
     obj = obj.offsetParent
    } while (true)
   }
   // Function to find the absolute y-position of a DOM object, taking CSS scale transforms into account.
-  var findabspos_zoom_y =
-  h.findabspos_zoom_y       = function (obj, lastobj) {
-   var curtop = 0, zoom_level_y = 0, borderWidthTest = 0
+  var findabsposZoomY = h.findabsposZoomY = function (obj, lastobj) {
+   var curtop = 0, zoomLevelY = 0, borderWidthTest = 0
    if (typeof lastobj == "undefined") lastobj = null
    do {
     if (obj.offsetParent == lastobj) {
-     zoom_level_y = 1
+     zoomLevelY = 1
     } else {
-     zoom_level_y = get_inherited_transform(obj.offsetParent, {transform_type: "scale", xy: "y"})
+     zoomLevelY = getInheritedTransform(obj.offsetParent, {type: "scale", xy: "y"})
     }
     borderWidthTest = parseFloat(window.getComputedStyle(obj).borderTopWidth)
-    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoom_level_y
+    if (!isNaN(borderWidthTest)) curtop += borderWidthTest * zoomLevelY
     if (obj.offsetParent == lastobj) return curtop // If offsetParent is lastobj (or null if lastobj is null), return the result.
-    curtop += obj.offsetTop * zoom_level_y
+    curtop += obj.offsetTop * zoomLevelY
     obj = obj.offsetParent
    } while (true)
   }
-  // Example usage: get_inherited_transform (obj, {transform_type:scale, xy:"x"})
-  var get_inherited_transform =
-  h.get_inherited_transform = function (obj, init) {
-   var transform_type = init.transform_type
-   var xy             = init.xy
-   var transform_string = ""
-   var transform_array  = []
-   switch (transform_type) {
+  // Example usage: getInheritedTransform(obj, {type: scale, xy: "x"})
+  var getInheritedTransform = h.getInheritedTransform = function (obj, init) {
+   var transformType   = init.type
+   var xy              = init.xy
+   var transformString = ""
+   var transformArray  = []
+   switch (transformType) {
     case "scale":
      var scale = 1
      while (true) {
-      transform_string = getTransformString(obj)
-      if (transform_string != false) {
-       transform_array = (transform_string.slice(7, transform_string.length - 6)).split(",")
+      transformString = getTransformString(obj)
+      if (transformString != false) {
+       transformArray = (transformString.slice(7, transformString.length - 6)).split(",")
        switch (xy) {
-        case "x": scale *= parseFloat(transform_array[0]); break
-        case "y": scale *= parseFloat(transform_array[3]); break
+        case "x": scale *= parseFloat(transformArray[0]); break
+        case "y": scale *= parseFloat(transformArray[3]); break
        }
       }
       var obj = obj.parentNode
@@ -317,13 +313,13 @@ void function () {
    }
    
    function getTransformString (obj) {
-    var transform_string = window.getComputedStyle(obj)["Transform"]
-    if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["msTransform"]}
-    if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["webkitTransform"]}
-    if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["MozTransform"]}
-    if (typeof transform_string == "undefined") {transform_string = window.getComputedStyle(obj)["OTransform"]}
-    if ((typeof transform_string == "undefined") || (transform_string == "none")) return false
-    return transform_string
+    var transformString = window.getComputedStyle(obj)["Transform"]
+    if (typeof transformString == "undefined") {transformString = window.getComputedStyle(obj)["msTransform"]}
+    if (typeof transformString == "undefined") {transformString = window.getComputedStyle(obj)["webkitTransform"]}
+    if (typeof transformString == "undefined") {transformString = window.getComputedStyle(obj)["MozTransform"]}
+    if (typeof transformString == "undefined") {transformString = window.getComputedStyle(obj)["OTransform"]}
+    if ((typeof transformString == "undefined") || (transformString == "none")) return false
+    return transformString
    }
   }
  }
@@ -331,290 +327,290 @@ void function () {
  
  // <Ajax / download functions. TAG: ajax, TAG: xhr, TAG: download, TAG: downloads.>
  if (h.library_settings.download) {
- // Ajax functions.
- h.ajax = function () {
-  var ajax = {}
-  
-  function merge_objects (secondary, primary) {
-   if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
-   var new_object = {}
-   for (var property in secondary) {new_object[property] = secondary[property]}
-   for (var property in primary)   {new_object[property] = primary  [property]}
-   return new_object
-  }
-  // Only ajax_queue.add, ajax_queue.group_add, ajax_queue.group_run, and ajax_queue.run are exposed.
-  var ajax_queue = ajax.queue = function () {
-   var ajax_queue = {}
-   var queue_list = {}
+  // Ajax functions.
+  h.ajax = function () {
+   var ajax = {}
    
-   // Enqueue an ajax function: If the queue is locked, add it to the queue. Otherwise, run it.
-   // Parameters: .name and .data.
-   ajax_queue.enqueue = ajax_queue.add = function (init) {
-    var name = (typeof init.name != "undefined") ? init.name : "default"
-    if (typeof queue_list[name] == "undefined") queue_list[name] = {locked: false, queue: []}
-    var queue = queue_list[name]
-    if (queue.locked) {
-     queue.queue_function.push (init.function)
-     queue.queue_data.push     (init.data)
-     return
-    }
-    process (init)
+   function merge_objects (secondary, primary) {
+    if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
+    var new_object = {}
+    for (var property in secondary) {new_object[property] = secondary[property]}
+    for (var property in primary)   {new_object[property] = primary  [property]}
+    return new_object
    }
-   
-   // Process an entry.
-   function process (init) {
-    var name          = init.name
-    var data          = init.data
-    queue_list[name].locked = true
-    init.function.apply (null, init.data)
-    ["success", "error", "callback"].forEach(function (func) {
-     init.data[func] = function () {
-      queue_list[name].locked = false
-      init.data[func].apply (null, Array.prototype.slice.call(arguments))
+   // Only ajax_queue.add, ajax_queue.group_add, ajax_queue.group_run, and ajax_queue.run are exposed.
+   var ajax_queue = ajax.queue = function () {
+    var ajax_queue = {}
+    var queue_list = {}
+    
+    // Enqueue an ajax function: If the queue is locked, add it to the queue. Otherwise, run it.
+    // Parameters: .name and .data.
+    ajax_queue.enqueue = ajax_queue.add = function (init) {
+     var name = (typeof init.name != "undefined") ? init.name : "default"
+     if (typeof queue_list[name] == "undefined") queue_list[name] = {locked: false, queue: []}
+     var queue = queue_list[name]
+     if (queue.locked) {
+      queue.queue_function.push(init.function)
+      queue.queue_data.push(init.data)
+      return
      }
-    })
+     process(init)
+    }
+    
+    // Process an entry.
+    function process (init) {
+     var name          = init.name
+     var data          = init.data
+     queue_list[name].locked = true
+     init.function.apply(null, init.data)
+     ["success", "error", "callback"].forEach(function (func) {
+      init.data[func] = function () {
+       queue_list[name].locked = false
+       init.data[func].apply(null, Array.prototype.slice.call(arguments))
+      }
+     })
+    }
+   } ()
+   
+   // A "latch"?
+   ajax.create_accumulator = function (init) {
+    var default_function = init.function
+    var func_list    = []
+    var run_list     = []
+    var resolve_func = undefined
+    var test_counter = 0
+    
+    var accumulator = {add: add, add_custom: add_custom, resolve: resolve, test: test}; return accumulator
+    function add () {func_list.push(default_function); run_list.push(Array.prototype.slice.call(arguments))}  
+    function add_custom (init) {
+     var func = (typeof init.function != "undefined") ? init.function : default_function
+     func_list.push(func); run_list.push(init.data)
+    }   
+    function resolve (new_resolve_func) {
+     if (typeof new_resolve_func != "undefined") resolve_func = new_resolve_func
+     test_counter += run_list.length
+     run_list.forEach(function (params, i) {func_list[i].apply(null, params)})
+     return accumulator
+    }
+    function test () {
+     test_counter -= 1
+     if (accumulator.test_progress) accumulator.test_progress(run_list.length - test_counter, run_list.length)
+     if (test_counter == 0 && resolve_func) resolve_func()
+    }
    }
-  } ()
-  
-  // A "latch"?
-  ajax.create_accumulator = function (init) {
-   var default_function = init.function
-   var func_list    = []
-   var run_list     = []
-   var resolve_func = undefined
-   var test_counter = 0
    
-   var accumulator = {add: add, add_custom: add_custom, resolve: resolve, test: test}; return accumulator
-   function add () {func_list.push (default_function); run_list.push (Array.prototype.slice.call(arguments))}  
-   function add_custom (init) {
-    var func = (typeof init.function != "undefined") ? init.function : default_function
-    func_list.push (func); run_list.push (init.data)
-   }   
-   function resolve (new_resolve_func) {
-    if (typeof new_resolve_func != "undefined") resolve_func = new_resolve_func
-    test_counter += run_list.length
-    run_list.forEach(function (params, i) {func_list[i].apply (null, params)})
-    return accumulator
-   }
-   function test () {
-    test_counter -= 1
-    if (accumulator.test_progress) accumulator.test_progress (run_list.length - test_counter, run_list.length)
-    if (test_counter == 0 && resolve_func) resolve_func ()
-   }
-  }
-  
-  // Get data. Parameters:
-  // .plaintext / .send_data_as_plaintext, .is_asynchronous / .async, .charset, .data,
-  // .ignore_request_status, .response_type, .header_list, .file, .request_method,
-  // .error, .success.
-  ajax.get_data = function (params) {
-   // Convert request into GET or POST data.
-   var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
-   var is_asynchronous = true
-   if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
-   if (typeof params.async           != "undefined") is_asynchronous = params.async
-   var charset = (typeof params.charset != "undefined") ? params.charset : ""
-   var data    = (typeof params.data    != "undefined") ? params.data    : ""
-   var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
-   var response_type         = (typeof params.response_type         != "undefined") ? params.response_type         : undefined
-   var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
-   
-   // Call the request function.
-   var http_request_result = make_request (params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method)
-   var http_request        = http_request_result["http_request"]
-   
-   if (is_asynchronous == false) return process_http_request ()
-   
-   http_request.onreadystatechange = function () {if (http_request.readyState == 4) process_http_request ()}
-   return http_request
-   
-   function process_http_request () {
-    var response_text = http_request.responseText
-    // If the request status isn't 200, send an error.
-    if ((http_request.status != 200) && (ignore_request_status == false)) {
-     response_text = {error: true, errormessage: response_text}
-    } else {
-     if ((send_data_as_plaintext != true) && (response_text != "")) {
-      // Send an error if the JSON text can't be parsed.
-      try {
-       response_text = JSON.parse (response_text)
-      } catch (err) {
-       response_text = {error: true, errormessage: response_text}
-       if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
+   // Get data. Parameters:
+   // .plaintext / .send_data_as_plaintext, .is_asynchronous / .async, .charset, .data,
+   // .ignore_request_status, .response_type, .header_list, .file, .request_method,
+   // .error, .success.
+   ajax.get_data = function (params) {
+    // Convert request into GET or POST data.
+    var send_data_as_plaintext = params.send_data_as_plaintext || params.plaintext || false
+    var is_asynchronous = true
+    if (typeof params.is_asynchronous != "undefined") is_asynchronous = params.is_asynchronous
+    if (typeof params.async           != "undefined") is_asynchronous = params.async
+    var charset = (typeof params.charset != "undefined") ? params.charset : ""
+    var data    = (typeof params.data    != "undefined") ? params.data    : ""
+    var ignore_request_status = (typeof params.ignore_request_status != "undefined") ? params.ignore_request_status : false
+    var response_type         = (typeof params.response_type         != "undefined") ? params.response_type         : undefined
+    var header_list           = (typeof params.header_list           != "undefined") ? params.header_list           : undefined
+    
+    // Call the request function.
+    var http_request_result = make_request(params.file, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, params.request_method)
+    var http_request        = http_request_result["http_request"]
+    
+    if (is_asynchronous == false) return process_http_request()
+    
+    http_request.onreadystatechange = function () {if (http_request.readyState == 4) process_http_request()}
+    return http_request
+    
+    function process_http_request () {
+     var response_text = http_request.responseText
+     // If the request status isn't 200, send an error.
+     if ((http_request.status != 200) && (ignore_request_status == false)) {
+      response_text = {error: true, errormessage: response_text}
+     } else {
+      if ((send_data_as_plaintext != true) && (response_text != "")) {
+       // Send an error if the JSON text can't be parsed.
+       try {
+        response_text = JSON.parse(response_text)
+       } catch (err) {
+        response_text = {error: true, errormessage: response_text}
+        if (is_asynchronous == false) {return response_text} else {if (params.error) params.error(response_text); return}
+       }
       }
      }
+     
+     // Send an error.
+     if ((response_text != "") && (response_text.error == true)) {
+      if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
+      return
+     }
+     
+     if (is_asynchronous == false) return response_text
+     if (typeof params.success != "undefined") params.success(response_text)
     }
-    
-    // Send an error.
-    if ((response_text != "") && (response_text.error == true)) {
-     if (typeof params.error != "undefined") if (is_asynchronous == false) {return response_text} else {return params.error(response_text)}
-     return
+   }
+   
+   // Use XMLHttpRequest to get text data from a file.
+   ajax.get_text_data = function (params) {return get_data(merge_objects(params, {plaintext: true}))}
+   
+   // Set text in a DOM element based on a filename (url).
+   ajax.set_innerhtml_from_url = function (params) {
+    return get_data(merge_objects(params, {plaintext: true, success: function (result) {obj.innerHTML = result; params.success()}}))
+   }
+   
+   function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
+    if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
+    if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
+    if (typeof charset == "undefined" || charset == '') {charset = ''} else {charset = '; charset=' + charset}
+    var http_request = new XMLHttpRequest()
+    if (!http_request) {alert("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
+    if (typeof request_method == "undefined") var request_method = ((data === null || data === '') ? "GET" : "POST")
+    if (request_method == "GET") {
+     if (typeof data == "string") {
+      // Add a "?" or "&" if the "?" doesn't already exist in the ending part of the url.
+      var altchar = (data[0] != "&") ? "&" : ""
+      var connecting_character = (url.indexOf("?") == -1) ? "?" : altchar
+      url += connecting_character + data
+     }
+     data = null
     }
-    
-    if (is_asynchronous == false) return response_text
-    if (typeof params.success != "undefined") params.success (response_text)
-   }
-  }
-
-  // Use XMLHttpRequest to get text data from a file.
-  ajax.get_text_data = function (params) {return get_data (merge_objects(params, {plaintext: true}))}
-  
-  // Set text in a DOM element based on a filename (url).
-  ajax.set_innerhtml_from_url = function (params) {
-   return get_data (merge_objects (params, {plaintext: true, success: function (result) {obj.innerHTML = result; params.success ()}}))
-  }
-  
-  function make_request (url, data, send_data_as_plaintext, charset, is_asynchronous, response_type, header_list, request_method) {
-   if ((typeof send_data_as_plaintext == "undefined") || (send_data_as_plaintext !== true)) send_data_as_plaintext = false
-   if ((typeof is_asynchronous == "undefined") || (is_asynchronous != false)) is_asynchronous = true
-   if (typeof charset == "undefined" || charset == '') {charset = ''} else {charset = '; charset=' + charset}
-   var http_request = new XMLHttpRequest()
-   if (!http_request) {alert ("Cannot create an XMLHTTP instance for some reason. Please try reloading the page.")}
-   if (typeof request_method == "undefined") var request_method = ((data === null || data === '') ? "GET" : "POST")
-   if (request_method == "GET") {
-    if (typeof data == "string") {
-     // Add a "?" or "&" if the "?" doesn't already exist in the ending part of the url.
-     var altchar = (data[0] != "&") ? "&" : ""
-     var connecting_character = (url.indexOf("?") == -1) ? "?" : altchar
-     url += connecting_character + data
+    http_request.open(request_method, url, is_asynchronous)
+    if (typeof response_type != "undefined") http_request.responseType = response_type
+    if (send_data_as_plaintext === true) {
+     http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
+     if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
+    } else {
+     http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
     }
-    data = null
+    if (header_list) {
+     header_list.forEach(function (header) {http_request.setRequestHeader(header.name, header.content)})
+    }
+    http_request.send(data)
+    return {"http_request": http_request}
    }
-   http_request.open (request_method, url, is_asynchronous)
-   if (typeof response_type != "undefined") http_request.responseType = response_type
-   if (send_data_as_plaintext === true) {
-    http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
-    if (typeof http_request.overrideMimeType != "undefined") http_request.overrideMimeType("text/plain; charset=x-user-defined")
-   } else {
-    http_request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded' + charset)
-   }
-   if (header_list) {
-    header_list.forEach(function (header) {http_request.setRequestHeader(header.name, header.content)})
-   }
-   http_request.send(data)
-   return {"http_request": http_request}
-  }
-  ajax.is_library_container = true
-  return ajax
- } ()
- h.get_data = h.ajax.get_data
-}
+   ajax.is_library_container = true
+   return ajax
+  } ()
+  h.get_data = h.ajax.get_data
+ }
  // </Ajax / download functions>
  
  // <DOM-widget functions. TAG: DOM, TAG: widgets, TAG: DOM widgets.>
  if (h.library_settings.gui_widgets) {
   h.sliderbar = function (init) {
-   var main = (typeof init.main_element != "undefined") ? init.main_element : document.createElement('div')
+   var main = (typeof init.mainElement != "undefined") ? init.mainElement : document.createElement('div')
    Object.defineProperty(main, 'parent', {
     get: function () {return parent},
-    set: function (new_parent) {
-     if ((typeof new_parent != "object") || (!(new_parent instanceof HTMLElement))) return
-     parent = new_parent; new_parent.appendChild(main); if (main.textbox) new_parent.appendChild(main.textbox)
+    set: function (newParent) {
+     if ((typeof newParent != "object") || (!(newParent instanceof HTMLElement))) return
+     parent = newParent; newParent.appendChild(main); if (main.textbox) newParent.appendChild(main.textbox)
     }
    })
    var parent = main.parent = init.parent
-   var background_style            = init.background_style
-   var foreground_container_style  = init.foreground_container_style
-   var foreground_style            = init.foreground_style
-   var foreground_inverse_style    = init.foreground_inverse_style
-   var background_class            = init.background_class
-   var foreground_container_class  = init.foreground_container_class
-   var foreground_class            = init.foreground_class
-   var foreground_inverse_class    = init.foreground_inverse_class
-   var background_beyond_max_style = init.background_beyond_max_style
-   var pivot_slice_style           = init.pivot_slice_style
-   var pivot_slice_class           = init.pivot_slice_class
-   var control_style               = init.control_style
-   var control_image_src           = init.control_image
-   var control_class               = init.control_class
-   var point_initial               = (typeof init.point_initial     != "undefined") ? init.point_initial : 0
-   var orientation                 = ((typeof init.orientation      != "undefined") && (init.orientation      == "vertical")) ? "vertical" : "horizontal"
-   var use_touch_events            = ((typeof init.use_touch_events != "undefined") && (init.use_touch_events == true      )) ? true       : false
-   var use_mouse_events            = ((typeof init.use_mouse_events == "undefined") || (init.use_mouse_events == true      )) ? true       : false
-   main.start_condition            = (typeof init.start_condition != "undefined") ? init.start_condition : undefined
-   main.events                     = {update: ("events" in init) ? init.events.update : undefined}
-   main.point_maximum              = (typeof init.point_maximum     == "number") ? init.point_maximum : 100
-   main.pivot_point                = (typeof init.pivot_point       == "number") ? init.pivot_point   : 0
-   main.point_upper_limit          = (typeof init.point_upper_limit == "number") ? init.point_upper_limit : 100
-   main.textbox_enabled            = init.textbox_enabled || false
-   main.control_unit_offset        = (typeof init.control_unit_offset == "number") ? init.control_unit_offset : 0
-   main.css_unit_type              = init.css_unit_type || "px"
-   main.recalculate_size           = (typeof init.recalculate_size != "undefined") ? init.recalculate_size : true
+   var backgroundStyle          = init.backgroundStyle
+   var foregroundContainerStyle = init.foregroundContainerStyle
+   var foregroundStyle          = init.foregroundStyle
+   var foregroundInverseStyle   = init.foregroundInverseStyle
+   var backgroundClass          = init.backgroundClass
+   var foregroundContainerClass = init.foregroundContainerClass
+   var foregroundClass          = init.foregroundClass
+   var foregroundInverseClass   = init.foregroundInverseClass
+   var backgroundBeyondMaxStyle = init.backgroundBeyondMaxStyle
+   var pivotSliceStyle          = init.pivotSliceStyle
+   var pivotSliceClass          = init.pivotSliceClass
+   var controlStyle             = init.controlStyle
+   var controlImageSrc          = init.controlImage
+   var controlClass             = init.controlClass
+   var pointInitial             = (typeof init.pointInitial    != "undefined") ? init.pointInitial : 0
+   var orientation              = ((typeof init.orientation    != "undefined") && (init.orientation    == "vertical")) ? "vertical" : "horizontal"
+   var useTouchEvents           = ((typeof init.useTouchEvents != "undefined") && (init.useTouchEvents == true      )) ? true       : false
+   var useMouseEvents           = ((typeof init.useMouseEvents == "undefined") || (init.useMouseEvents == true      )) ? true       : false
+   main.startCondition          = (typeof init.startCondition  != "undefined") ? init.startCondition : undefined
+   main.events                  = {update: ("events" in init) ? init.events.update : undefined}
+   main.pointMaximum            = (typeof init.pointMaximum    == "number") ? init.pointMaximum    : 100
+   main.pivotPoint              = (typeof init.pivotPoint      == "number") ? init.pivotPoint      : 0
+   main.pointUpperLimit         = (typeof init.pointUpperLimit == "number") ? init.pointUpperLimit : 100
+   main.textboxEnabled          = init.textboxEnabled || false
+   main.controlUnitOffset       = (typeof init.controlUnitOffset == "number") ? init.controlUnitOffset : 0
+   main.cssUnitType             = init.cssUnitType || "px"
+   main.recalculateSize         = (typeof init.recalculateSize != "undefined") ? init.recalculateSize : true
    
-   var width_height    = (orientation == "horizontal") ? "width"           : "height"
-   var left_top        = (orientation == "horizontal") ? "left"            : "top"
-   var pageXY          = (orientation == "horizontal") ? "pageX"           : "pageY"
-   var orientation_xy  = (orientation == "horizontal") ? "x"               : "y"
-   var findabspos_zoom = (orientation == "horizontal") ? h.findabspos_zoom_x : h.findabspos_zoom_y
+   var widthHeight    = (orientation == "horizontal") ? "width"           : "height"
+   var leftTop        = (orientation == "horizontal") ? "left"            : "top"
+   var pageXY         = (orientation == "horizontal") ? "pageX"           : "pageY"
+   var orientationXY  = (orientation == "horizontal") ? "x"               : "y"
+   var findabsposZoom = (orientation == "horizontal") ? h.findabsposZoomX : h.findabsposZoomY
    
-   var px_to_css_unit_type_fixed = undefined
+   var pxToCssUnitTypeFixed = undefined
    
-   var zoom_level_fixed = undefined
+   var zoomLevelFixed = undefined
    // Add a linked textbox object if it is set.
-   if (main.textbox_enabled != true) {
+   if (main.textboxEnabled != true) {
     var textbox = main.textbox = undefined
    } else {
     var textbox = main.textbox = document.createElement('div')
-    textbox.className = init.textbox_class || ''; add_style(textbox, init.textbox_style || '')
+    textbox.className = init.textboxClass || ''; addStyle(textbox, init.textboxStyle || '')
     parent.appendChild(textbox)
-    if (typeof init.textbox_prefix != "undefined") {
-     var textbox_prefix = document.createElement('div')
-     textbox_prefix.className = init.textbox_prefix_class || ''; add_style(textbox_prefix, init.textbox_prefix_style || '')
-     textbox_prefix.innerHTML = init.textbox_prefix || ''
-     textbox.appendChild(textbox_prefix)
+    if (typeof init.textboxPrefix != "undefined") {
+     var textboxPrefix = document.createElement('div')
+     textboxPrefix.className = init.textboxPrefixClass || ''; addStyle(textboxPrefix, init.textboxPrefixStyle || '')
+     textboxPrefix.innerHTML = init.textboxPrefix || ''
+     textbox.appendChild(textboxPrefix)
     }
-    var textbox_number = document.createElement('input')
-    add_style(textbox_number, init.textbox_number_style || ''); textbox_number.className = init.textbox_number_class || ''
-    textbox_number.type = "text"
-    textbox_number.readOnly = false
-    textbox_number.addEventListener('input', textbox_change)
-    textbox_number.addEventListener('keypress', textbox_keypress)
-    textbox.appendChild(textbox_number)
-    if (typeof init.textbox_suffix != "undefined") {
-     var textbox_suffix = document.createElement('div')
-     textbox_suffix.className = init.textbox_suffix_class  || ''; add_style(textbox_suffix, init.textbox_suffix_style || '')
-     textbox_suffix.innerHTML = init.textbox_suffix || ''
-     textbox.appendChild(textbox_suffix)
+    var textboxNumber = document.createElement('input')
+    addStyle(textboxNumber, init.textboxNumberStyle || ''); textboxNumber.className = init.textboxNumberClass || ''
+    textboxNumber.type = "text"
+    textboxNumber.readOnly = false
+    textboxNumber.addEventListener('input', textboxChange)
+    textboxNumber.addEventListener('keypress', textboxKeypress)
+    textbox.appendChild(textboxNumber)
+    if (typeof init.textboxSuffix != "undefined") {
+     var textboxSuffix = document.createElement('div')
+     textboxSuffix.className = init.textboxSuffixClass  || ''; addStyle(textboxSuffix, init.textboxSuffixStyle || '')
+     textboxSuffix.innerHTML = init.textboxSuffix || ''
+     textbox.appendChild(textboxSuffix)
     }
    }
    
    // Set the main object (background) class and style. Don't override the original style with a blank if a new one isn't defined.
-   main.className = init.background_class || ''; if (typeof background_style != "undefined") add_style(main, background_style)
+   main.className = init.backgroundClass || ''; if (typeof backgroundStyle != "undefined") addStyle(main, backgroundStyle)
    
-   // Create the "background_beyond_max" object and set its class and style.
-   if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
-    main.background_beyond_max = document.createElement('div'); main.background_beyond_max.className = init.background_beyond_max_class || ''; add_style(main.background_beyond_max, background_beyond_max_style || '')
-    main.appendChild(main.background_beyond_max)
+   // Create the "backgroundBeyondMax" object and set its class and style.
+   if ((typeof backgroundBeyondMaxStyle != 'undefined') || (typeof backgroundBeyondMaxClass != 'undefined')) {
+    main.backgroundBeyondMax = document.createElement('div'); main.backgroundBeyondMax.className = init.backgroundBeyondMaxClass || ''; addStyle(main.backgroundBeyondMax, backgroundBeyondMaxStyle || '')
+    main.appendChild(main.backgroundBeyondMax)
    }
    
    // Create the foreground object and set its class and style.
-   main.foreground_container = document.createElement('div'); add_style(main.foreground_container, "position: relative; overflow: hidden; "+width_height+": 100%; line-height: 0")
-   main.foreground_container.className = foreground_container_class || ''; add_style(main.foreground_container, foreground_container_style || '')
-   main.appendChild(main.foreground_container)
-   main.foreground_container.style.pointerEvents = "none"
+   main.foregroundContainer = document.createElement('div'); addStyle(main.foregroundContainer, "position: relative; overflow: hidden; "+widthHeight+": 100%; line-height: 0")
+   main.foregroundContainer.className = foregroundContainerClass || ''; addStyle(main.foregroundContainer, foregroundContainerStyle || '')
+   main.appendChild(main.foregroundContainer)
+   main.foregroundContainer.style.pointerEvents = "none"
    
-   main.foreground = document.createElement('div'); main.foreground.className = foreground_class || ''; add_style(main.foreground, foreground_style || '')
-   main.foreground_container.appendChild(main.foreground)
+   main.foreground = document.createElement('div'); main.foreground.className = foregroundClass || ''; addStyle(main.foreground, foregroundStyle || '')
+   main.foregroundContainer.appendChild(main.foreground)
    main.foreground.style.pointerEvents = "none"
    
-   main.foreground_inverse = document.createElement('div'); main.foreground_inverse.className = foreground_inverse_class || ''; add_style(main.foreground_inverse, foreground_inverse_style || '')
-   main.foreground_container.appendChild(main.foreground_inverse)
-   main.foreground_inverse.style.pointerEvents = "none"
+   main.foregroundInverse = document.createElement('div'); main.foregroundInverse.className = foregroundInverseClass || ''; addStyle(main.foregroundInverse, foregroundInverseStyle || '')
+   main.foregroundContainer.appendChild(main.foregroundInverse)
+   main.foregroundInverse.style.pointerEvents = "none"
    
    // Create the control object and set its class and style.
-   var control_element_type = (typeof control_image_src != "undefined") ? "img" : "div"
-   main.control = document.createElement(control_element_type)
+   var controlElementType = (typeof controlImageSrc != "undefined") ? "img" : "div"
+   main.control = document.createElement(controlElementType)
    main.control.style.pointerEvents = "none"
-   main.control.className = control_class || ''
-   add_style(main.control, control_style || '')
+   main.control.className = controlClass || ''
+   addStyle(main.control, controlStyle || '')
    
-   if (typeof control_image_src != "undefined") main.control.src = control_image_src
+   if (typeof controlImageSrc != "undefined") main.control.src = controlImageSrc
    main.appendChild(main.control)
    
    // Now make the pivot slice element.
-   if (typeof pivot_slice_style != 'undefined') {
-    main.pivot_slice = document.createElement('div'); main.pivot_slice.className = pivot_slice_class || ''; add_style(main.pivot_slice, pivot_slice_style || '')
-    main.appendChild(main.pivot_slice)
+   if (typeof pivotSliceStyle != 'undefined') {
+    main.pivotSlice = document.createElement('div'); main.pivotSlice.className = pivotSliceClass || ''; addStyle(main.pivotSlice, pivotSliceStyle || '')
+    main.appendChild(main.pivotSlice)
    }
    
    // Calculate the physical control position max, calculate the logical control position max, and set the initial physical control position.
@@ -622,49 +618,49 @@ void function () {
    main.update()
    
    var startscroll = false, startxy = 0, offsetxy = 0     
-   if (use_mouse_events) {  
+   if (useMouseEvents) {  
     main.addEventListener     ('mousedown', mousedown)
     main.addEventListener     ('mouseover', mousemove)
     main.addEventListener     ('mousemove', mousemove)
-    document.addEventListener('mouseup'  , mouseup_or_blur)
-    window.addEventListener   ('blur'     , mouseup_or_blur)
+    document.addEventListener ('mouseup'  , mouseupOrBlur)
+    window.addEventListener   ('blur'     , mouseupOrBlur)
     window.addEventListener   ('mouseout' , mouseout)
    }
-   if (use_touch_events) {
+   if (useTouchEvents) {
     main.addEventListener     ('touchstart' , touchstart)
     main.addEventListener     ('touchmove'  , mousemove)
-    document.addEventListener('touchend'   , mouseup_or_blur)
-    window.addEventListener   ('touchcancel', mouseup_or_blur)
-    window.addEventListener   ('touchleave' , mouseup_or_blur)
+    document.addEventListener ('touchend'   , mouseupOrBlur)
+    window.addEventListener   ('touchcancel', mouseupOrBlur)
+    window.addEventListener   ('touchleave' , mouseupOrBlur)
    }
    if (main.textbox) {
-    document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
-    textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
-    textbox_number.removeEventListener ('input'   , textbox_change)
-    textbox_number.removeEventListener ('keypress', textbox_keypress)
+    document.removeEventListener      ((!useTouchEvents) ? 'mousedown' : 'touchstart', textboxBlur)
+    textboxNumber.removeEventListener ((!useTouchEvents) ? 'click'     : 'touchend',  textboxFocus)
+    textboxNumber.removeEventListener ('input'   , textboxChange)
+    textboxNumber.removeEventListener ('keypress', textboxKeypress)
    }
    
-   main.update_position = function (pxc, zoom_level) {
-    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
-    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
-    startxy = findabspos_zoom(main) / (pxc * zoom_level)
+   main.updatePosition = function (pxc, zoomLevel) {
+    if (typeof pxc       == "undefined") pxc       = pxToCssUnitType()
+    if (typeof zoomLevel == "undefined") zoomLevel = calculateZoomLevel()
+    startxy = findabsposZoom(main) / (pxc * zoomLevel)
    }
-   main.set_position = function (new_position, trigger_update_event, pxc, evt) {return set_position(new_position, trigger_update_event, pxc, evt)}
-   main.set_position_percent = function (new_point_value, trigger_update_event, evt) {
-    main.set_position(main.position_physical_max * new_point_value / main.point_upper_limit, trigger_update_event, px_to_css_unit_type(), evt)
+   main.setPosition = function (newPosition, triggerUpdateEvent, pxc, evt) {return setPosition(newPosition, triggerUpdateEvent, pxc, evt)}
+   main.setPositionPercent = function (newPointValue, triggerUpdateEvent, evt) {
+    main.setPosition(main.positionPhysicalMax * newPointValue / main.pointUpperLimit, triggerUpdateEvent, pxToCssUnitType(), evt)
    }
-   main.get_position_percent = function () {return (main.position / main.position_physical_max * main.point_upper_limit)}
-   main.destroy = function () {return destroy(main, use_mouse_events, use_touch_events)}
+   main.getPositionPercent = function () {return (main.position / main.positionPhysicalMax * main.pointUpperLimit)}
+   main.destroy = function () {return destroy(main, useMouseEvents, useTouchEvents)}
    
    //If MutationObserver is defined, call main.destroy when the object is removed from a parent element.
    var MutationObserver = window.MutationObserver || window.WebkitMutationObserver
    if (typeof MutationObserver != "undefined") {
-    var observer = new MutationObserver (function (mutation_list) {
-     for (var i = 0, curlen_i = mutation_list.length; i < curlen_i; i++) {
-      var mutation_item = mutation_list[i]
-      if (mutation_item.type != 'childList') return
-      for (var j = 0, curlen_j = mutation_item.removedNodes.length; j < curlen_j; j++) {
-       if (mutation_item.removedNodes[j] != main) continue
+    var observer = new MutationObserver(function (mutationList) {
+     for (var i = 0, curlenI = mutationList.length; i < curlenI; i++) {
+      var mutationItem = mutationList[i]
+      if (mutationItem.type != 'childList') return
+      for (var j = 0, curlenJ = mutationItem.removedNodes.length; j < curlenJ; j++) {
+       if (mutationItem.removedNodes[j] != main) continue
        main.destroy(); observer.disconnect(); return
       }
      }
@@ -673,84 +669,84 @@ void function () {
    }
    return main
    
-   function px_to_css_unit_type () {
-    if (main.css_unit_type == "px") return 1
-    if ((!main.recalculate_size) && (typeof px_to_css_unit_type_fixed != "undefined")) return px_to_css_unit_type_fixed
-    var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.css_unit_type
+   function pxToCssUnitType () {
+    if (main.cssUnitType == "px") return 1
+    if ((!main.recalculateSize) && (typeof pxToCssUnitTypeFixed != "undefined")) return pxToCssUnitTypeFixed
+    var mydiv = document.createElement('div'); mydiv.style.visibility = 'hidden'; mydiv.style.width = '1' + main.cssUnitType
     parent.appendChild(mydiv); var w = mydiv.getBoundingClientRect().width; parent.removeChild(mydiv)
-    if (!main.recalculate_size) px_to_css_unit_type_fixed = w
+    if (!main.recalculateSize) pxToCssUnitTypeFixed = w
     return w
    }
-   function calculate_physical_max (pxc, zoom_level) {
-    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
-    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
+   function calculatePhysicalMax (pxc, zoomLevel) {
+    if (typeof zoomLevel == "undefined") zoomLevel = calculateZoomLevel()
+    if (typeof pxc       == "undefined") pxc       = pxToCssUnitType()
     var style = window.getComputedStyle(main)
-    var box_sizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
-    if (box_sizing == "border-box") {
-     var border_and_padding_adjustment = 0
+    var boxSizing = (style.boxSizing != "") ? style.boxSizing : style.mozBoxSizing
+    if (boxSizing == "border-box") {
+     var borderAndPaddingAdjustment = 0
     } else {
-     var border_and_padding_adjustment = (orientation == "horizontal"
+     var borderAndPaddingAdjustment = (orientation == "horizontal"
       ? parseFloat(window.getComputedStyle(main).borderLeftWidth) + parseFloat(window.getComputedStyle(main).borderRightWidth)
       : parseFloat(window.getComputedStyle(main).borderTopWidth)  + parseFloat(window.getComputedStyle(main).borderBottomWidth)
      )
     }
-    border_and_padding_adjustment += (orientation == "horizontal"
+    borderAndPaddingAdjustment += (orientation == "horizontal"
      ? parseFloat(window.getComputedStyle(main).paddingLeft) + parseFloat(window.getComputedStyle(main).paddingRight)
      : parseFloat(window.getComputedStyle(main).paddingTop)  + parseFloat(window.getComputedStyle(main).paddingBottom)
     )
-    if (isNaN(border_and_padding_adjustment)) border_and_padding_adjustment = 0
-    var is_not_border_box = (box_sizing != "border-box") ? 1 : 0
-    return (main.getBoundingClientRect()[width_height] - main.control.getBoundingClientRect()[width_height]) / (pxc * zoom_level) - border_and_padding_adjustment / pxc - main.control_unit_offset * 2
+    if (isNaN(borderAndPaddingAdjustment)) borderAndPaddingAdjustment = 0
+    var isNotBorderBox = (boxSizing != "border-box") ? 1 : 0
+    return (main.getBoundingClientRect()[widthHeight] - main.control.getBoundingClientRect()[widthHeight]) / (pxc * zoomLevel) - borderAndPaddingAdjustment / pxc - main.controlUnitOffset * 2
    }
-   function calculate_zoom_level () {
-    if ((!main.recalculate_size) && (typeof zoom_level_fixed != "undefined")) return zoom_level_fixed
-    var zoom_level = h.get_inherited_transform(main, {transform_type: "scale", xy: orientation_xy})
-    if (!main.recalculate_size) zoom_level_fixed = zoom_level
-    return zoom_level
+   function calculateZoomLevel () {
+    if ((!main.recalculateSize) && (typeof zoomLevelFixed != "undefined")) return zoomLevelFixed
+    var zoomLevel = getInheritedTransform(main, {type: "scale", xy: orientationXY})
+    if (!main.recalculateSize) zoomLevelFixed = zoomLevel
+    return zoomLevel
    }
-   function textbox_change (evt) {
-    var curvalue = parseFloat(textbox_number.value)
+   function textboxChange (evt) {
+    var curvalue = parseFloat(textboxNumber.value)
     if ((isNaN(curvalue)) || (curvalue < 0)) curvalue = 0
-    if (curvalue > main.point_upper_limit) curvalue = main.point_upper_limit
-    main.set_position_by_point_value(curvalue)
+    if (curvalue > main.pointUpperLimit) curvalue = main.pointUpperLimit
+    main.setPositionByPointValue(curvalue)
    }
-   function textbox_keypress (evt) {var keyCode = evt.keyCode; if (keyCode == 13) textbox_number.blur()}
-   function textbox_update_value (pxc) {
-    if (typeof pxc == "undefined") pxc = px_to_css_unit_type()
-    textbox_number.value = Math.round((main.point_upper_limit * main.position) / calculate_physical_max(pxc))
+   function textboxKeypress (evt) {var keyCode = evt.keyCode; if (keyCode == 13) textboxNumber.blur()}
+   function textboxUpdateValue (pxc) {
+    if (typeof pxc == "undefined") pxc = pxToCssUnitType()
+    textboxNumber.value = Math.round((main.pointUpperLimit * main.position) / calculatePhysicalMax(pxc))
    }
-   function textbox_blur (evt) {
-    if (main.textbox_enabled == false) return
-    if (evt.currentTarget == textbox_number) return
-    textbox_number.blur()
+   function textboxBlur (evt) {
+    if (main.textboxEnabled == false) return
+    if (evt.currentTarget == textboxNumber) return
+    textboxNumber.blur()
    }
-   function textbox_focus (evt) {
-    if (main.textbox_enabled == true) return
-    if (evt.currentTarget == textbox_number) return
-    textbox_number.focus()
+   function textboxFocus (evt) {
+    if (main.textboxEnabled == true) return
+    if (evt.currentTarget == textboxNumber) return
+    textboxNumber.focus()
    }  
-   function update_foreground_width_height () {
-    main.foreground.style[width_height]         = (((main.position + main.control_unit_offset) >= 0) ? main.position : 0) + main.css_unit_type
+   function updateForegroundWidthHeight () {
+    main.foreground.style[widthHeight] = (((main.position + main.controlUnitOffset) >= 0) ? main.position : 0) + main.cssUnitType
    }
    function mousedown (evt) {
     evt.preventDefault()
     if (evt.target != evt.currentTarget) return
-    if (h.get_right_click(evt) || (main.start_condition && !main.start_condition(main)) || startscroll == true) return
-    var pxc        = px_to_css_unit_type()
-    var zoom_level = calculate_zoom_level()
-    main.update_position(pxc, zoom_level)
-    offsetxy = (main.control.getBoundingClientRect()[width_height] / 2) / (zoom_level * pxc)
+    if (h.getRightClick(evt) || (main.startCondition && !main.startCondition(main)) || startscroll == true) return
+    var pxc        = pxToCssUnitType()
+    var zoomLevel = calculateZoomLevel()
+    main.updatePosition(pxc, zoomLevel)
+    offsetxy = (main.control.getBoundingClientRect()[widthHeight] / 2) / (zoomLevel * pxc)
     startscroll = true
-    mousemove(evt, pxc, zoom_level)
+    mousemove(evt, pxc, zoomLevel)
    }
-   function touchstart (evt) {mousemove(evt); mousedown (evt)}
-   function mousemove (evt, pxc, zoom_level) {
+   function touchstart (evt) {mousemove(evt); mousedown(evt)}
+   function mousemove (evt, pxc, zoomLevel) {
     if (evt.currentTarget == main) evt.preventDefault()
     if (startscroll == false) return
-    if (typeof pxc        == "undefined") pxc        = px_to_css_unit_type()
-    if (typeof zoom_level == "undefined") zoom_level = calculate_zoom_level()
-    var xy = (evt.changedTouches ? evt.changedTouches[0] : evt)[pageXY] / (zoom_level * pxc)
-    main.set_position(xy - offsetxy - startxy - main.control_unit_offset, true, pxc, evt)
+    if (typeof pxc        == "undefined") pxc        = pxToCssUnitType()
+    if (typeof zoomLevel == "undefined")  zoomLevel = calculateZoomLevel()
+    var xy = (evt.changedTouches ? evt.changedTouches[0] : evt)[pageXY] / (zoomLevel * pxc)
+    main.setPosition(xy - offsetxy - startxy - main.controlUnitOffset, true, pxc, evt)
    }
    function mouseout (evt) {
     evt.preventDefault()
@@ -759,90 +755,94 @@ void function () {
     var windowScrollX = (typeof window.scrollX != "undefined") ? window.scrollX : document.body.scrollLeft
     var windowScrollY = (typeof window.scrollY != "undefined") ? window.scrollY : document.body.scrollTop
     if (((mouseY >= 0)) && ((mouseY <= window.innerHeight + windowScrollY)) && ((mouseX >= 0) && mouseX <= (window.innerWidth + windowScrollX))) return
-    mouseup_or_blur(evt)
+    mouseupOrBlur(evt)
    }
-   function mouseup_or_blur (evt) {
+   function mouseupOrBlur (evt) {
     if (startscroll == false) return
-    if (evt.target != main) {main.events.update(main, evt)} else {
-    mousemove(evt, px_to_css_unit_type(), calculate_zoom_level())}
+    if (evt.target != main) {
+     main.events.update(main, evt)
+    } else {
+    console.log  (pxToCssUnitType(), calculateZoomLevel())
+     mousemove(evt, pxToCssUnitType(), calculateZoomLevel())
+    }
     startscroll = false
    }
    function update (main) {
-    var pxc        = px_to_css_unit_type()
-    var zoom_level = calculate_zoom_level()
-    main.position_physical_max = calculate_physical_max(pxc, zoom_level)
-    if (main.point_upper_limit != 0) {
-     main.position_logical_max  = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
+    var pxc       = pxToCssUnitType()
+    var zoomLevel = calculateZoomLevel()
+    main.positionPhysicalMax = calculatePhysicalMax(pxc, zoomLevel)
+    if (main.pointUpperLimit != 0) {
+     main.positionLogicalMax  = main.positionPhysicalMax * (main.pointMaximum / main.pointUpperLimit)
     }
-    if (typeof main.position != "undefined" && main.position_logical_max != 0) {
-     var logical_position = main.position / main.position_logical_max
+    if (typeof main.position != "undefined" && main.positionLogicalMax != 0) {
+     var logicalPosition = main.position / main.positionLogicalMax
     }
     if (typeof main.position == "undefined") {
-     if (main.point_upper_limit != 0) {
-      main.position = main.position_physical_max * (point_initial / main.point_upper_limit)
+     if (main.pointUpperLimit != 0) {
+      main.position = main.positionPhysicalMax * (pointInitial / main.pointUpperLimit)
      }
     } else {
-     if (typeof main.position_logical_max != "undefined" && typeof logical_position != "undefined") {
-      main.position = logical_position * main.position_logical_max
+     if (typeof main.positionLogicalMax != "undefined" && typeof logicalPosition != "undefined") {
+      main.position = logicalPosition * main.positionLogicalMax
      }
     }
     
     // Set the control left/top position and the foreground width/height.
-    main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
-    update_foreground_width_height()
-    if ((typeof background_beyond_max_style != 'undefined') || (typeof background_beyond_max_class != 'undefined')) {
-     main.background_beyond_max.style[width_height] = (main.position_physical_max - main.position_logical_max) + main.css_unit_type
-     main.background_beyond_max.style[left_top]     = main.position_logical_max + main.css_unit_type
+    main.control.style[leftTop] = (main.position + main.controlUnitOffset) + main.cssUnitType
+    updateForegroundWidthHeight()
+    if ((typeof backgroundBeyondMax != 'undefined') || (typeof backgroundBeyondMaxClass != 'undefined')) {
+     main.backgroundBeyondMax.style[widthHeight] = (main.positionLogicalMax - main.positionLogicalMax) + main.cssUnitType
+     main.backgroundBeyondMax.style[leftTop]     = main.positionLogicalMax + main.cssUnitType
     }
-    if (typeof pivot_slice_style != 'undefined') {
-     main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
-     main.pivot_end   = main.position
-     main.pivot_slice.style[width_height] = Math.abs(main.pivot_end - main.pivot_start) + main.css_unit_type
-     main.pivot_slice.style[left_top]     = ((main.pivot_end > main.pivot_start) ? main.pivot_start : main.pivot_end) + main.css_unit_type
+    if (typeof pivotSliceStyle != 'undefined') {
+     main.pivotStart = main.positionPhysicalMax * (main.pivotPoint / main.pointUpperLimit)
+     main.pivotEnd   = main.position
+     main.pivotSlice.style[widthHeight] = Math.abs(main.pivotEnd - main.pivotStart) + main.cssUnitType
+     main.pivotSlice.style[leftTop]     = ((main.pivotEnd > main.pivotStart) ? main.pivotStart : main.pivotEnd) + main.cssUnitType
     }
-    if (main.textbox) textbox_update_value(pxc)
+    if (main.textbox) textboxUpdateValue(pxc)
    }
-   function set_position (new_position, trigger_update_event, pxc, evt) {
-    main.position = new_position
-    main.position_logical_max = main.position_physical_max * (main.point_maximum / main.point_upper_limit)
-    if (main.position > main.position_logical_max) {
-     main.position = main.position_logical_max
+   function setPosition (newPosition, triggerUpdateEvent, pxc, evt) {
+    main.position = newPosition
+    main.positionLogicalMax = main.positionPhysicalMax * (main.pointMaximum / main.pointUpperLimit)
+    if (main.position > main.positionLogicalMax) {
+     main.position = main.positionLogicalMax
     } else {
      if (main.position < 0) main.position = 0
     }
-    main.control.style[left_top] = (main.position + main.control_unit_offset) + main.css_unit_type
-    update_foreground_width_height()
-    if (typeof pivot_slice_style != 'undefined') {
-     main.pivot_start = main.position_physical_max * (main.pivot_point / main.point_upper_limit)
-     main.pivot_end   = main.position
-     update_foreground_width_height()
+    main.control.style[leftTop] = (main.position + main.controlUnitOffset) + main.cssUnitType
+    updateForegroundWidthHeight()
+    if (typeof pivotSliceStyle != 'undefined') {
+     main.pivotStart = main.positionPhysicalMax * (main.pivotPoint / main.pointUpperLimit)
+     main.pivotEnd   = main.position
+     updateForegroundWidthHeight()
     }
-    if (main.textbox_enabled == true) textbox_update_value(pxc)
-    if (trigger_update_event && main.events.update) main.events.update(main, evt)
+    if (main.textboxEnabled == true) textboxUpdateValue(pxc)
+    if (triggerUpdateEvent && main.events.update) main.events.update(main, evt)
    }
-   function destroy (main, use_mouse_events, use_touch_events) {
-    if (use_mouse_events) {
+   function destroy (main, useMouseEvents, useTouchEvents) {
+    if (useMouseEvents) {
      main.removeEventListener     ('mousedown', mousedown)
      main.removeEventListener     ('mouseover', mousemove)
      main.removeEventListener     ('mousemove', mousemove)
-     document.removeEventListener ('mouseup'  , mouseup_or_blur)
-     window.removeEventListener   ('blur'     , mouseup_or_blur)
+     document.removeEventListener ('mouseup'  , mouseupOrBlur)
+     window.removeEventListener   ('blur'     , mouseupOrBlur)
      window.removeEventListener   ('mouseout' , mouseout)
     }
-    if (use_touch_events) {
+    if (useTouchEvents) {
      main.removeEventListener     ('touchstart' , touchstart)
      main.removeEventListener     ('touchmove'  , mousemove)
-     document.removeEventListener ('touchend'   , mouseup_or_blur)
-     window.removeEventListener   ('touchcancel', mouseup_or_blur)
-     window.removeEventListener   ('touchleave' , mouseup_or_blur)
+     document.removeEventListener ('touchend'   , mouseupOrBlur)
+     window.removeEventListener   ('touchcancel', mouseupOrBlur)
+     window.removeEventListener   ('touchleave' , mouseupOrBlur)
     }
     if (main.textbox) {
-     document.removeEventListener       ((!use_touch_events) ? 'mousedown' : 'touchstart', textbox_blur)
-     textbox_number.removeEventListener ((!use_touch_events) ? 'click'     : 'touchend',  textbox_focus)
-     textbox_number.removeEventListener ('input'   , textbox_change)
-     textbox_number.removeEventListener ('keypress', textbox_keypress)
+     document.removeEventListener      ((!useTouchEvents) ? 'mousedown' : 'touchstart', textboxBlur)
+     textboxNumber.removeEventListener ((!useTouchEvents) ? 'click'     : 'touchend',  textboxFocus)
+     textboxNumber.removeEventListener ('input'   , textboxChange)
+     textboxNumber.removeEventListener ('keypress', textboxKeypress)
     }
-    var current_parent = main.parentNode; if (current_parent != null) current_parent.removeChild(main)
+    var currentParent = main.parentNode; if (currentParent != null) currentParent.removeChild(main)
    }
   }
  }
@@ -859,10 +859,10 @@ void function () {
      var addEventListenerNative = HTMLElement.prototype.addEventListener
      HTMLElement.prototype.addEventListener = function () {
       var args = Array.prototype.slice.call(arguments)
-      if (typeof args[0] == "string") {addEventListenerNative.apply (this, args); return}
+      if (typeof args[0] == "string") {addEventListenerNative.apply(this, args); return}
       if (Array.isArray(args[0])) {
        var args0 = args[0]
-       args0.forEach(function (eventName) {args[0] = eventName; addEventListenerNative.apply (this, args)}, this)
+       args0.forEach(function (eventName) {args[0] = eventName; addEventListenerNative.apply(this, args)}, this)
       }
      }
     }
@@ -899,12 +899,12 @@ void function () {
   }
   dom.setWidthLikeDiv  = function (input) {dom.matchElementDimensions(input,  "width", "inline-block", "left",  "right", "div")}
   dom.setHeightLikeDiv = function (input) {dom.matchElementDimensions(input, "height",        "block",  "top", "bottom", "div")}
-  dom.matchElementDimensions = function (input, dimension, temp_display_type, min_edge, max_edge, temporary_element_type) {
+  dom.matchElementDimensions = function (input, dimension, tempDisplayType, minEdge, maxEdge, temporaryElementType) {
    function capitalize (obj) {return obj.toLowerCase().replace(/^[a-z]|\s[a-z]/g, conv); function conv () {return arguments[0].toUpperCase()}}
-   var dimension_c = capitalize(dimension), min_edge_c = capitalize(min_edge), max_edge_c = capitalize(max_edge)
+   var dimensionC = capitalize(dimension), minEdgeC = capitalize(minEdge), maxEdgeC = capitalize(maxEdge)
    input.style[dimension] = ""
-   var s = window.getComputedStyle(input); var cousin = document.createElement(temporary_element_type)
-   cousin.style.display = temp_display_type
+   var s = window.getComputedStyle(input); var cousin = document.createElement(temporaryElementType)
+   cousin.style.display = tempDisplayType
    new Array("paddingLeft", "paddingRight", "paddingTop", "paddingBottom", "fontFamily", "fontSize", "fontWeight", "letterSpacing", "fontKerning", "lineHeight", "textIndent").forEach(function (p) {cousin.style[p] = s[p]})
    // 1) Converts end-of-line to "<br/>&nbsp;".
    // 2) Any empty strings become "nbsp;".
@@ -912,9 +912,9 @@ void function () {
    cousin.innerHTML = input.value.replace(/[\n\r]/g, "<br/>&nbsp;").replace(/^$/, '&nbsp;').replace(/ +$/, function(count) {return '&nbsp;'.repeat(count.length)})
    input.parentNode.insertBefore(cousin, input)
    input.style[dimension] = (
-    cousin["client" + dimension_c] +
-    parseFloat(s["border"  + min_edge_c + "Width"]) + parseFloat(s["border"  + max_edge_c + "Width"]) +
-    parseFloat(s["margin"  + min_edge_c])           + parseFloat(s["margin"  + max_edge_c])
+    cousin["client" + dimensionC] +
+    parseFloat(s["border"  + minEdgeC + "Width"]) + parseFloat(s["border"  + minEdgeC + "Width"]) +
+    parseFloat(s["margin"  + minEdgeC])           + parseFloat(s["margin"  + minEdgeC])
    ) + "px"
    cousin.parentNode.removeChild(cousin)
   }
@@ -928,7 +928,7 @@ void function () {
   dom.appendChildren = function (init) {var parent = init.parent, children = init.children; children.forEach(function (child) {parent.appendChild(child)})}
   dom.detachAll = function (parent, recursive) {
    Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
-    parent.removeChild(child); if (recursive) dom.detachAll (child, recursive)
+    parent.removeChild(child); if (recursive) dom.detachAll(child, recursive)
    })
   }
   dom.detachAllOtherSiblings = function (exceptedChildren, recursive) {
@@ -936,7 +936,7 @@ void function () {
    var parent = exceptedChildren[0].parentNode
    Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
     if (exceptedChildren.find(function (testchild) {return testchild == child})) return
-    parent.removeChild(child); if (recursive) dom.detachAll (child, recursive)
+    parent.removeChild(child); if (recursive) dom.detachAll(child, recursive)
    })
   }
   dom.detachAllRecursive = function (parent) {return dom.detachAll(parent, true)}
@@ -1005,7 +1005,7 @@ void function () {
    
    subscribeTarget[dispatchEventOriginalName] = subscribeTarget.dispatchEvent
    var dispatchEventFunction = function (eventName, evt) {
-    if (typeof eventName != "string") {subscribeTarget[dispatchEventOriginalName].apply (this, arguments); return}
+    if (typeof eventName != "string") {subscribeTarget[dispatchEventOriginalName].apply(this, arguments); return}
     subscribeTarget[dispatchEventName] (new CustomEvent(eventName, {detail: evt}))
    }
    subscribeTarget[dispatchEventName] = dispatchEventFunction
@@ -1029,7 +1029,7 @@ void function () {
       }
       if (!('name'     in evt)) evt.name   = eventName
       if (!('target'   in evt)) evt.target = element
-      if (!doNotRemoveIfDetached && (!dom.isAttached(element))) {subscribeTarget.removeEventListener (eventName, functionwrapper); return}
+      if (!doNotRemoveIfDetached && (!dom.isAttached(element))) {subscribeTarget.removeEventListener(eventName, functionwrapper); return}
       if ((typeof columnAffected != "undefined") && !(evt.columnsAffected.includes(columnAffected))) return
       func.apply(element, [evt])
      }
@@ -1060,11 +1060,11 @@ void function () {
     var entry = get_entry_object({container: entry_container, entry_id: entry_id})
     var entry_original = Object.assign({}, entry)
     var additions = {}, columns_affected = []
-    query_parameters.forEach(function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push (prop)}})
+    query_parameters.forEach(function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push(prop)}})
     Object.assign(entry, additions)
     event_name = (typeof event_name == "string") ? event_name : event_name(additions)
     var id_param = {}; id_param[entry_name] = entry // id_param is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
-    if (!wait_for_result) event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+    if (!wait_for_result) event_dispatcher.dispatchEvent(event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
    }
    
    if (typeof init.callback == "undefined") init.callback = function () {}
@@ -1079,9 +1079,9 @@ void function () {
     } else if (wait_for_result) {
      var effects = (typeof result == "object") ? result.effects : undefined
      if (effects) {
-      dispatch_events (effects)
+      dispatch_events(effects)
      } else {
-      event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+      event_dispatcher.dispatchEvent(event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
      }
     }
     callback_original(result)
@@ -1210,7 +1210,7 @@ void function () {
    if (nestInput == true) {
     var inputWrapper = document.createElement('span')
     inputWrapper.className = (typeof init.inputWrapperClassName != 'undefined') ? init.inputWrapperClassName : "input_wrapper_default"
-    if (typeof init.inputWrapperStyle != "undefined") add_style(inputWrapper, init.inputWrapperStyle)
+    if (typeof init.inputWrapperStyle != "undefined") addStyle(inputWrapper, init.inputWrapperStyle)
     inputWrapper.appendChild(input)
    }
    var inputToAppend = (nestInput == true) ? inputWrapper : input
@@ -1228,9 +1228,9 @@ void function () {
    main.className  = (typeof init.className      != 'undefined') ? init.className      : "input_main_default"
    label.className = (typeof init.labelClassName != 'undefined') ? init.labelClassName : "input_label_default"
    input.className = (typeof init.inputClassName != 'undefined') ? init.inputClassName : "input_input_default"
-   if (typeof init.labelStyle != "undefined") add_style(label, init.labelStyle)
-   if (typeof init.inputStyle != "undefined") add_style(input, init.inputStyle)
-   if (typeof init.style       != "undefined") add_style(main , init.style)
+   if (typeof init.labelStyle != "undefined") addStyle(label, init.labelStyle)
+   if (typeof init.inputStyle != "undefined") addStyle(input, init.inputStyle)
+   if (typeof init.style       != "undefined") addStyle(main , init.style)
    for (var attributeName in inputAttributes) {
     input[attributeName] = inputAttributes[attributeName]
    }
@@ -1516,14 +1516,14 @@ void function () {
    var timeout_attempt_limit = (typeof timeout_attempt_limit == "undefined") ? 300 : timeout_attempt_limit
    var loaded_font_amount = 0
    font_list.forEach(function (font_family) {
-    if (typeof font_family == "string") {load_font_by_family_and_size (font_family, "normal"); return}
+    if (typeof font_family == "string") {load_font_by_family_and_size(font_family, "normal"); return}
     var font_weight_list = font_family.font_weight, font_family = font_family.font_family
-    font_weight_list.forEach(function (font_weight) {load_font_by_family_and_size (font_family, font_weight)})
+    font_weight_list.forEach(function (font_weight) {load_font_by_family_and_size(font_family, font_weight)})
    })
    
    if (typeof callback == "undefined") return
    
-   check_that_all_fonts_have_loaded ()
+   check_that_all_fonts_have_loaded()
    
    function load_font_by_family_and_size (font_family, font_weight) {
     var node = document.createElement('span')
@@ -1544,22 +1544,22 @@ void function () {
     // Remember width with no applied web font.
     node.original_width = node.getBoundingClientRect().width
     node.style.fontFamily = font_family
-    check_font (node, 0)
+    check_font(node, 0)
    }
    
    function check_font (node, timeout_attempt) {
     // Compare current width with original width.
     if (node.offsetWidth == node.original_width && timeout_attempt < timeout_attempt_limit) {
      timeout_attempt += 1
-     var check_font_timeout = setTimeout (function () {check_font(node, timeout_attempt)}, 30); return
+     var check_font_timeout = setTimeout(function () {check_font(node, timeout_attempt)}, 30); return
     }
     loaded_font_amount += 1
     node.parentNode.removeChild(node)
    }
    
    function check_that_all_fonts_have_loaded () {
-    if (loaded_font_amount < font_list.length) {setTimeout (check_that_all_fonts_have_loaded, 30); return}
-    callback ()
+    if (loaded_font_amount < font_list.length) {setTimeout(check_that_all_fonts_have_loaded, 30); return}
+    callback()
    }
   }
   
@@ -1584,12 +1584,12 @@ void function () {
     
     if (min_size === middle_size || max_size === middle_size) return best_size
     if (iterations < iteration_max) {
-     if (inner_height > height || inner_width > width)   {iterations += 1; return find_best_size (min_size, middle_size, best_size)}
-     if (inner_height <= height && inner_width <= width) {iterations += 1; return find_best_size (middle_size, max_size, middle_size)}
+     if (inner_height > height || inner_width > width)   {iterations += 1; return find_best_size(min_size, middle_size, best_size)}
+     if (inner_height <= height && inner_width <= width) {iterations += 1; return find_best_size(middle_size, max_size, middle_size)}
     }
     return best_size
    }
-   var best = find_best_size (
+   var best = find_best_size(
     (typeof init.min_size  != "undefined") ? init.min_size  : 0,
     (typeof init.max_size  != "undefined") ? init.max_size  : 120,
     (typeof init.best_size != "undefined") ? init.best_size : 0
