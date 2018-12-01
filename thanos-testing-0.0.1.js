@@ -1327,7 +1327,7 @@ void function () {
  // <Domain and directory functions. TAG: form, TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
  // Get URL variables from window.location and put them into variable_object as key/value pairs. Returns variable_object.
  if (h.library_settings.domain_and_directory) {
-  h.getUrlVars             = function (variable_object) {
+  h.getUrlVars = function (variable_object) {
    if ((typeof variable_object != "object") || (variable_object == null)) variable_object = {}
    var variable_list = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
    var curlen = variable_list.length
@@ -1339,16 +1339,17 @@ void function () {
    return variable_object
   }
   // Form a GET URL string from an array.
-  h.formUrlVars            = function (variable_list, options) {
-   if (typeof options           == "undefined") options = {}
-   if (typeof options.record_undefined_values == "undefined") options.record_undefined_values = true
-   var return_value = ""
-   for (var i in variable_list) {
-   if ((typeof variable_list[i] != "undefined") || (options.record_undefined_values == true)) return_value += "&" + i + "=" + variable_list[i]}
-   if (return_value != "") return_value = "?" + return_value.slice(1, return_value.length)
-   return return_value
+  h.formUrlVars = function (variableList, options) {
+   if (typeof options == "undefined") options = {}
+   var recordUndefinedValues = options.recordUndefinedValues, isPartial = options.isPartial
+   if (typeof recordUndefinedValues == "undefined") recordUndefinedValues = true
+   var returnValue = ""
+   for (var i in variableList) {
+   if ((typeof variableList[i] != "undefined") || (recordUndefinedValues == true)) returnValue += "&" + i + "=" + variableList[i]}
+   if (returnValue != "") returnValue = (isPartial ? "&" : "?") + returnValue.slice(1, returnValue.length)
+   return returnValue
   }
-  h.directoryNormalize    = function (dirpath) {
+  h.directoryNormalize = function (dirpath) {
    var part_list = dirpath.split('/')
    loop1:
    for (var i = 0, curlen = part_list.length; i < curlen; i++) {
