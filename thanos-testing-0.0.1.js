@@ -15,6 +15,7 @@ void function () {
  // Settings.
  h.library_settings = {
   misc_polyfills        : true,
+  string_manipulation   : true,
   object_manipulation   : true,
   physical_control      : true,
   dom_position          : true,
@@ -29,11 +30,19 @@ void function () {
   misc                  : true,
  }
  
+ // Hmm...
+ //["map"].forEach(function (op) {
+ // NodeList.prototype[op] = HTMLCollection.prototype[op] = function (callback, thisArg) {
+ //  return Array.prototype.slice.call(this)[op](callback, thisArg)
+ // }
+ //})
+ 
  var addStyle = function (element, text) {
+  console.log (element, text)
   // Multiple element support.
   if ((typeof element == "object") && (element instanceof Array)) {element.forEach(function (currentElement) {addStyle(currentElement, text)}); return}
   if (element.getAttribute("style") == null) {element.setAttribute("style", element, text); return}
-  element.setAttribute("style", element, element.getAttribute("style") + "; " + text)
+  element.setAttribute("style", element.getAttribute("style") + "; " + text)
  }
  
  // <Miscellaneous browser fixes and polyfills. TAG: polyfills.>
@@ -74,15 +83,18 @@ void function () {
  }
  // </Miscellaneous browser fixes and polyfills.>
  
+ // <String manipulation functions. TAG: string, TAG: string manipulation.>
+ if (h.library_settings.object_manipulation) {
+  h.string = {}
+  h.string.isAlphanumeric = function (string) {return string.search(/^[a-z0-9]+$/i) != -1}
+ }
+ // </String manipulation functions.>
  // <Object manipulation functions. TAG: array, TAG: arrays, TAG: array manipulation, TAG: object manipulation, TAG: copy, TAG: test.>
  if (h.library_settings.object_manipulation) {
   h.Array = {}
   h.Array.shuffle = function (arr) {
    for (var i = arr.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1))
-    var x = arr[i]
-    arr[i] = arr[j]
-    arr[j] = x
+    var j = Math.floor(Math.random() * (i + 1)); var x = arr[i]; arr[i] = arr[j]; arr[j] = x
    }
    return arr
   }
@@ -91,90 +103,87 @@ void function () {
  
  // <Physical control functions. TAG: mouse, TAG: keyboard, TAG: pointer, TAG: pinch, TAG: swipe.>
  if (h.library_settings.physical_control) {
-  var getRightClick  =
-  h.getRightClick    = function (evt) {return (evt.which) ? (evt.which == 3) : ((evt.button) ? (evt.button == 2) : false)}
+  var getRightClick  = h.getRightClick = function (evt) {return (evt.which) ? (evt.which == 3) : ((evt.button) ? (evt.button == 2) : false)}
   h.getWheelData     = function (evt) {return evt.detail ? evt.detail * -1 : evt.wheelDelta / 40}
   h.getKeyCodeString = function (evt) {
    var keyCode = evt.keyCode
    var keyMap = {37: "left", 38: "up", 39: "right", 40: "down", 107: "+", 187: "+", 109: "-", 189: "-", 16: "shift", 27: "escape", 13: "enter"}
    if (typeof keyCode[keyMap] == "undefined") {return String.fromCharCode(keyCode).toUpperCase()} else {return keyCode[keyMap]}
   }
-  if (h.library_settings.dom_position) {
-   h.addPinchControls  = function (init) {
-    var target = init.target, currentDistance = false, zoomX = undefined, zoomY = undefined
-    target.addEventListener('touchend'    , endEffect)
-    target.addEventListener('touchcancel' , endEffect)
-    target.addEventListener('touchleave'  , endEffect)
-    target.addEventListener('touchstart'  , pinch)
-    target.addEventListener('touchmove'   , pinch)
-    function endEffect (evt) {if (currentDistance != false) if (typeof init.endEffect != "undefined") init.endEffect(evt)}
-    function pinch (evt) {
-     if (evt.touches.length < 2) {currentDistance = false; return}
-     if (evt.type == 'touchmove') {
-      if (currentDistance == false) {return} else {var lastDistance = currentDistance}
-     } else {
-      if ((typeof init.startCondition != "undefined") && (init.startCondition (evt) === false)) return
-     }
-     var xy0 = getXY(evt.touches[0], target); var x0 = xy0[0]; var y0 = xy0[1]
-     var xy1 = getXY(evt.touches[1], target); var x1 = xy1[0]; var y1 = xy1[1]
-     if ((init.alwaysRecalculateZoomTarget === true) || (currentDistance == false)) {
-      zoomX = (x0 + x1) / 2, zoomY = (y0 + y1) / 2
-     }
-     currentDistance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
-     if (evt.type == 'touchstart') {
-      if (typeof init.startEffect != "undefined") init.startEffect(evt, x0, y0, x1, y1)
-      return
-     }
-     init.resultFunction(currentDistance / lastDistance, zoomX, zoomY)
-     if (typeof init.moveEffect != "undefined") init.moveEffect(evt)
+  h.addPinchControls  = function (init) {
+   var target = init.target, currentDistance = false, zoomX = undefined, zoomY = undefined
+   target.addEventListener('touchend'    , endEffect)
+   target.addEventListener('touchcancel' , endEffect)
+   target.addEventListener('touchleave'  , endEffect)
+   target.addEventListener('touchstart'  , pinch)
+   target.addEventListener('touchmove'   , pinch)
+   function endEffect (evt) {if (currentDistance != false) if (typeof init.endEffect != "undefined") init.endEffect(evt)}
+   function pinch (evt) {
+    if (evt.touches.length < 2) {currentDistance = false; return}
+    if (evt.type == 'touchmove') {
+     if (currentDistance == false) {return} else {var lastDistance = currentDistance}
+    } else {
+     if ((typeof init.startCondition != "undefined") && (init.startCondition (evt) === false)) return
     }
+    var xy0 = getXY(evt.touches[0], target); var x0 = xy0[0]; var y0 = xy0[1]
+    var xy1 = getXY(evt.touches[1], target); var x1 = xy1[0]; var y1 = xy1[1]
+    if ((init.alwaysRecalculateZoomTarget === true) || (currentDistance == false)) {
+     zoomX = (x0 + x1) / 2, zoomY = (y0 + y1) / 2
+    }
+    currentDistance = Math.sqrt(Math.pow(Math.abs(x0 - x1), 2) + Math.pow(Math.abs(y0 - y1), 2))
+    if (evt.type == 'touchstart') {
+     if (typeof init.startEffect != "undefined") init.startEffect(evt, x0, y0, x1, y1)
+     return
+    }
+    init.resultFunction(currentDistance / lastDistance, zoomX, zoomY)
+    if (typeof init.moveEffect != "undefined") init.moveEffect(evt)
    }
-   
-   h.addSwipeControls  = function (init) {
-    // N.B.: For PCs, use .preventDefault on dragstart. For mobile, use .preventDefault on touchmove.
-    if (typeof init.isMobile == "undefined") init.isMobile = true
-    var target = init.target, initialX, initialY, currentX, currentY, swipeInEffect = false
-    target.addEventListener(init.isMobile ? 'touchstart'  : 'mousedown', swipeStartEvent)
-    target.addEventListener(init.isMobile ? 'touchmove'   : 'mousemove', swipeEvent)
-    target.addEventListener(init.isMobile ? 'touchend'    : 'mouseup'  , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
-    target.addEventListener(init.isMobile ? 'touchleave'  : 'mouseout' , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
-    target.addEventListener(init.isMobile ? 'touchcancel' : 'blur'     , function (evt) {if (swipeInEffect == false) return; swipeEnd(evt)})
-    function swipeEnd (evt) {
-     if (swipeInEffect == false) return
-     swipeInEffect = false
-     if (typeof init.endEffect != "undefined") init.endEffect(evt)
+  }
+  
+  h.addSwipeControls  = function (init) {
+   // N.B.: For PCs, use .preventDefault on dragstart. For mobile, use .preventDefault on touchmove.
+   if (typeof init.isMobile == "undefined") init.isMobile = true
+   var target = init.target, initialX, initialY, currentX, currentY, swipeInEffect = false
+   target.addEventListener(init.isMobile ? 'touchstart'  : 'mousedown', swipeStartEvent)
+   target.addEventListener(init.isMobile ? 'touchmove'   : 'mousemove', swipeEvent)
+   target.addEventListener(init.isMobile ? 'touchend'    : 'mouseup'  , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
+   target.addEventListener(init.isMobile ? 'touchleave'  : 'mouseout' , function (evt) {if (swipeInEffect == false) return; swipeEndEvent(evt)})
+   target.addEventListener(init.isMobile ? 'touchcancel' : 'blur'     , function (evt) {if (swipeInEffect == false) return; swipeEnd(evt)})
+   function swipeEnd (evt) {
+    if (swipeInEffect == false) return
+    swipeInEffect = false
+    if (typeof init.endEffect != "undefined") init.endEffect(evt)
+   }
+   function swipeStartEvent (evt) {
+    if ((typeof init.startCondition != "undefined") && (init.startCondition(evt) == false)) return
+    if ((init.isMobile) && (evt.touches.length != 1)) return
+    var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); initialX = xy[0]; initialY = xy[1]
+    currentX = initialX; currentY = initialY
+    if (swipeInEffect == true) return
+    swipeInEffect = true
+    if (typeof init.startEffect != "undefined") init.startEffect(evt)
+   }
+   function swipeEvent (evt) {
+    if (
+        ((init.isMobile) && (evt.touches.length != 1)) ||
+        ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false))
+       ) {swipeEnd(evt); return}
+    var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); currentX = xy[0]; currentY = xy[1]
+    if (typeof init.swipeMove != "undefined") init.swipeMove({evt: evt, init: init, initialX: initialX, initialY: initialY, currentX: currentX, currentY: currentY, swipeInEffect: swipeInEffect})
+   }
+   function swipeEndEvent (evt) {
+    if ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false)) {swipeEnd(evt); return}
+    if (currentX < initialX) {
+     if (typeof init.swipeLeft != "undefined") init.swipeLeft(evt)
+    } else {
+     if ((currentX > initialX) && (typeof init.swipeRight != "undefined")) init.swipeRight(evt)
     }
-    function swipeStartEvent (evt) {
-     if ((typeof init.startCondition != "undefined") && (init.startCondition(evt) == false)) return
-     if ((init.isMobile) && (evt.touches.length != 1)) return
-     var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); initialX = xy[0]; initialY = xy[1]
-     currentX = initialX; currentY = initialY
-     if (swipeInEffect == true) return
-     swipeInEffect = true
-     if (typeof init.startEffect != "undefined") init.startEffect(evt)
+    if (currentY < initialY) {
+     if (typeof init.swipeDown != "undefined") init.swipeDown(evt)
+    } else {
+     if ((currentY > initialY) && (typeof init.swipeUp != "undefined")) init.swipeUp(evt)
     }
-    function swipeEvent (evt) {
-     if (
-         ((init.isMobile) && (evt.touches.length != 1)) ||
-         ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false))
-        ) {swipeEnd(evt); return}
-     var xy = getXY((init.isMobile) ? evt.touches[0] : evt, target); currentX = xy[0]; currentY = xy[1]
-     if (typeof init.swipeMove != "undefined") init.swipeMove({evt: evt, init: init, initialX: initialX, initialY: initialY, currentX: currentX, currentY: currentY, swipeInEffect: swipeInEffect})
-    }
-    function swipeEndEvent (evt) {
-     if ((typeof init.continueCondition != "undefined") && (init.continueCondition(evt) === false)) {swipeEnd(evt); return}
-     if (currentX < initialX) {
-      if (typeof init.swipeLeft != "undefined") init.swipeLeft(evt)
-     } else {
-      if ((currentX > initialX) && (typeof init.swipeRight != "undefined")) init.swipeRight(evt)
-     }
-     if (currentY < initialY) {
-      if (typeof init.swipeDown != "undefined") init.swipeDown(evt)
-     } else {
-      if ((currentY > initialY) && (typeof init.swipeUp != "undefined")) init.swipeUp(evt)
-     }
-     swipeEnd(evt)
-    }
+    swipeEnd(evt)
    }
   }
  }
@@ -333,10 +342,10 @@ void function () {
    
    function merge_objects (secondary, primary) {
     if (typeof secondary == "undefined") var primary = primary.primary, secondary = primary.secondary
-    var new_object = {}
-    for (var property in secondary) {new_object[property] = secondary[property]}
-    for (var property in primary)   {new_object[property] = primary  [property]}
-    return new_object
+    var result = {}
+    for (var property in secondary) {result[property] = secondary[property]}
+    for (var property in primary)   {result[property] = primary  [property]}
+    return result
    }
    // Only ajax_queue.add, ajax_queue.group_add, ajax_queue.group_run, and ajax_queue.run are exposed.
    var ajax_queue = ajax.queue = function () {
@@ -762,7 +771,6 @@ void function () {
     if (evt.target != main) {
      main.events.update(main, evt)
     } else {
-    console.log  (pxToCssUnitType(), calculateZoomLevel())
      mousemove(evt, pxToCssUnitType(), calculateZoomLevel())
     }
     startscroll = false
@@ -963,10 +971,14 @@ void function () {
    var children = init.children, events = init.events, parent = init.parent; delete (init.children); delete (init.events); delete (init.parent)
    var element = document.createElement(type)
    if (init.className && dom.processCss) {element.className = dom.processCss(init.className); delete (init.className)}
+   
    if (init.style) {
     var style = init.style
-    for (var prop in style) {element.style[prop] = style[prop]}
-    delete (init.style)
+    if (typeof style == "string") {
+     addStyle(element, style)
+    } else {
+     for (var prop in style) {element.style[prop] = style[prop]}
+    }
    }
    for (var prop in init) {if (typeof prop != "undefined") element[prop] = init[prop]}
    if (typeof events != "undefined") {
@@ -1040,126 +1052,126 @@ void function () {
    return subscriber
   }
   dom.databaseSyncSetter = function (init) {
-   var entry_name             = init.entry_name
-   var database_action        = init.database_action
-   var action_type            = init.action_type
-   var entry_id_string        = init.entry_id
-   var entry_container_string = init.entry_container
-   var central_data           = init.central_data
-   var query_parameters       = init.query_parameters
-   var event_name             = init.event_name
-   var event_dispatcher       = init.event_dispatcher
-   var dbrequest_queue        = init.dbrequest_queue
-   var wait_for_result        = (action_type == "create" || action_type == "remove") ? true : (("wait_for_result" in init) ? init.wait_for_result : false)
-   var init                   = init.init
+   var entryName            = init.entryName
+   var databaseAction       = init.databaseAction
+   var actionType           = init.actionType
+   var entryIdString        = init.entryId
+   var entryContainerString = init.entryContainer
+   var centralData          = init.centralData
+   var queryParameters      = init.queryParameters
+   var eventName            = init.eventName
+   var eventDispatcher      = init.eventDispatcher
+   var dbrequestQueue       = init.dbrequestQueue
+   var waitForResult        = (actionType == "create" || actionType == "remove") ? true : (("waitForResult" in init) ? init.waitForResult : false)
+   var init                 = init.init
    
-   var entry_id = init[entry_id_string]
-   var entry_container = central_data[entry_container_string]
+   var entryId = init[entryIdString]
+   var entryContainer = centralData[entryContainerString]
    
-   if (action_type == "set") {
-    var entry = get_entry_object({container: entry_container, entry_id: entry_id})
-    var entry_original = Object.assign({}, entry)
-    var additions = {}, columns_affected = []
-    query_parameters.forEach(function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push(prop)}})
+   if (actionType == "set") {
+    var entry = getEntryObject({container: entryContainer, entryId: entryId})
+    var entryOriginal = Object.assign({}, entry)
+    var additions = {}, columnsAffected = []
+    queryParameters.forEach(function (prop) {if (prop in init) {additions[prop] = init[prop]; columnsAffected.push(prop)}})
     Object.assign(entry, additions)
-    event_name = (typeof event_name == "string") ? event_name : event_name(additions)
-    var id_param = {}; id_param[entry_name] = entry // id_param is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
-    if (!wait_for_result) event_dispatcher.dispatchEvent(event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+    eventName = (typeof eventName == "string") ? eventName : eventName(additions)
+    var idParam = {}; idParam[eventName] = entry // idParam is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
+    if (!waitForResult) eventDispatcher.dispatchEvent(eventName, Object.assign ({}, idParam, {columnsAffected: columnsAffected}, additions))
    }
    
    if (typeof init.callback == "undefined") init.callback = function () {}
-   var callback_original = init.callback
+   var callbackOriginal = init.callback
    init.callback = function (result) {
     if (result && result.error) {
      additions = {}
-     if (action_type == "set") {
-      query_parameters.forEach(function (prop) {if (prop in init) additions[prop] = entry_original[prop]})
-      event_dispatcher.dispatchEvent(event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+     if (actionType == "set") {
+      queryParameters.forEach(function (prop) {if (prop in init) additions[prop] = entryOriginal[prop]})
+      eventDispatcher.dispatchEvent(eventName, Object.assign ({}, idParam, {columnsAffected: columnsAffected}, additions))
      }
-    } else if (wait_for_result) {
+    } else if (waitForResult) {
      var effects = (typeof result == "object") ? result.effects : undefined
      if (effects) {
-      dispatch_events(effects)
+      dispatchEvents(effects)
      } else {
-      event_dispatcher.dispatchEvent(event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+      eventDispatcher.dispatchEvent(eventName, Object.assign ({}, idParam, {columnsAffected: columnsAffected}, additions))
      }
     }
-    callback_original(result)
+    callbackOriginal(result)
    }
-   dbrequest_queue(database_action, query_parameters.concat(entry_id_string), init)
+   dbrequestQueue(databaseAction, queryParameters.concat(entryIdString), init)
    
-   function get_entry_object (init) {
-    var container = init.container, entry_id = init.entry_id
-    if (typeof entry_id == "undefined") return container
+   function getEntryObject (init) {
+    var container = init.container, entryId = init.entryId
+    if (typeof entryId == "undefined") return container
     if (Array.isArray(container)) {
-     return container.find(function (test_entry) {return test_entry.id == entry_id})
+     return container.find(function (testEntry) {return testEntry.id == entryId})
     } else {
-     return container[entry_id]
+     return container[entryId]
     }
    }
-   function set_entry_object (init) {
-    var container = init.container, entry_id = init.entry_id, entry = init.entry_data
-    var sort_column = init.sort_column, sort_direction = init.sort_direction
+   function setEntryObject (init) {
+    var container = init.container, entryId = init.entryId, entry = init.entryData
+    var sortColumn = init.sortColumn, sortDirection = init.sortDirection
     if (!Array.isArray(container)) {
-     container[entry_id] = entry
+     container[entryId] = entry
     } else {
-     if (!sort_column) {
+     if (!sortColumn) {
       container.push(entry)
      } else {
-      var insert_position = container.findIndex(
-       (!sort_direction || sort_direction.toLowerCase() == "asc") ?
-       function (test_entry) {return entry[sort_column]  < test_entry[sort_column]} :
-       function (test_entry) {return entry[sort_column] >= test_entry[sort_column]}
+      var insertPosition = container.findIndex(
+       (!sortDirection || sortDirection.toLowerCase() == "asc") ?
+       function (testEntry) {return entry[sortColumn]  < testEntry[sortColumn]} :
+       function (testEntry) {return entry[sortColumn] >= testEntry[sortColumn]}
       )
-      if (insert_position == -1) insert_position = container.length
-      container.splice(insert_position, 0, entry)
+      if (insertPosition == -1) insertPosition = container.length
+      container.splice(insertPosition, 0, entry)
      }
     }
     return entry
    }
-   function delete_entry_object (init) {
-    var container = init.container, entry_id = init.entry_id
+   function deleteEntryObject (init) {
+    var container = init.container, entryId = init.entryId
     if (!Array.isArray(container)) {
-     var entry = container[entry_id]
-     delete (container[entry_id])
+     var entry = container[entryId]
+     delete (container[entryId])
     } else {
-     var entry_index = container.findIndex(function (entry) {if (entry.id == entry_id) return true})
-     var entry = container[entry_index]
-     container.splice(entry_index, 1)
+     var entryIndex = container.findIndex(function (entry) {if (entry.id == entryId) return true})
+     var entry = container[entryIndex]
+     container.splice(entryIndex, 1)
     }
     return entry
    }
    
-   function dispatch_events (event_list) {
-    var dispatch_list = []
-    for (var event_name in event_list) {
-     var event = event_list[event_name]
-     var columns_affected = [], id_param_list = {}, additions = {}
-     for (var entry_name in event) {
-      var entry_descriptor = event[entry_name]
-      var location = entry_descriptor.location, data = entry_descriptor.data
-      var entry_container_string = location.container, entry_id = location.id
+   function dispatchEvents (eventList) {
+    var dispatchList = []
+    for (var eventName in eventList) {
+     var event = eventList[eventName]
+     var columnsAffected = [], idParamList = {}, additions = {}
+     for (var entryName in event) {
+      var entryDescriptor = event[entryName]
+      var location = entryDescriptor.location, data = entryDescriptor.data
+      var entryContainerString = location.container, entryId = location.id
       
       // If data is undefined, we are removing an object, not modifying or creating it.
       if (typeof data == "undefined") {
-       var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+       var entry = deleteEntryObject({container: centralData[entryContainerString], entryId: entryId})
       } else {
        // If data is set, modify or create an object.
-       var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
-       columns_affected = columns_affected.concat(Object.keys(data))
+       var entry = getEntryObject({container: centralData[entryContainerString], entryId: entryId})
+       columnsAffected = columnsAffected.concat(Object.keys(data))
        if (typeof entry == "undefined") {
-        var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
-        entry.id = entry_id
+        var entry = setEntryObject({container: centralData[entryContainerString], entryId: entryId, entryData: data, sortColumn: location.sortColumn, sortDirection: location.sortDirection})
+        entry.id = entryId
        } else {
         Object.assign(entry, data)
        }
        Object.assign(additions, data)
       }
-      id_param_list[entry_name] = entry
+      idParamList[entryName] = entry
      }
-     dispatch_list.push([event_name, Object.assign({}, id_param_list, {columnsAffected: columns_affected}, (Object.keys(event).length == 1 ? additions : {}))])
+     dispatchList.push([eventName, Object.assign({}, idParamList, {columnsAffected: columnsAffected}, (Object.keys(event).length == 1 ? additions : {}))])
     }
-    dispatch_list.forEach(function (dispatch_data) {event_dispatcher.dispatchEvent.apply(null, dispatch_data)})
+    dispatchList.forEach(function (dispatchData) {eventDispatcher.dispatchEvent.apply(null, dispatchData)})
    }
   }
   dom.setToBiggestWidth = function (arr) {
@@ -1177,6 +1189,7 @@ void function () {
    var inputAttributes  = init.attributes
    var inputSubElements = init.subElements
    var inputElement     = init.inputElement
+   var placeholder      = init.placeholder
    var useDefaultStyles = (typeof init.useDefaultStyles == "undefined") ? true : (init.useDefaultStyles)
    var nestInput        = (typeof init.nestInput == "undefined") ? false : (init.nestInput)
    var main = document.createElement('div')
@@ -1202,6 +1215,7 @@ void function () {
     if (init.readonly == true) init.readonly = "readonly"
     input.readOnly = init.readonly
    }
+   if (placeholder) input.placeholder = init.placeholder
    if (inputElement == "input") input.type = inputType
    input.oncontextmenu = function () {return true}
    input.name = inputName
@@ -1210,7 +1224,7 @@ void function () {
    if (nestInput == true) {
     var inputWrapper = document.createElement('span')
     inputWrapper.className = (typeof init.inputWrapperClassName != 'undefined') ? init.inputWrapperClassName : "input_wrapper_default"
-    if (typeof init.inputWrapperStyle != "undefined") addStyle(inputWrapper, init.inputWrapperStyle)
+    if (typeof init.inputWrapperStyleString != "undefined") addStyle(inputWrapper, init.inputWrapperStyleString)
     inputWrapper.appendChild(input)
    }
    var inputToAppend = (nestInput == true) ? inputWrapper : input
@@ -1228,9 +1242,9 @@ void function () {
    main.className  = (typeof init.className      != 'undefined') ? init.className      : "input_main_default"
    label.className = (typeof init.labelClassName != 'undefined') ? init.labelClassName : "input_label_default"
    input.className = (typeof init.inputClassName != 'undefined') ? init.inputClassName : "input_input_default"
-   if (typeof init.labelStyle != "undefined") addStyle(label, init.labelStyle)
-   if (typeof init.inputStyle != "undefined") addStyle(input, init.inputStyle)
-   if (typeof init.style       != "undefined") addStyle(main , init.style)
+   if (typeof init.labelStyleString != "undefined") addStyle(label, init.labelStyleString)
+   if (typeof init.inputStyleString != "undefined") addStyle(input, init.inputStyleString)
+   if (typeof init.styleString      != "undefined") addStyle(main, init.styleString)
    for (var attributeName in inputAttributes) {
     input[attributeName] = inputAttributes[attributeName]
    }
@@ -1325,18 +1339,18 @@ void function () {
  // </DOM manipulation functions.>
  
  // <Domain and directory functions. TAG: form, TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
- // Get URL variables from window.location and put them into variable_object as key/value pairs. Returns variable_object.
+ // Get URL variables from window.location and put them into variableObject as key/value pairs. Returns variableObject.
  if (h.library_settings.domain_and_directory) {
-  h.getUrlVars = function (variable_object) {
-   if ((typeof variable_object != "object") || (variable_object == null)) variable_object = {}
-   var variable_list = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
-   var curlen = variable_list.length
+  h.getUrlVars = function (variableObject) {
+   if ((typeof variableObject != "object") || (variableObject == null)) variableObject = {}
+   var variableList = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
+   var curlen = variableList.length
    for (var i = 0; i < curlen; i++) {
-    var current_variable = variable_list[i].split('=')
-    if (typeof current_variable[1] == "undefined") continue
-    variable_object[current_variable[0]] = decodeURIComponent(current_variable[1])
+    var currentVariable = variableList[i].split('=')
+    if (typeof currentVariable[1] == "undefined") continue
+    variableObject[currentVariable[0]] = decodeURIComponent(currentVariable[1])
    }
-   return variable_object
+   return variableObject
   }
   // Form a GET URL string from an array.
   h.formUrlVars = function (variableList, options) {
@@ -1350,19 +1364,19 @@ void function () {
    return returnValue
   }
   h.directoryNormalize = function (dirpath) {
-   var part_list = dirpath.split('/')
+   var partList = dirpath.split('/')
    loop1:
-   for (var i = 0, curlen = part_list.length; i < curlen; i++) {
-    if (part_list[i] == '..') {
+   for (var i = 0, curlen = partList.length; i < curlen; i++) {
+    if (partList[i] == '..') {
      for (var j = i - 1; j >= 0; j--) {
-      if ((part_list[j] == '..') || (part_list[j] == '')) continue
-      part_list[j] = ''; part_list[i] = ''
+      if ((partList[j] == '..') || (partList[j] == '')) continue
+      partList[j] = ''; partList[i] = ''
       continue loop1
      }
     }
-    part_list[i] = '/' + part_list[i]
+    partList[i] = '/' + partList[i]
    }
-   var dirpath = part_list.join ('')
+   var dirpath = partList.join ('')
    dirpath = dirpath.substr(1, dirpath.length - 1)
    return dirpath
   }
@@ -1370,38 +1384,38 @@ void function () {
    var startAt = url.indexOf('://');
    if (startAt == -1) return url
    startAt = startAt == -1 ? 0 : startAt+3;
-   var first_index = url.indexOf("/", startAt) + 1
-   if (first_index == 0) return url
-   return url.substring(first_index)
+   var firstIndex = url.indexOf("/", startAt) + 1
+   if (firstIndex == 0) return url
+   return url.substring(firstIndex)
   }
-  h.getDomainAndDirectory = function (url) {var last_index = url.lastIndexOf("/") + 1; return url.substring(0, last_index)}
+  h.getDomainAndDirectory = function (url) {var lastIndex = url.lastIndexOf("/") + 1; return url.substring(0, lastIndex)}
   h.stripFromBaseHref     = function (url) {
    var startAt = url.indexOf('://');
    if (startAt == -1) return url
    startAt = startAt == -1 ? 0 : startAt+3;
-   var first_index = url.indexOf("/", startAt) + 1
-   if (first_index == 0) return url
-   return url.substring(first_index)
+   var firstIndex = url.indexOf("/", startAt) + 1
+   if (firstIndex == 0) return url
+   return url.substring(firstIndex)
   }
-  h.stripDirectory        = function (url) {var last_index = url.lastIndexOf("/") + 1; if (last_index == 0) return url; return url.substring(last_index)}
+  h.stripDirectory        = function (url) {var lastIndex = url.lastIndexOf("/") + 1; if (lastIndex == 0) return url; return url.substring(lastIndex)}
   h.stripExtension        = function (url) {return url.substring(0, url.lastIndexOf("."))}
   h.removeBaseUrl         = function (url) {
-   var url_original = url
-   var base_url_pattern = /^https?:\/\/[a-z\:0-9.]+/
+   var urlOriginal = url
+   var baseUrlPattern = /^https?:\/\/[a-z\:0-9.]+/
    var result = ""
-   var match = base_url_pattern.exec(url)
+   var match = baseUrlPattern.exec(url)
    if (match != null) result = match[0]
    if (result.length > 0) url = url.replace(result, "").substr(1)
    // Check if there is a base element, and if so, remove its href from the beginning of the URL.
-   var base_element = document.querySelector('base')
-   if (base_element != null) {
-    var base_href = base_element.getAttribute("href")
-    base_href = base_href.substr(base_href.indexOf('/') + 1) + "/"
-    url = url.replace(new RegExp("^(" + base_href + "\.)"), '')
+   var baseElement = document.querySelector('base')
+   if (baseElement != null) {
+    var baseHref = baseElement.getAttribute("href")
+    baseHref = baseHref.substr(baseHref.indexOf('/') + 1) + "/"
+    url = url.replace(new RegExp("^(" + baseHref + "\.)"), '')
    }
    return url
   }
-  h.modifyHrefIfRelative  = function (prefix_src, current_src) {if (current_src.substr(0, 7) != "http://") {return prefix_src + current_src} else {return current_src}}
+  h.modifyHrefIfRelative  = function (prefixSrc, currentSrc) {if (currentSrc.substr(0, 7) != "http://") {return prefixSrc + currentSrc} else {return currentSrc}}
  }
  // <Domain and directory functions.>
 
@@ -1499,11 +1513,11 @@ void function () {
  // <Cookie/localStorage functions. TAG: cookie, TAG: localstorage.>
  if (h.library_settings.cookie) {
   h.readcookie = function (name) {
-   var name_eq = name + "=", ca = document.cookie.split(";")
+   var nameEq = name + "=", ca = document.cookie.split(";")
    for (var i = 0; i < ca.length; i++) {
     var c = ca[i]
     while (c.charAt(0) == " ") {c = c.substring(1, c.length)}
-    if (c.indexOf(name_eq) == 0) return decodeURIComponent(c.substring(name_eq.length, c.length))
+    if (c.indexOf(nameEq) == 0) return decodeURIComponent(c.substring(nameEq.length, c.length))
    }
    return null
   }
