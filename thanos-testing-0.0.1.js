@@ -971,15 +971,18 @@ void function () {
    var element = document.createElement(type)
    if (init.className && dom.processCss) {element.className = dom.processCss(init.className); delete (init.className)}
    
-   if (init.style) {
-    var style = init.style
-    if (typeof style == "string") {
-     addStyle(element, style)
+   var nonwritables = ["style", "dataset"]
+   nonwritables.forEach(function (nonwritable) {
+    if (!init[nonwritable]) return
+    var prop_object_init = init[nonwritable]
+    if (nonwritable == "style" && typeof prop_object_init == "string") {
+     addStyle(element, prop_object_init)
     } else {
-     for (var prop in style) {element.style[prop] = style[prop]}
+     var prop_object_element = element[nonwritable]
+     for (var prop in prop_object_init) {prop_object_element[prop] = prop_object_init[prop]}
     }
-    delete (init.style)
-   }
+    delete (init[nonwritable])
+   })
    for (var prop in init) {if (typeof prop != "undefined") element[prop] = init[prop]}
    if (typeof events != "undefined") {
     for (var eventNameList in events) {
@@ -1354,14 +1357,14 @@ dom.databaseSyncSetter = function (init) {
    }
    return variableObject
   }
-  // Form a GET URL string from an array.
+  // Form a GET URL string from a list.
   h.formUrlVars = function (variableList, options) {
    if (typeof options == "undefined") options = {}
    var recordUndefinedValues = options.recordUndefinedValues, isPartial = options.isPartial
    if (typeof recordUndefinedValues == "undefined") recordUndefinedValues = true
    var returnValue = ""
    for (var i in variableList) {
-   if ((typeof variableList[i] != "undefined") || (recordUndefinedValues == true)) returnValue += "&" + i + "=" + variableList[i]}
+   if ((typeof variableList[i] != "undefined") || (recordUndefinedValues == true)) returnValue += "&" + i + "=" + encodeURIComponent(variableList[i])}
    if (returnValue != "") returnValue = (isPartial ? "&" : "?") + returnValue.slice(1, returnValue.length)
    return returnValue
   }
