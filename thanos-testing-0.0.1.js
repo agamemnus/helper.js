@@ -1003,11 +1003,18 @@ void function () {
     children: {}
    }
    if (children) {
-    children.forEach(function (arr) {
-     var childName = arr[0], tagTypeName = arr[1], childData = arr[2]
-     var child = dom.create(tagTypeName, childData)
-     element.dom.children[childName] = child
-     element.appendChild(child)
+    // Children are in object blocks inside arrays to preserve desired append order
+    // and to make a reference at the same time.
+    // (As a consequence, identical references will be overwritten within the "children" property!)
+    if (!(children instanceof Array)) children = [children]
+    children.forEach(function (childrenGroup) {
+     for (var childName in childrenGroup) {
+      var constructData = childrenGroup[childName]
+      var tagTypeName = constructData[0], parameters = constructData[1]
+      var child = dom.create(tagTypeName, parameters)
+      element.dom.children[childName] = child
+      element.appendChild(child)
+     }
     })
    }
    return element
