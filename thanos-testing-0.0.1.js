@@ -1,16 +1,14 @@
 "use strict";
 
-// Thanos.js version 0.1.
+// Thanos.js version 0.2.
 
 // Modifications or additions to native functionality:
 // 1) In .misc_polyfills: polyfills or fixes to IE.
 
 void function () {
  var h = {}
- if (typeof module == "undefined") var module = {}
- module.exports = h
- if (typeof window != "undefined") var global = window
- if (global) global.helperjs = h
+ 
+ if ((typeof module === "object") && module.exports) module.exports = h
  
  // Settings.
  h.library_settings = {
@@ -932,6 +930,7 @@ void function () {
     if (obj == null) return false
    }
   }
+  dom.getNodeIndex = function (element) {var index = -1; do {element = element.previousSibling; index++} while (element != null); return index}
   dom.appendChildren = function (init) {var parent = init.parent, children = init.children; children.forEach(function (child) {parent.appendChild(child)})}
   dom.detachAll = function (parent, recursive) {
    Array.prototype.slice.call(parent.childNodes).forEach(function (child) {
@@ -1061,131 +1060,129 @@ void function () {
    subscribeTarget[subscribeToEventName] = subscriber
    return subscriber
   }
-dom.databaseSyncSetter = function (init) {
-  var entry_name             = init.entry_name
-  var database_action        = init.database_action
-  var action_type            = init.action_type
-  var entry_id_string        = init.entry_id
-  var entry_container_string = init.entry_container
-  var central_data           = init.central_data
-  var query_parameters       = init.query_parameters
-  var event_name             = init.event_name
-  var event_dispatcher       = init.event_dispatcher
-  var dbrequest_queue        = init.dbrequest_queue
-  var wait_for_result        = (action_type == "create" || action_type == "remove") ? true : (("wait_for_result" in init) ? init.wait_for_result : false)
-  var init                   = init.init
-  
-  var entry_id = init[entry_id_string]
-  var entry_container = central_data[entry_container_string]
-  
-  if (action_type == "set") {
-   var entry = get_entry_object({container: entry_container, entry_id: entry_id})
-   var entry_original = Object.assign({}, entry)
-   var additions = {}, columns_affected = []
-   query_parameters.forEach (function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push (prop)}})
-   Object.assign (entry, additions)
-   event_name = (typeof event_name == "string") ? event_name : event_name(additions)
-   var id_param = {}; id_param[entry_name] = entry // id_param is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
-   if (!wait_for_result) event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
-  }
-  
-  if (typeof init.callback == "undefined") init.callback = function () {}
-  var callback_original = init.callback
-  init.callback = function (result) {
-   if (result && result.error) {
-    additions = {}
-    if (action_type == "set") {
-     query_parameters.forEach (function (prop) {if (prop in init) additions[prop] = entry_original[prop]})
-     event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
-    }
-   } else if (wait_for_result) {
-    var effects = (typeof result == "object") ? result.effects : undefined
-    if (effects) {
-     dispatch_events (effects)
-    } else {
-     event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
-    }
+  dom.databaseSyncSetter = function (init) {
+   var entry_name             = init.entry_name
+   var database_action        = init.database_action
+   var action_type            = init.action_type
+   var entry_id_string        = init.entry_id
+   var entry_container_string = init.entry_container
+   var central_data           = init.central_data
+   var query_parameters       = init.query_parameters
+   var event_name             = init.event_name
+   var event_dispatcher       = init.event_dispatcher
+   var dbrequest_queue        = init.dbrequest_queue
+   var wait_for_result        = (action_type == "create" || action_type == "remove") ? true : (("wait_for_result" in init) ? init.wait_for_result : false)
+   var init                   = init.init
+   
+   var entry_id = init[entry_id_string]
+   var entry_container = central_data[entry_container_string]
+   
+   if (action_type == "set") {
+    var entry = get_entry_object({container: entry_container, entry_id: entry_id})
+    var entry_original = Object.assign({}, entry)
+    var additions = {}, columns_affected = []
+    query_parameters.forEach (function (prop) {if (prop in init) {additions[prop] = init[prop]; columns_affected.push (prop)}})
+    Object.assign (entry, additions)
+    event_name = (typeof event_name == "string") ? event_name : event_name(additions)
+    var id_param = {}; id_param[entry_name] = entry // id_param is the thing being sent to the event listeners. E.G.: "{fragment: fragment}".
+    if (!wait_for_result) event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
    }
-   callback_original (result)
-  }
-  dbrequest_queue (database_action, query_parameters.concat(entry_id_string), init)
-  
-  function get_entry_object (init) {
-   var container = init.container, entry_id = init.entry_id
-   if (typeof entry_id == "undefined") return container
-   if (Array.isArray(container)) {
-    return container.find(function (test_entry) {return test_entry.id == entry_id})
-   } else {
-    return container[entry_id]
-   }
-  }
-  function set_entry_object (init) {
-   var container = init.container, entry_id = init.entry_id, entry = init.entry_data
-   var sort_column = init.sort_column, sort_direction = init.sort_direction
-   if (!Array.isArray(container)) {
-    container[entry_id] = entry
-   } else {
-    if (!sort_column) {
-     container.push(entry)
-    } else {
-     var insert_position = container.findIndex(
-      (!sort_direction || sort_direction.toLowerCase() == "asc") ?
-      function (test_entry) {return entry[sort_column]  < test_entry[sort_column]} :
-      function (test_entry) {return entry[sort_column] >= test_entry[sort_column]}
-     )
-     if (insert_position == -1) insert_position = container.length
-     container.splice(insert_position, 0, entry)
-    }
-   }
-   return entry
-  }
-  function delete_entry_object (init) {
-   var container = init.container, entry_id = init.entry_id
-   if (!Array.isArray(container)) {
-    var entry = container[entry_id]
-    delete (container[entry_id])
-   } else {
-    var entry_index = container.findIndex(function (entry) {if (entry.id == entry_id) return true})
-    var entry = container[entry_index]
-    container.splice(entry_index, 1)
-   }
-   return entry
-  }
-  
-  function dispatch_events (event_list) {
-   var dispatch_list = []
-   for (var event_name in event_list) {
-    var event = event_list[event_name]
-    var columns_affected = [], id_param_list = {}, additions = {}
-    for (var entry_name in event) {
-     var entry_descriptor = event[entry_name]
-     var location = entry_descriptor.location, data = entry_descriptor.data
-     var entry_container_string = location.container, entry_id = location.id
-
-     // If data is undefined, we are removing an object, not modifying or creating it.
-     if (typeof data == "undefined") {
-      var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
-     } else {
-      // If data is set, modify or create an object.
-      var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
-      columns_affected = columns_affected.concat(Object.keys(data))
-      if (typeof entry == "undefined") {
-        
-       var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
-       entry.id = entry_id
-      } else {
-       Object.assign(entry, data)
-      }
-      Object.assign(additions, data)
+   
+   if (typeof init.callback == "undefined") init.callback = function () {}
+   var callback_original = init.callback
+   init.callback = function (result) {
+    if (result && result.error) {
+     additions = {}
+     if (action_type == "set") {
+      query_parameters.forEach (function (prop) {if (prop in init) additions[prop] = entry_original[prop]})
+      event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
      }
-     id_param_list[entry_name] = entry
+    } else if (wait_for_result) {
+     var effects = (typeof result == "object") ? result.effects : undefined
+     if (effects) {
+      dispatch_events (effects)
+     } else {
+      event_dispatcher.dispatchEvent (event_name, Object.assign ({}, id_param, {columnsAffected: columns_affected}, additions))
+     }
     }
-    dispatch_list.push([event_name, Object.assign({}, id_param_list, {columnsAffected: columns_affected}, (Object.keys(event).length == 1 ? additions : {}))])
+    callback_original (result)
    }
-   dispatch_list.forEach (function (dispatch_data) {event_dispatcher.dispatchEvent.apply(null, dispatch_data)})
-  }
- }
- 
+   dbrequest_queue (database_action, query_parameters.concat(entry_id_string), init)
+   
+   function get_entry_object (init) {
+    var container = init.container, entry_id = init.entry_id
+    if (typeof entry_id == "undefined") return container
+    if (Array.isArray(container)) {
+     return container.find(function (test_entry) {return test_entry.id == entry_id})
+    } else {
+     return container[entry_id]
+    }
+   }
+   function set_entry_object (init) {
+    var container = init.container, entry_id = init.entry_id, entry = init.entry_data
+    var sort_column = init.sort_column, sort_direction = init.sort_direction
+    if (!Array.isArray(container)) {
+     container[entry_id] = entry
+    } else {
+     if (!sort_column) {
+      container.push(entry)
+     } else {
+      var insert_position = container.findIndex(
+       (!sort_direction || sort_direction.toLowerCase() == "asc") ?
+       function (test_entry) {return entry[sort_column]  < test_entry[sort_column]} :
+       function (test_entry) {return entry[sort_column] >= test_entry[sort_column]}
+      )
+      if (insert_position == -1) insert_position = container.length
+     container.splice(insert_position, 0, entry)
+     }
+    }
+    return entry
+   }
+   function delete_entry_object (init) {
+    var container = init.container, entry_id = init.entry_id
+    if (!Array.isArray(container)) {
+     var entry = container[entry_id]
+     delete (container[entry_id])
+    } else {
+     var entry_index = container.findIndex(function (entry) {if (entry.id == entry_id) return true})
+     var entry = container[entry_index]
+     container.splice(entry_index, 1)
+    }
+    return entry
+   }
+   
+   function dispatch_events (event_list) {
+    var dispatch_list = []
+    for (var event_name in event_list) {
+     var event = event_list[event_name]
+     var columns_affected = [], id_param_list = {}, additions = {}
+     for (var entry_name in event) {
+      var entry_descriptor = event[entry_name]
+      var location = entry_descriptor.location, data = entry_descriptor.data
+      var entry_container_string = location.container, entry_id = location.id
+      
+      // If data is undefined, we are removing an object, not modifying or creating it.
+      if (typeof data == "undefined") {
+       var entry = delete_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+      } else {
+       // If data is set, modify or create an object.
+       var entry = get_entry_object({container: central_data[entry_container_string], entry_id: entry_id})
+       columns_affected = columns_affected.concat(Object.keys(data))
+       if (typeof entry == "undefined") {   
+        var entry = set_entry_object({container: central_data[entry_container_string], entry_id: entry_id, entry_data: data, sort_column: location.sort_column, sort_direction: location.sort_direction})
+        entry.id = entry_id
+       } else {
+        Object.assign(entry, data)
+       }
+       Object.assign(additions, data)
+      }
+      id_param_list[entry_name] = entry
+     }
+     dispatch_list.push([event_name, Object.assign({}, id_param_list, {columnsAffected: columns_affected}, (Object.keys(event).length == 1 ? additions : {}))])
+    }
+    dispatch_list.forEach (function (dispatch_data) {event_dispatcher.dispatchEvent.apply(null, dispatch_data)})
+   }
+  } 
   dom.setToBiggestWidth = function (arr) {
    var biggestWidth = 0
    arr.forEach(function (obj) {if (biggestWidth < obj.offsetWidth) biggestWidth = obj.offsetWidth})
@@ -1351,18 +1348,21 @@ dom.databaseSyncSetter = function (init) {
  // </DOM manipulation functions.>
  
  // <Domain and directory functions. TAG: form, TAG: uri component, TAG: domain, TAG: directory, TAG: path.>
- // Get URL variables from window.location and put them into variableObject as key/value pairs. Returns variableObject.
+ // Get URL variables from window.location or string and put them into a result object as key/value pairs. Returns variableObject.
  if (h.library_settings.domain_and_directory) {
-  h.getUrlVars = function (variableObject) {
-   if ((typeof variableObject != "object") || (variableObject == null)) variableObject = {}
-   var variableList = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
+  h.getUrlVars = function (input) {
+   var result = {}
+   if (typeof input == "undefined") input = window.location.href
+   var pound_pos = input.lastIndexOf("#") 
+   if (pound_pos != -1) input = input.substring(0, input.lastIndexOf("#"))
+   var variableList = input.slice(input.indexOf('?') + 1).split('&')
    var curlen = variableList.length
    for (var i = 0; i < curlen; i++) {
     var currentVariable = variableList[i].split('=')
     if (typeof currentVariable[1] == "undefined") continue
-    variableObject[currentVariable[0]] = decodeURIComponent(currentVariable[1])
+    result[currentVariable[0]] = decodeURIComponent(currentVariable[1])
    }
-   return variableObject
+   return result
   }
   // Form a GET URL string from a list.
   h.formUrlVars = function (variableList, options) {
