@@ -1,0 +1,10 @@
+{
+ "name": "thanos.js",
+ "version" : "0.0.2",
+ "description": "Remove half the things.",
+ "main": "thanos-testing-0.0.2.js",
+ "dependencies": {},
+ "homepage": "https://github.com/agamemnus/thanos.js",
+ "license": "public domain",
+ "repository": {"type": "git", "url": "git+https://github.com/agamemnus/thanos.js.git"}
+}
