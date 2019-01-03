@@ -5,6 +5,6 @@
  "main": "thanos-testing-0.0.2.js",
  "dependencies": {},
  "homepage": "https://github.com/agamemnus/thanos.js",
- "license": "public domain",
+ "license": "MIT",
  "repository": {"type": "git", "url": "git+https://github.com/agamemnus/thanos.js.git"}
 }
